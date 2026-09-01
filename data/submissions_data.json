@@ -1,0 +1,382 @@
+[
+  {
+    "id": "sub-1",
+    "lab_id": "lab-1",
+    "student_name": "John Doe",
+    "student_id": "STU-100",
+    "submission_text": "Measured time constant tau = 10ms. Theoretical Q1: Increasing R increases time constant tau. Theoretical Q2: f_c = 1 / (2 * pi * R * C) = 15.91 Hz.",
+    "code_files": {},
+    "submitted_at": "2026-09-01 00:32:17",
+    "status": "graded",
+    "grade_result": {
+      "ai_suggested_grade": 90.0,
+      "total_possible_grade": 100.0,
+      "percentage": 90.0,
+      "summary_feedback": "Mock grading result: 90.0% across criteria.",
+      "criterion_evaluations": [
+        {
+          "criterion_name": "Hardware Wiring & Measurement Correctness",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Hardware Wiring & Measurement Correctness' with minor improvements possible."
+        },
+        {
+          "criterion_name": "Theoretical Analysis & Derivations",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Theoretical Analysis & Derivations' with minor improvements possible."
+        }
+      ],
+      "code_reviews": [],
+      "warnings": [],
+      "ai_metadata": {
+        "ai_engine_version": "1.4.0",
+        "prompt_version": "2.0.0",
+        "operation": "grade_submission",
+        "provider": null,
+        "model_used": null,
+        "latency_ms": 0.0,
+        "parse_success": true,
+        "prompt_truncated": false,
+        "scores_adjusted": false,
+        "output_sanitized": false,
+        "warnings_count": 0,
+        "completed_at": "2026-09-01T13:16:31.781296+00:00",
+        "extra": null
+      }
+    }
+  },
+  {
+    "id": "sub-2",
+    "lab_id": "lab-3",
+    "student_name": "Esraa Khaled",
+    "student_id": "231009987",
+    "submission_text": "==============================================================================\nSTUDENT LAB REPORT: GEOMETRICAL OPTICS\nStudent Name: Esraa Khaled\nStudent ID: 231009987\n==============================================================================\n\nEXPERIMENTAL DATA RECORDED:\nTrial 1: u = 30.0 cm, v = 30.2 cm => 1/f = 1/30 + 1/30.2 => f = 15.05 cm\nTrial 2: u = 40.0 cm, v = 24.0 cm => 1/f = 1/40 + 1/24 => f = 15.00 cm\nTrial 3: u = 50.0 cm, v = 21.4 cm => 1/f = 1/50 + 1/21.4 => f = 14.98 cm\n\nAverage Calculated Focal Length: f_avg = 15.01 cm.\n\nTHEORETICAL ANSWERS:\nQ1: Snell's Law states n1 sin(theta1) = n2 sin(theta2). When light enters glass from air, the speed of light decreases, causing the wave front to bend towards the normal line.\nQ2: Refractive index n = sin(45 deg) / sin(28 deg) = 0.707 / 0.469 = 1.507.\nQ3: Critical angle is the boundary angle where light undergoes total internal reflection instead of passing into the second medium.\n",
+    "code_files": {},
+    "submitted_at": "2026-09-01 00:41:48",
+    "status": "graded",
+    "grade_result": {
+      "ai_suggested_grade": 51.0,
+      "total_possible_grade": 100.0,
+      "percentage": 51.0,
+      "summary_feedback": "Demonstrated a solid understanding of the theoretical concepts, answering all three theory questions correctly. However, the experimental portion is incomplete: setup description is missing, only 3 of 5 required measurements recorded, and 1/u vs 1/v graph fitting is missing.",
+      "criterion_evaluations": [
+        {
+          "criterion_name": "Experimental Setup & Procedure Execution",
+          "score_given": 8.0,
+          "max_points": 20.0,
+          "reasoning": "The report does not describe how equipment was mounted or aligned, nor does it mention bench marks."
+        },
+        {
+          "criterion_name": "Data Collection Accuracy",
+          "score_given": 6.0,
+          "max_points": 20.0,
+          "reasoning": "Only three of the five required object positions are reported."
+        },
+        {
+          "criterion_name": "Data Analysis & Graphical Interpretation",
+          "score_given": 7.0,
+          "max_points": 20.0,
+          "reasoning": "Focal lengths are calculated and averaged, but the required 1/u vs 1/v plot and line fit are absent."
+        },
+        {
+          "criterion_name": "Theoretical Questions",
+          "score_given": 20.0,
+          "max_points": 20.0,
+          "reasoning": "All three theoretical answers are correct, concise, and include proper calculations."
+        },
+        {
+          "criterion_name": "Report Presentation & Documentation",
+          "score_given": 10.0,
+          "max_points": 20.0,
+          "reasoning": "The report includes title, ID, data table, and theory answers, but formatting is basic."
+        }
+      ],
+      "code_reviews": [],
+      "warnings": [],
+      "ai_metadata": null
+    }
+  },
+  {
+    "id": "sub-3",
+    "lab_id": "lab-1",
+    "student_name": "John Doe",
+    "student_id": "STU-100",
+    "submission_text": "Measured tau = 10ms",
+    "code_files": {},
+    "submitted_at": "2026-09-01 01:05:28",
+    "status": "graded",
+    "grade_result": {
+      "ai_suggested_grade": 90.0,
+      "total_possible_grade": 100.0,
+      "percentage": 90.0,
+      "summary_feedback": "Mock grading result: 90.0% across criteria.",
+      "criterion_evaluations": [
+        {
+          "criterion_name": "Hardware Wiring & Measurement Correctness",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Hardware Wiring & Measurement Correctness' with minor improvements possible."
+        },
+        {
+          "criterion_name": "Theoretical Analysis & Derivations",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Theoretical Analysis & Derivations' with minor improvements possible."
+        }
+      ],
+      "code_reviews": [],
+      "warnings": [],
+      "ai_metadata": {
+        "ai_engine_version": "1.4.0",
+        "prompt_version": "2.0.0",
+        "operation": "grade_submission",
+        "provider": null,
+        "model_used": null,
+        "latency_ms": 0.0,
+        "parse_success": true,
+        "prompt_truncated": false,
+        "scores_adjusted": false,
+        "output_sanitized": false,
+        "warnings_count": 0,
+        "completed_at": "2026-09-01T13:16:31.782412+00:00",
+        "extra": null
+      }
+    }
+  },
+  {
+    "id": "sub-4",
+    "lab_id": "lab-1",
+    "student_name": "John Doe",
+    "student_id": "STU-100",
+    "submission_text": "Measured tau = 10ms",
+    "code_files": {},
+    "submitted_at": "2026-09-01 16:05:41",
+    "status": "graded",
+    "grade_result": {
+      "ai_suggested_grade": 90.0,
+      "total_possible_grade": 100.0,
+      "percentage": 90.0,
+      "summary_feedback": "Mock grading result: 90.0% across criteria.",
+      "criterion_evaluations": [
+        {
+          "criterion_name": "Hardware Wiring & Measurement Correctness",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Hardware Wiring & Measurement Correctness' with minor improvements possible."
+        },
+        {
+          "criterion_name": "Theoretical Analysis & Derivations",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Theoretical Analysis & Derivations' with minor improvements possible."
+        }
+      ],
+      "code_reviews": [],
+      "warnings": [],
+      "ai_metadata": {
+        "ai_engine_version": "1.4.0",
+        "prompt_version": "2.0.0",
+        "operation": "grade_submission",
+        "provider": null,
+        "model_used": null,
+        "latency_ms": 0.0,
+        "parse_success": true,
+        "prompt_truncated": false,
+        "scores_adjusted": false,
+        "output_sanitized": false,
+        "warnings_count": 0,
+        "completed_at": "2026-09-01T13:16:31.782412+00:00",
+        "extra": null
+      }
+    }
+  },
+  {
+    "id": "sub-5",
+    "lab_id": "lab-1",
+    "student_name": "John Doe",
+    "student_id": "STU-100",
+    "submission_text": "Measured tau = 10ms",
+    "code_files": {},
+    "submitted_at": "2026-09-01 16:06:32",
+    "status": "graded",
+    "grade_result": {
+      "ai_suggested_grade": 90.0,
+      "total_possible_grade": 100.0,
+      "percentage": 90.0,
+      "summary_feedback": "Mock grading result: 90.0% across criteria.",
+      "criterion_evaluations": [
+        {
+          "criterion_name": "Hardware Wiring & Measurement Correctness",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Hardware Wiring & Measurement Correctness' with minor improvements possible."
+        },
+        {
+          "criterion_name": "Theoretical Analysis & Derivations",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Theoretical Analysis & Derivations' with minor improvements possible."
+        }
+      ],
+      "code_reviews": [],
+      "warnings": [],
+      "ai_metadata": {
+        "ai_engine_version": "1.4.0",
+        "prompt_version": "2.0.0",
+        "operation": "grade_submission",
+        "provider": null,
+        "model_used": null,
+        "latency_ms": 0.0,
+        "parse_success": true,
+        "prompt_truncated": false,
+        "scores_adjusted": false,
+        "output_sanitized": false,
+        "warnings_count": 0,
+        "completed_at": "2026-09-01T13:16:31.782412+00:00",
+        "extra": null
+      }
+    }
+  },
+  {
+    "id": "sub-6",
+    "lab_id": "lab-1",
+    "student_name": "John Doe",
+    "student_id": "STU-100",
+    "submission_text": "Measured tau = 10ms",
+    "code_files": {},
+    "submitted_at": "2026-09-01 16:07:52",
+    "status": "graded",
+    "grade_result": {
+      "ai_suggested_grade": 90.0,
+      "total_possible_grade": 100.0,
+      "percentage": 90.0,
+      "summary_feedback": "Mock grading result: 90.0% across criteria.",
+      "criterion_evaluations": [
+        {
+          "criterion_name": "Hardware Wiring & Measurement Correctness",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Hardware Wiring & Measurement Correctness' with minor improvements possible."
+        },
+        {
+          "criterion_name": "Theoretical Analysis & Derivations",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Theoretical Analysis & Derivations' with minor improvements possible."
+        }
+      ],
+      "code_reviews": [],
+      "warnings": [],
+      "ai_metadata": {
+        "ai_engine_version": "1.4.0",
+        "prompt_version": "2.0.0",
+        "operation": "grade_submission",
+        "provider": null,
+        "model_used": null,
+        "latency_ms": 0.0,
+        "parse_success": true,
+        "prompt_truncated": false,
+        "scores_adjusted": false,
+        "output_sanitized": false,
+        "warnings_count": 0,
+        "completed_at": "2026-09-01T13:16:31.782412+00:00",
+        "extra": null
+      }
+    }
+  },
+  {
+    "id": "sub-7",
+    "lab_id": "lab-1",
+    "student_name": "John Doe",
+    "student_id": "STU-100",
+    "submission_text": "Measured tau = 10ms",
+    "code_files": {},
+    "submitted_at": "2026-09-01 16:12:35",
+    "status": "graded",
+    "grade_result": {
+      "ai_suggested_grade": 90.0,
+      "total_possible_grade": 100.0,
+      "percentage": 90.0,
+      "summary_feedback": "Mock grading result: 90.0% across criteria.",
+      "criterion_evaluations": [
+        {
+          "criterion_name": "Hardware Wiring & Measurement Correctness",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Hardware Wiring & Measurement Correctness' with minor improvements possible."
+        },
+        {
+          "criterion_name": "Theoretical Analysis & Derivations",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Theoretical Analysis & Derivations' with minor improvements possible."
+        }
+      ],
+      "code_reviews": [],
+      "warnings": [],
+      "ai_metadata": {
+        "ai_engine_version": "1.4.0",
+        "prompt_version": "2.0.0",
+        "operation": "grade_submission",
+        "provider": null,
+        "model_used": null,
+        "latency_ms": 0.0,
+        "parse_success": true,
+        "prompt_truncated": false,
+        "scores_adjusted": false,
+        "output_sanitized": false,
+        "warnings_count": 0,
+        "completed_at": "2026-09-01T13:16:31.782412+00:00",
+        "extra": null
+      }
+    }
+  },
+  {
+    "id": "sub-8",
+    "lab_id": "lab-1",
+    "student_name": "John Doe",
+    "student_id": "STU-100",
+    "submission_text": "Measured tau = 10ms",
+    "code_files": {},
+    "submitted_at": "2026-09-01 16:16:31",
+    "status": "graded",
+    "grade_result": {
+      "ai_suggested_grade": 90.0,
+      "total_possible_grade": 100.0,
+      "percentage": 90.0,
+      "summary_feedback": "Mock grading result: 90.0% across criteria.",
+      "criterion_evaluations": [
+        {
+          "criterion_name": "Hardware Wiring & Measurement Correctness",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Hardware Wiring & Measurement Correctness' with minor improvements possible."
+        },
+        {
+          "criterion_name": "Theoretical Analysis & Derivations",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Theoretical Analysis & Derivations' with minor improvements possible."
+        }
+      ],
+      "code_reviews": [],
+      "warnings": [],
+      "ai_metadata": {
+        "ai_engine_version": "1.4.0",
+        "prompt_version": "2.0.0",
+        "operation": "grade_submission",
+        "provider": null,
+        "model_used": null,
+        "latency_ms": 0.0,
+        "parse_success": true,
+        "prompt_truncated": false,
+        "scores_adjusted": false,
+        "output_sanitized": false,
+        "warnings_count": 0,
+        "completed_at": "2026-09-01T13:16:31.782412+00:00",
+        "extra": null
+      }
+    }
+  }
+]

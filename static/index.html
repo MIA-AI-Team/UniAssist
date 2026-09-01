@@ -1,0 +1,2038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Evaluation Assistant - University Hub</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- KaTeX CSS & JS for rendering LaTeX math formulas -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <!-- Marked.js for parsing Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+
+    
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --bg-card-border: rgba(255, 255, 255, 0.1);
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-glow: rgba(99, 102, 241, 0.25);
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --input-bg: rgba(15, 23, 42, 0.6);
+            --border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        /* Header Bar */
+        header {
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(12px);
+            background: rgba(15, 23, 42, 0.8);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--accent-emerald);
+            padding: 0.35rem 0.85rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-emerald);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-emerald);
+        }
+
+        /* Main Container */
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            flex: 1;
+            width: 100%;
+        }
+
+        /* Navigation Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(30, 41, 59, 0.5);
+            padding: 0.4rem;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+            width: fit-content;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.65rem 1.4rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        /* Card Layout */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--bg-card-border);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        /* Global Text & Pre Overflow Protection */
+        pre, code, details, summary, .chat-bubble, .code-finding, .criteria-card, #lab-banner-steps, #lab-banner-desc, #lab-context-banner {
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .card-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+        }
+
+        .card-subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Form Controls */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="text"], input[type="number"], textarea, select {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        /* Drag and Drop Zone */
+        .drop-zone {
+            border: 2px dashed rgba(99, 102, 241, 0.3);
+            background: rgba(99, 102, 241, 0.03);
+            border-radius: 14px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        .drop-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .drop-zone-icon {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .drop-zone-text {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .drop-zone-subtext {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .file-preview {
+            margin-top: 0.75rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--accent-emerald);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        /* Buttons */
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.85rem 1.8rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            box-shadow: 0 4px 14px var(--primary-glow);
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-danger {
+            background: rgba(244, 63, 94, 0.2);
+            color: var(--accent-rose);
+            box-shadow: none;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+        }
+
+        .btn-danger:hover {
+            background: rgba(244, 63, 94, 0.35);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Output Display */
+        .output-container {
+            display: none;
+            margin-top: 2rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .score-banner {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(16, 185, 129, 0.15));
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .score-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--accent-emerald);
+        }
+
+        .criteria-card {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .criteria-row-edit {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Interactive AI Refinement Box */
+        .refinement-box {
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 14px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Code Review Badges */
+        .badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-info { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+        .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); }
+        .badge-critical, .badge-error { background: rgba(244, 63, 94, 0.2); color: var(--accent-rose); }
+
+        .code-finding {
+            background: rgba(15, 23, 42, 0.6);
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            border-radius: 0 10px 10px 0;
+            margin-bottom: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .finding-file {
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 0.2rem;
+        }
+
+        /* Socratic Chatbot Styles */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 480px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1.25rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .chat-bubble {
+            max-width: 80%;
+            padding: 0.9rem 1.2rem;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .chat-bubble.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            color: white;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        .chat-bubble.assistant {
+            align-self: flex-start;
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.8);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .quick-chips {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .chip {
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            color: #a5b4fc;
+            padding: 0.4rem 0.85rem;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .chip:hover {
+            background: rgba(99, 102, 241, 0.25);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="brand">
+                <div class="brand-icon">🎓</div>
+                <div>
+                    <div>AI Evaluation Assistant</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 400;">University Task Hub</div>
+                </div>
+            </div>
+            <div class="status-pill">
+                <div class="status-dot"></div>
+                <span>LLM Engine: Groq GPT-120B / Llama 3.3</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main>
+        <!-- Mode Navigation Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('rubric-tab')">
+                <span>📝</span> 1. Generate & Refine Rubric
+            </button>
+            <button class="tab-btn" onclick="switchTab('eval-tab')">
+                <span>🔍</span> 2. Grade Student Submission
+            </button>
+            <button class="tab-btn" onclick="switchTab('labs-tab')">
+                <span>🧪</span> 3. Labs Assistance & Submissions
+            </button>
+        </div>
+
+
+        <!-- TAB 1: RUBRIC GENERATOR & REFINEMENT -->
+        <div id="rubric-tab" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Generate AI Rubric from Specification</h2>
+                    <p class="card-subtitle">Upload your lab/assignment spec file OR describe the task requirements below to generate specific grading criteria.</p>
+                </div>
+
+                <form id="rubric-form" onsubmit="handleGenerateRubric(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Task Title</label>
+                            <input type="text" id="r-title" placeholder="e.g. Machine Learning Model Evaluation" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Task Type</label>
+                            <select id="r-type">
+                                <option value="lab">Lab Task</option>
+                                <option value="assignment">Assignment</option>
+                                <option value="project">Team Project</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label>Task Description & Essential Requirements</label>
+                        <textarea id="r-desc" rows="3" placeholder="Describe the task details, essential steps, tools used, and target deliverables..."></textarea>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label>Upload Specification File (PDF, DOCX, TXT)</label>
+                        <div class="drop-zone" onclick="document.getElementById('r-file').click()">
+                            <div class="drop-zone-icon">📄</div>
+                            <div class="drop-zone-text">Click or drag & drop your Task Specification file here</div>
+                            <div class="drop-zone-subtext">Supports PDF, DOCX, TXT documents</div>
+                            <input type="file" id="r-file" accept=".pdf,.docx,.txt" onchange="updateFilePreview('r-file', 'r-preview')">
+                            <div id="r-preview" class="file-preview" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label>Or Paste Specification Text Directly (Optional)</label>
+                        <textarea id="r-text-override" rows="3" placeholder="If you don't have a file, paste raw specification text here..."></textarea>
+                    </div>
+
+                    <button type="submit" id="r-submit-btn" class="btn">
+                        <div class="spinner" id="r-spinner"></div>
+                        <span>Generate AI Rubric</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Rubric Result Display & Interactive Editor -->
+            <div id="rubric-output" class="output-container card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h3 class="card-title" id="out-r-title">Generated Rubric Criteria</h3>
+                        <p class="card-subtitle" id="out-r-rationale"></p>
+                    </div>
+                    <button class="btn" style="background: var(--accent-emerald);" onclick="useCurrentRubricForGrading()">
+                        <span>Accept & Use Rubric for Grading ➔</span>
+                    </button>
+                </div>
+
+                <!-- Interactive AI Refinement Box -->
+                <div class="refinement-box">
+                    <label style="color: var(--primary);">🤖 Re-prompt AI to Refine Rubric</label>
+                    <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+                        <input type="text" id="r-feedback-input" placeholder="e.g. 'Break down the task into subtasks and make each criterion up to 3 points each'" style="flex: 1;">
+                        <button type="button" class="btn btn-secondary" onclick="handleRefineRubricWithAI()">
+                            <div class="spinner" id="r-refine-spinner"></div>
+                            <span>Refine with AI</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Editable Criteria List -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h4 style="font-size: 1.1rem;">Editable Criteria (Total: <span id="out-total-pts" style="color: var(--accent-emerald);">100</span> pts)</h4>
+                    <button type="button" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="addNewCriteriaRow()">+ Add Criterion</button>
+                </div>
+
+                <div id="out-r-criteria-list"></div>
+            </div>
+        </div>
+
+        <!-- TAB 2: SUBMISSION EVALUATOR -->
+        <div id="eval-tab" class="tab-content" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Grade Student Submission</h2>
+                    <p class="card-subtitle">Upload the task specification file and the student submission file (PDF, DOCX, PY, CPP, or ZIP).</p>
+                </div>
+
+                <form id="eval-form" onsubmit="handleGradeSubmission(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Task Title</label>
+                            <input type="text" id="e-title" placeholder="e.g. Lab 1: Linked List Implementation" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Task Type</label>
+                            <select id="e-type">
+                                <option value="lab">Lab Task</option>
+                                <option value="assignment">Assignment</option>
+                                <option value="project">Team Project</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>1. Upload Task Specification File (PDF / DOCX)</label>
+                            <div class="drop-zone" onclick="document.getElementById('e-spec-file').click()">
+                                <div class="drop-zone-icon">📜</div>
+                                <div class="drop-zone-text">Click or drag spec file</div>
+                                <input type="file" id="e-spec-file" accept=".pdf,.docx,.txt" onchange="updateFilePreview('e-spec-file', 'e-spec-preview')">
+                                <div id="e-spec-preview" class="file-preview" style="display:none;"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>2. Upload Student Submission (PDF / CPP / PY / ZIP)</label>
+                            <div class="drop-zone" onclick="document.getElementById('e-sub-file').click()">
+                                <div class="drop-zone-icon">📦</div>
+                                <div class="drop-zone-text">Click or drag student file/zip</div>
+                                <input type="file" id="e-sub-file" accept=".pdf,.docx,.txt,.py,.cpp,.hpp,.zip" onchange="updateFilePreview('e-sub-file', 'e-sub-preview')">
+                                <div id="e-sub-preview" class="file-preview" style="display:none;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Or Paste Specification Text</label>
+                            <textarea id="e-spec-text-override" rows="3" placeholder="Paste task specification text if you did not upload a file..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Or Paste Submission Code / Text</label>
+                            <textarea id="e-sub-text-override" rows="3" placeholder="Paste student code or written answers if you did not upload a file..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label>Accepted Rubric Criteria (JSON)</label>
+                        <textarea id="e-rubric-json" rows="6" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;" required>[
+  {
+    "name": "Correctness & Functionality",
+    "description": "All required methods work correctly.",
+    "max_points": 50.0,
+    "sort_order": 1
+  },
+  {
+    "name": "Memory Management & Pointers",
+    "description": "No memory leaks or dangling pointers.",
+    "max_points": 30.0,
+    "sort_order": 2
+  },
+  {
+    "name": "Code Structure & Style",
+    "description": "Clean modular layout with proper comments.",
+    "max_points": 20.0,
+    "sort_order": 3
+  }
+]</textarea>
+                    </div>
+
+                    <button type="submit" id="e-submit-btn" class="btn">
+                        <div class="spinner" id="e-spinner"></div>
+                        <span>Evaluate & Grade Submission</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Evaluation Result Display -->
+            <div id="eval-output" class="output-container card">
+                <div class="score-banner">
+                    <div>
+                        <div style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">AI Suggested Score</div>
+                        <div class="score-value" id="out-score">90 / 100</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-main);" id="out-pct">90%</div>
+                        <div style="font-size: 0.85rem; color: var(--accent-emerald);">Status: Ready for Professor Confirmation</div>
+                    </div>
+                </div>
+
+                <div class="card-header">
+                    <h3 class="card-title">Summary Feedback</h3>
+                    <p class="card-subtitle" id="out-summary" style="font-size: 0.95rem; line-height: 1.6; color: var(--text-main);"></p>
+                </div>
+
+                <div id="out-warnings" style="display:none; margin-bottom: 1.5rem; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.25); color: var(--accent-amber); font-size: 0.9rem;"></div>
+
+                <h3 class="card-title" style="margin-bottom: 1rem;">Criterion Breakdown</h3>
+
+                <div id="out-criteria-breakdown"></div>
+
+                <h3 class="card-title" style="margin-top: 2rem; margin-bottom: 1rem;">Code Review Findings</h3>
+                <div id="out-code-reviews"></div>
+            </div>
+        </div>
+
+        <!-- TAB 3: LABS ASSISTANCE & SUBMISSION FEATURE -->
+        <div id="labs-tab" class="tab-content" style="display: none;">
+            <!-- Role Mode Switcher -->
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; background: rgba(15,23,42,0.6); padding: 0.5rem; border-radius: 12px; border: 1px solid var(--border-color); width: fit-content;">
+                <button type="button" class="btn" id="role-student-btn" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;" onclick="switchLabRole('student')">
+                    <span>🎓 Student Lab Assistant & Submission</span>
+                </button>
+                <button type="button" class="btn btn-secondary" id="role-ta-btn" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;" onclick="switchLabRole('ta')">
+                    <span>🧑‍🏫 TA Lab Setup & Grading Portal</span>
+                </button>
+            </div>
+
+            <!-- STUDENT LAB PORTAL -->
+            <div id="student-lab-view">
+                <div class="card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h2 class="card-title">Select Active Lab</h2>
+                            <p class="card-subtitle">Choose your lab session. The AI automatically connects to your TA's uploaded lab steps and guidelines.</p>
+                        </div>
+                        <select id="student-lab-select" style="min-width: 320px; font-weight: 600;" onchange="loadSelectedLabContext()">
+                            <!-- Dynamic options populated via JavaScript -->
+                        </select>
+                    </div>
+
+                    <!-- Selected Lab Info Banner -->
+                    <div id="lab-context-banner" style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 14px; padding: 1.25rem; margin-bottom: 1.5rem; max-width: 100%; box-sizing: border-box; overflow: hidden;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <h3 id="lab-banner-title" style="font-size: 1.2rem; font-weight: 700; color: var(--text-main);">Loading Lab...</h3>
+                            <span id="lab-banner-badge" class="badge badge-info">Experiment Lab</span>
+                        </div>
+                        <p id="lab-banner-desc" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.75rem; overflow-wrap: anywhere; word-break: break-word;"></p>
+                        <details style="background: rgba(15, 23, 42, 0.4); padding: 0.75rem 1rem; border-radius: 10px; border: 1px solid var(--border-color); max-width: 100%; box-sizing: border-box; overflow: hidden;">
+                            <summary style="cursor: pointer; font-size: 0.85rem; font-weight: 600; color: var(--primary);">📋 View TA Uploaded Lab Steps & Theoretical Questions</summary>
+                            <div id="lab-banner-steps" style="margin-top: 0.75rem; background: rgba(15, 23, 42, 0.7); padding: 1rem; border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; overflow-x: auto; max-width: 100%; box-sizing: border-box; color: var(--text-main);"></div>
+                        </details>
+                    </div>
+
+                    <!-- Scoped AI Lab Assistant Chat -->
+                    <div class="card-header">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 class="card-title">🤖 Live AI Lab Assistant</h3>
+                            <button class="btn btn-secondary" onclick="resetLabChat()" style="font-size: 0.85rem; padding: 0.4rem 0.85rem;">
+                                🔄 Reset Session
+                            </button>
+                        </div>
+                        <p class="card-subtitle" id="lab-chat-subtitle">Ask questions about procedure steps, physical equipment, or code logic. Direct model answers remain shielded!</p>
+                    </div>
+
+                    <!-- Quick Action Chips -->
+                    <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Quick Lab Queries:</label>
+                    <div class="quick-chips" id="lab-chips-container" style="margin-bottom: 1rem;">
+                        <!-- Dynamic Quick Chips -->
+                    </div>
+
+                    <!-- Chat Box -->
+                    <div class="chat-container">
+                        <div class="chat-messages" id="lab-chat-messages">
+                            <div class="chat-bubble assistant">
+                                👋 <strong>Welcome to live Lab Assistance!</strong> Select your lab above and ask me any question about the steps or concepts. For coding labs, I will provide hints without giving away the direct code!
+                            </div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" id="lab-user-input" placeholder="Type your lab question here..." style="flex: 1;" onkeypress="if(event.key === 'Enter') handleSendLabMessage()">
+                            <button type="button" id="lab-send-btn" class="btn" onclick="handleSendLabMessage()">
+                                <div class="spinner" id="lab-chat-spinner"></div>
+                                <span>Send ➔</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Lab Work Card -->
+                <div class="card" style="margin-top: 2rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">📤 Submit Completed Lab</h2>
+                        <p class="card-subtitle">Finished your lab work or experiment report? Submit your work here so your TA can evaluate and grade it.</p>
+                    </div>
+                    <form id="submit-lab-form" onsubmit="handleStudentLabSubmit(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Student Name</label>
+                                <input type="text" id="sub-student-name" placeholder="e.g. Alex Johnson" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Student ID / Registration No.</label>
+                                <input type="text" id="sub-student-id" placeholder="e.g. 2026-CS-104" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label>Lab Findings / Measurements / Code Implementation</label>
+                            <textarea id="sub-text-content" rows="4" placeholder="Paste your lab report text, recorded oscilloscope values, or source code solutions here..."></textarea>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label>Upload Lab File (PDF, DOCX, PY, CPP, ZIP)</label>
+                            <div class="drop-zone" onclick="document.getElementById('sub-file-input').click()">
+                                <div class="drop-zone-icon">📎</div>
+                                <div class="drop-zone-text">Click or drag & drop your lab submission file</div>
+                                <input type="file" id="sub-file-input" accept=".pdf,.docx,.txt,.py,.cpp,.hpp,.zip" onchange="updateFilePreview('sub-file-input', 'sub-file-preview')">
+                                <div id="sub-file-preview" class="file-preview" style="display:none;"></div>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="sub-btn" class="btn" style="background: var(--accent-emerald);">
+                            <div class="spinner" id="sub-spinner"></div>
+                            <span>Submit Lab to TA ➔</span>
+                        </button>
+                    </form>
+
+                    <div id="sub-success-banner" class="score-banner" style="display:none; margin-top: 1.5rem; background: rgba(16, 185, 129, 0.15);">
+                        <div>
+                            <div style="font-size: 1.1rem; font-weight: 700; color: var(--accent-emerald);">✅ Lab Submitted Successfully!</div>
+                            <div style="font-size: 0.9rem; color: var(--text-main);" id="sub-success-details">Your work has been submitted to the TA for grading.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TA LAB MANAGEMENT & GRADING PORTAL -->
+            <div id="ta-lab-view" style="display: none;">
+                <!-- Create/Upload Lab Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🧑‍🏫 Upload & Configure New Lab</h2>
+                        <p class="card-subtitle">Upload lab steps, theoretical questions, and model answers so the AI Assistant knows the exact lab context.</p>
+                    </div>
+
+                    <form id="create-lab-form" onsubmit="handleCreateLab(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Lab Title</label>
+                                <input type="text" id="ta-lab-title" placeholder="e.g. Lab 3: Operational Amplifier Circuits" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Lab Type</label>
+                                <select id="ta-lab-type">
+                                    <option value="experiment">🧪 Hardware / Science Experiment Lab</option>
+                                    <option value="coding">💻 Software / Coding Lab</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label>Lab High-Level Description</label>
+                            <textarea id="ta-lab-desc" rows="2" placeholder="Brief summary of lab objectives, required equipment, or algorithm goals..."></textarea>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>1. Lab Steps & Theoretical Questions (Text or Upload File)</label>
+                                <textarea id="ta-steps-text" rows="4" placeholder="Paste step-by-step procedures and theoretical questions here..."></textarea>
+                                <div style="margin-top: 0.5rem;">
+                                    <input type="file" id="ta-steps-file" accept=".pdf,.docx,.txt">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>2. Model Answers & Solution Key (Shielded context - Text or Upload File)</label>
+                                <textarea id="ta-answers-text" rows="4" placeholder="Paste model answer key, expected measurement values, or C++/Python solutions..."></textarea>
+                                <div style="margin-top: 0.5rem;">
+                                    <input type="file" id="ta-answers-file" accept=".pdf,.docx,.txt,.py,.cpp">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 1.5rem; background: rgba(15,23,42,0.4); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                            <label style="margin-bottom: 0.75rem; display: block; color: var(--primary);">Choose Rubric Creation Mode</label>
+                            
+                            <div style="display: flex; gap: 1.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; text-transform: none; font-size: 0.9rem; color: var(--text-main);">
+                                    <input type="radio" name="ta-rubric-mode" value="auto" checked onchange="toggleTARubricMode('auto')">
+                                    ✨ <strong>Auto-Generate Rubric using AI</strong> (from uploaded lab steps & model answers)
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; text-transform: none; font-size: 0.9rem; color: var(--text-main);">
+                                    <input type="radio" name="ta-rubric-mode" value="manual" onchange="toggleTARubricMode('manual')">
+                                    ✏️ <strong>Custom / Manual Rubric Criteria</strong> (JSON format)
+                                </label>
+                            </div>
+
+                            <!-- AI Auto-Generate Info & Preview -->
+                            <div id="ta-rubric-auto-info" style="display: block; background: rgba(99, 102, 241, 0.08); border: 1px dashed rgba(99, 102, 241, 0.3); border-radius: 10px; padding: 1rem;">
+                                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem;">
+                                    🤖 <strong>AI Rubric Generator Active</strong>: The AI Engine will analyze your uploaded lab steps and model answers to automatically generate criteria and point allocations when you publish.
+                                </div>
+                                <button type="button" class="btn btn-secondary" onclick="generateTARubricPreview(event)" style="font-size: 0.8rem; padding: 0.4rem 0.85rem;">
+                                    ⚡ Generate AI Rubric Preview Now
+                                </button>
+                            </div>
+
+                            <!-- Manual JSON Mode Box -->
+                            <div id="ta-rubric-manual-box" style="display: none; margin-top: 0.75rem;">
+                                <label style="margin-bottom: 0.4rem; display: block;">Grading Rubric Criteria (JSON Format)</label>
+                                <textarea id="ta-rubric-json" rows="4" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">[
+  {"name": "Execution & Steps Correctness", "description": "Accurate step completion and theoretical answers.", "max_points": 50.0, "sort_order": 1},
+  {"name": "Code / Measurement Accuracy", "description": "High accuracy in findings, code syntax, or calculations.", "max_points": 50.0, "sort_order": 2}
+]</textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="ta-create-btn" class="btn">
+                            <div class="spinner" id="ta-create-spinner"></div>
+                            <span>Publish Lab for Students 🚀</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- View Submissions & AI Grading Dashboard -->
+                <div class="card" style="margin-top: 2rem;">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h2 class="card-title">📊 Student Submissions & AI Grading</h2>
+                            <p class="card-subtitle">Review submitted student labs, run AI auto-grading against TA model answers, and confirm final marks.</p>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                            <button type="button" class="btn" id="grade-all-btn" onclick="triggerBatchAIGrading()" style="background: linear-gradient(135deg, var(--primary), #8b5cf6); font-size: 0.85rem; padding: 0.45rem 1rem;">
+                                ⚡ Grade All Submissions
+                            </button>
+                            <select id="ta-submission-lab-select" style="min-width: 250px; font-weight: 600;" onchange="loadSubmissionsForSelectedLab()">
+                                <!-- Populated dynamically -->
+                            </select>
+                            <button type="button" class="btn btn-danger" onclick="deleteSelectedLab()" style="font-size: 0.85rem; padding: 0.45rem 0.85rem;">
+                                🗑️ Delete Lab
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="submissions-list-container" style="margin-top: 1rem;">
+                        <!-- Submissions table populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let currentCriteriaList = [];
+        let currentRubricRationale = "";
+        let tutorChatHistory = [];
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(tabId).style.display = 'block';
+            event.currentTarget.classList.add('active');
+        }
+
+        function sendQuickChip(text) {
+            document.getElementById('chat-user-input').value = text;
+            handleSendTutorMessage();
+        }
+
+        function resetTutorChat() {
+            tutorChatHistory = [];
+            const list = document.getElementById('chat-messages-list');
+            list.innerHTML = `
+                <div class="chat-bubble assistant">
+                    👋 <strong>Conversation reset!</strong> Ask me any question about your assignment. I'm ready to help guide you!
+                </div>
+            `;
+        }
+
+        async function handleSendTutorMessage() {
+            const input = document.getElementById('chat-user-input');
+            const messageText = input.value.trim();
+            if (!messageText) return;
+
+            const sendBtn = document.getElementById('chat-send-btn');
+            const spinner = document.getElementById('chat-spinner');
+            const chatList = document.getElementById('chat-messages-list');
+
+            // 1. Append User Message
+            chatList.innerHTML += `
+                <div class="chat-bubble user">${escapeHtml(messageText)}</div>
+            `;
+            input.value = '';
+            chatList.scrollTop = chatList.scrollHeight;
+
+            sendBtn.disabled = true;
+            spinner.style.display = 'inline-block';
+
+            const payload = {
+                task_title: document.getElementById('t-title').value || "Assignment Guidance",
+                reference_text: document.getElementById('t-spec').value || "",
+                chat_history: tutorChatHistory,
+                student_message: messageText
+            };
+
+            try {
+                const response = await fetch('/api/student-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert(`Error: ${err.detail}`);
+                    return;
+                }
+
+                const data = await response.json();
+                
+                // Update in-memory history
+                tutorChatHistory.push({ role: 'user', content: messageText });
+                tutorChatHistory.push({ role: 'assistant', content: data.reply });
+
+                // 2. Append Assistant Reply
+                chatList.innerHTML += `
+                    <div class="chat-bubble assistant">🎓 ${formatMarkdownText(data.reply)}</div>
+                `;
+                chatList.scrollTop = chatList.scrollHeight;
+            } catch (err) {
+                alert(`Error communicating with tutor: ${err.message}`);
+            } finally {
+                sendBtn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return "";
+            return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function formatMarkdownText(text) {
+            if (!text) return "";
+            
+            const mathBlocks = [];
+
+            function renderTex(tex, isBlock) {
+                const cleanTex = tex.trim();
+                if (window.katex) {
+                    try {
+                        return katex.renderToString(cleanTex, {
+                            displayMode: isBlock,
+                            throwOnError: false
+                        });
+                    } catch (e) {
+                        console.error("KaTeX render error:", e);
+                    }
+                }
+                if (isBlock) {
+                    return `<div class="katex-fallback-block" style="text-align:center; margin:0.5rem 0; font-family: monospace; font-weight: 600;">\\[ ${escapeHtml(cleanTex)} \\]</div>`;
+                } else {
+                    return `<span class="katex-fallback-inline" style="font-family: monospace; font-weight: 600;">\\(${escapeHtml(cleanTex)}\\)</span>`;
+                }
+            }
+
+            // 0. Pre-clean: remove redundant parens around LaTeX inline math delimiters & convert line dividers
+            let processed = String(text).replace(/\(\\\(([\s\S]*?)\\\)\)/g, '\\($1\\)');
+            processed = processed.replace(/^[=\-]{3,}\s*$/gm, '---');
+
+            // 1. Extract Display/Block Math: \[...\] or $$...$$
+            processed = processed.replace(/\\\[([\s\S]*?)\\\]/g, (match, tex) => {
+                const token = `MATHBLOCKTOKEN${mathBlocks.length}X`;
+                mathBlocks.push(renderTex(tex, true));
+                return token;
+            });
+            processed = processed.replace(/\$\$([\s\S]*?)\$\$/g, (match, tex) => {
+                const token = `MATHBLOCKTOKEN${mathBlocks.length}X`;
+                mathBlocks.push(renderTex(tex, true));
+                return token;
+            });
+
+            // 2. Extract Inline Math: \(...\) or $...$
+            processed = processed.replace(/\\\(([\s\S]*?)\\\)/g, (match, tex) => {
+                const token = `MATHBLOCKTOKEN${mathBlocks.length}X`;
+                mathBlocks.push(renderTex(tex, false));
+                return token;
+            });
+            processed = processed.replace(/\$([^\$\n]+?)\$/g, (match, tex) => {
+                const token = `MATHBLOCKTOKEN${mathBlocks.length}X`;
+                mathBlocks.push(renderTex(tex, false));
+                return token;
+            });
+
+            // 3. Parse Markdown using marked if loaded, or fallback
+            let formatted = "";
+            if (window.marked && typeof window.marked.parse === 'function') {
+                try {
+                    marked.setOptions({ breaks: true, gfm: true });
+                    formatted = marked.parse(processed);
+                } catch (e) {
+                    console.error("Marked parsing error:", e);
+                    formatted = fallbackMarkdownParse(processed);
+                }
+            } else {
+                formatted = fallbackMarkdownParse(processed);
+            }
+
+            // 4. Restore math tokens with rendered HTML
+            mathBlocks.forEach((rendered, idx) => {
+                const token = `MATHBLOCKTOKEN${idx}X`;
+                formatted = formatted.split(token).join(rendered);
+            });
+
+            return formatted;
+        }
+
+        function fallbackMarkdownParse(text) {
+            let formatted = escapeHtml(text);
+            formatted = formatted.replace(/\n/g, '<br>');
+            formatted = formatted.replace(/### (.*?)(<br>|$)/g, '<h4 style="margin: 0.5rem 0; font-size: 1rem; color: var(--primary);">$1</h4>');
+            formatted = formatted.replace(/## (.*?)(<br>|$)/g, '<h3 style="margin: 0.5rem 0; font-size: 1.1rem; color: var(--primary);">$1</h3>');
+            formatted = formatted.replace(/# (.*?)(<br>|$)/g, '<h2 style="margin: 0.5rem 0; font-size: 1.25rem; color: var(--primary);">$1</h2>');
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            formatted = formatted.replace(/`([^`]+)`/g, '<code style="background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; font-family: monospace;">$1</code>');
+            return formatted;
+        }
+
+
+
+        function updateFilePreview(inputId, previewId) {
+            const input = document.getElementById(inputId);
+            const preview = document.getElementById(previewId);
+            if (input.files && input.files[0]) {
+                preview.innerText = `Selected File: ${input.files[0].name} (${(input.files[0].size / 1024).toFixed(1)} KB)`;
+                preview.style.display = 'inline-block';
+            }
+        }
+
+        // Handle Generate Rubric
+        async function handleGenerateRubric(event) {
+            event.preventDefault();
+            const btn = document.getElementById('r-submit-btn');
+            const spinner = document.getElementById('r-spinner');
+            const output = document.getElementById('rubric-output');
+
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+            output.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('task_title', document.getElementById('r-title').value);
+            formData.append('task_type', document.getElementById('r-type').value);
+            formData.append('task_description', document.getElementById('r-desc').value);
+
+            const fileInput = document.getElementById('r-file');
+            if (fileInput.files[0]) {
+                formData.append('spec_file', fileInput.files[0]);
+            }
+            const overrideText = document.getElementById('r-text-override').value;
+            if (overrideText) {
+                formData.append('spec_text_override', overrideText);
+            }
+
+            try {
+                const response = await fetch('/api/suggest-rubric', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert(`Error: ${err.detail}`);
+                    return;
+                }
+
+                const data = await response.json();
+                currentCriteriaList = data.criteria;
+                currentRubricRationale = data.rationale;
+                renderEditableRubric(data.task_title, currentRubricRationale, currentCriteriaList);
+            } catch (err) {
+                alert(`Network or Server error: ${err.message}`);
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        // Handle Refine Rubric with AI Feedback
+        async function handleRefineRubricWithAI() {
+            const feedbackInput = document.getElementById('r-feedback-input');
+            const feedbackText = feedbackInput.value.trim();
+
+            if (!feedbackText) {
+                alert("Please enter feedback instructions for the AI.");
+                return;
+            }
+
+            const spinner = document.getElementById('r-refine-spinner');
+            spinner.style.display = 'inline-block';
+
+            syncEditedCriteriaFromDOM();
+
+            const formData = new FormData();
+            formData.append('task_title', document.getElementById('r-title').value);
+            formData.append('task_type', document.getElementById('r-type').value);
+            formData.append('task_description', document.getElementById('r-desc').value);
+            formData.append('rubric_json', JSON.stringify(currentCriteriaList));
+            formData.append('staff_feedback', feedbackText);
+
+            const fileInput = document.getElementById('r-file');
+            if (fileInput.files[0]) {
+                formData.append('spec_file', fileInput.files[0]);
+            }
+            const overrideText = document.getElementById('r-text-override').value;
+            if (overrideText) {
+                formData.append('spec_text_override', overrideText);
+            }
+
+            try {
+                const response = await fetch('/api/refine-rubric', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert(`Error refining rubric: ${err.detail}`);
+                    return;
+                }
+
+                const data = await response.json();
+                currentCriteriaList = data.criteria;
+                currentRubricRationale = data.rationale;
+                renderEditableRubric(data.task_title, currentRubricRationale, currentCriteriaList);
+                feedbackInput.value = '';
+            } catch (err) {
+                alert(`Error refining rubric: ${err.message}`);
+            } finally {
+                spinner.style.display = 'none';
+            }
+        }
+
+        function renderEditableRubric(title, rationale, criteria) {
+            document.getElementById('out-r-title').innerText = `Rubric for: ${title}`;
+            document.getElementById('out-r-rationale').innerHTML = formatMarkdownText(rationale);
+
+            const container = document.getElementById('out-r-criteria-list');
+            container.innerHTML = '';
+
+            let totalPts = 0;
+            criteria.forEach((item, idx) => {
+                totalPts += parseFloat(item.max_points || 0);
+                container.innerHTML += `
+                    <div class="criteria-card" id="crit-card-${idx}">
+                        <div class="criteria-row-edit">
+                            <input type="text" value="${item.name}" placeholder="Criterion Name" id="crit-name-${idx}" style="flex: 2; font-weight: 600;" onchange="updateRubricTotalPoints()">
+                            <input type="number" value="${item.max_points}" placeholder="Max Pts" id="crit-pts-${idx}" style="width: 100px;" onchange="updateRubricTotalPoints()">
+                            <button type="button" class="btn btn-danger" onclick="deleteCriteriaRow(${idx})">Delete</button>
+                        </div>
+                        <textarea rows="2" placeholder="Description..." id="crit-desc-${idx}" style="width: 100%; font-size: 0.9rem;">${item.description}</textarea>
+                    </div>
+                `;
+            });
+
+            document.getElementById('out-total-pts').innerText = totalPts;
+            document.getElementById('rubric-output').style.display = 'block';
+        }
+
+        function syncEditedCriteriaFromDOM() {
+            const cards = document.querySelectorAll('.criteria-card');
+            const updated = [];
+            cards.forEach((card, idx) => {
+                const nameEl = document.getElementById(`crit-name-${idx}`);
+                const ptsEl = document.getElementById(`crit-pts-${idx}`);
+                const descEl = document.getElementById(`crit-desc-${idx}`);
+                if (nameEl && ptsEl && descEl) {
+                    updated.push({
+                        name: nameEl.value.trim(),
+                        max_points: parseFloat(ptsEl.value) || 0,
+                        description: descEl.value.trim(),
+                        sort_order: idx + 1
+                    });
+                }
+            });
+            currentCriteriaList = updated;
+        }
+
+        function updateRubricTotalPoints() {
+            syncEditedCriteriaFromDOM();
+            let sum = currentCriteriaList.reduce((acc, curr) => acc + (curr.max_points || 0), 0);
+            document.getElementById('out-total-pts').innerText = sum;
+        }
+
+        function addNewCriteriaRow() {
+            syncEditedCriteriaFromDOM();
+            currentCriteriaList.push({
+                name: "New Criterion",
+                max_points: 3.0,
+                description: "Criterion description...",
+                sort_order: currentCriteriaList.length + 1
+            });
+            renderEditableRubric(document.getElementById('r-title').value, currentRubricRationale, currentCriteriaList);
+        }
+
+        function deleteCriteriaRow(idx) {
+            syncEditedCriteriaFromDOM();
+            currentCriteriaList.splice(idx, 1);
+            renderEditableRubric(document.getElementById('r-title').value, currentRubricRationale, currentCriteriaList);
+        }
+
+        function useCurrentRubricForGrading() {
+            syncEditedCriteriaFromDOM();
+            if (currentCriteriaList.length === 0) {
+                alert("Please add at least one rubric criterion.");
+                return;
+            }
+            document.getElementById('e-title').value = document.getElementById('r-title').value;
+            document.getElementById('e-rubric-json').value = JSON.stringify(currentCriteriaList, null, 2);
+            document.getElementById('e-spec-text-override').value = document.getElementById('r-text-override').value;
+
+            const rFile = document.getElementById('r-file');
+            if (rFile.files[0]) {
+                const dt = new DataTransfer();
+                dt.items.add(rFile.files[0]);
+                document.getElementById('e-spec-file').files = dt.files;
+                updateFilePreview('e-spec-file', 'e-spec-preview');
+            }
+
+            document.querySelectorAll('.tab-btn')[1].click();
+        }
+
+        // Handle Grade Submission
+        async function handleGradeSubmission(event) {
+            event.preventDefault();
+            const btn = document.getElementById('e-submit-btn');
+            const spinner = document.getElementById('e-spinner');
+            const output = document.getElementById('eval-output');
+
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+            output.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('task_title', document.getElementById('e-title').value);
+            formData.append('task_type', document.getElementById('e-type').value);
+            formData.append('rubric_json', document.getElementById('e-rubric-json').value);
+
+            const specFileInput = document.getElementById('e-spec-file');
+            const specTextOverride = document.getElementById('e-spec-text-override').value.trim();
+            if (specFileInput.files[0]) {
+                formData.append('spec_file', specFileInput.files[0]);
+            } else if (specTextOverride) {
+                formData.append('spec_text_override', specTextOverride);
+            } else {
+                alert('Please upload a task specification file or paste specification text.');
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                return;
+            }
+
+            const subFileInput = document.getElementById('e-sub-file');
+            const subTextOverride = document.getElementById('e-sub-text-override').value.trim();
+            if (subFileInput.files[0]) {
+                formData.append('submission_file', subFileInput.files[0]);
+            } else if (subTextOverride) {
+                formData.append('submission_text_override', subTextOverride);
+            } else {
+                alert('Please upload a student submission file or paste submission code/text.');
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/grade-submission', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert(`Error: ${err.detail}`);
+                    return;
+                }
+
+                const data = await response.json();
+                renderEvaluationResult(data);
+            } catch (err) {
+                alert(`Network or Server error: ${err.message}`);
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        function renderEvaluationResult(data) {
+            document.getElementById('out-score').innerText = `${data.ai_suggested_grade} / ${data.total_possible_grade}`;
+            document.getElementById('out-pct').innerText = `${data.percentage}%`;
+            document.getElementById('out-summary').innerHTML = formatMarkdownText(data.summary_feedback);
+
+            const warningsEl = document.getElementById('out-warnings');
+            if (data.warnings && data.warnings.length > 0) {
+                warningsEl.style.display = 'block';
+                warningsEl.innerHTML = '<strong>Notices:</strong><ul style="margin: 0.5rem 0 0 1.2rem;">'
+                    + data.warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')
+                    + '</ul>';
+            } else {
+                warningsEl.style.display = 'none';
+                warningsEl.innerHTML = '';
+            }
+
+            const warningsEl = document.getElementById('out-warnings');
+            if (data.warnings && data.warnings.length > 0) {
+                warningsEl.style.display = 'block';
+                warningsEl.innerHTML = '<strong>Notices:</strong><ul style="margin: 0.5rem 0 0 1.2rem;">'
+                    + data.warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')
+                    + '</ul>';
+            } else {
+                warningsEl.style.display = 'none';
+                warningsEl.innerHTML = '';
+            }
+
+            const cContainer = document.getElementById('out-criteria-breakdown');
+            cContainer.innerHTML = '';
+            data.criterion_evaluations.forEach(item => {
+                cContainer.innerHTML += `
+                    <div class="criteria-card">
+                        <div class="criteria-header">
+                            <span>${escapeHtml(item.criterion_name)}</span>
+                            <span class="criteria-points">${item.score_given} / ${item.max_points} pts</span>
+                        </div>
+                        <div class="criteria-reasoning">${formatMarkdownText(item.reasoning)}</div>
+                    </div>
+                `;
+            });
+
+
+            const rContainer = document.getElementById('out-code-reviews');
+            rContainer.innerHTML = '';
+
+            if (data.code_reviews && data.code_reviews.length > 0) {
+                data.code_reviews.forEach(rev => {
+                    const badgeClass = `badge-${rev.severity.toLowerCase()}`;
+                    rContainer.innerHTML += `
+                        <div class="code-finding">
+                            <div class="finding-file">
+                                <span class="badge ${badgeClass}">${escapeHtml(rev.severity)}</span>
+                                ${escapeHtml(rev.file_path)} ${rev.line_number ? '(Line ' + rev.line_number + ')' : ''}
+                            </div>
+                            <div>${formatMarkdownText(rev.finding)}</div>
+                        </div>
+                    `;
+                });
+            } else {
+                rContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">No major code review issues found. Clean submission!</div>';
+            }
+
+            document.getElementById('eval-output').style.display = 'block';
+        }
+
+
+        // --- LABS ASSISTANCE FEATURE JAVASCRIPT ---
+        let currentLabsList = [];
+        let selectedLab = null;
+        let labChatHistory = [];
+
+        async function loadLabsList() {
+            try {
+                const response = await fetch('/api/labs');
+                if (response.ok) {
+                    currentLabsList = await response.json();
+                    populateLabDropdowns();
+                    if (currentLabsList.length > 0) {
+                        loadSelectedLabContext(currentLabsList[0].id);
+                    } else {
+                        selectedLab = null;
+                        document.getElementById('lab-banner-title').innerText = "No Active Labs";
+                        document.getElementById('lab-banner-desc').innerText = "There are no published labs currently available.";
+                        document.getElementById('lab-banner-steps').innerText = "TA can create a new lab using the TA portal.";
+                        const subContainer = document.getElementById('submissions-list-container');
+                        if (subContainer) subContainer.innerHTML = '<div style="color: var(--text-muted); padding: 1rem;">No active labs available.</div>';
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load labs list:", err);
+            }
+        }
+
+        function populateLabDropdowns() {
+            const studentSelect = document.getElementById('student-lab-select');
+            const taSelect = document.getElementById('ta-submission-lab-select');
+            
+            if (!studentSelect || !taSelect) return;
+
+            studentSelect.options.length = 0;
+            taSelect.options.length = 0;
+
+            const seenTitles = new Set();
+            currentLabsList.forEach(lab => {
+                const normTitle = lab.title.trim().toLowerCase();
+                if (seenTitles.has(normTitle)) return;
+                seenTitles.add(normTitle);
+
+                const typeIcon = lab.lab_type === 'experiment' ? '🧪' : '💻';
+                const label = `${typeIcon} ${lab.title}`;
+                studentSelect.options.add(new Option(label, lab.id));
+                taSelect.options.add(new Option(label, lab.id));
+            });
+        }
+
+        function loadSelectedLabContext(labIdOverride) {
+            const select = document.getElementById('student-lab-select');
+            const labId = labIdOverride || select.value;
+            
+            selectedLab = currentLabsList.find(l => l.id === labId);
+            if (!selectedLab) return;
+
+            document.getElementById('lab-banner-title').innerText = selectedLab.title;
+            document.getElementById('lab-banner-desc').innerHTML = formatMarkdownText(selectedLab.description || "No description provided.");
+            document.getElementById('lab-banner-steps').innerHTML = formatMarkdownText(selectedLab.steps_and_theory || "No detailed steps uploaded.");
+
+            const badge = document.getElementById('lab-banner-badge');
+            if (selectedLab.lab_type === 'experiment') {
+                badge.innerText = "🧪 Hardware Experiment Lab";
+                badge.className = "badge badge-info";
+                document.getElementById('lab-chat-subtitle').innerText = "Ask questions about procedural steps, apparatus setup, or theoretical questions!";
+            } else {
+                badge.innerText = "💻 Coding Lab";
+                badge.className = "badge badge-warning";
+                document.getElementById('lab-chat-subtitle').innerText = "Ask for conceptual hints or debugging guidance! Direct model answers/solutions are shielded.";
+            }
+
+            renderLabQuickChips(selectedLab.lab_type);
+            resetLabChat();
+        }
+
+        function renderLabQuickChips(labType) {
+            const container = document.getElementById('lab-chips-container');
+            if (!container) return;
+
+            if (labType === 'experiment') {
+                container.innerHTML = `
+                    <div class="chip" onclick="sendLabQuickChip('What is Step 1 in the lab procedure?')">📌 "Explain Step 1"</div>
+                    <div class="chip" onclick="sendLabQuickChip('How do I calibrate the oscilloscope for V_cap measurement?')">🔬 "Oscilloscope setup"</div>
+                    <div class="chip" onclick="sendLabQuickChip('Can you explain Theoretical Question 1?')">💡 "Explain Theoretical Q1"</div>
+                    <div class="chip" onclick="sendLabQuickChip('What formula should I use for cutoff frequency?')">📐 "Cutoff frequency formula"</div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="chip" onclick="sendLabQuickChip('Can you give me direct solution code for BST insertion?')">⚠️ "Give me direct code solution"</div>
+                    <div class="chip" onclick="sendLabQuickChip('How do I handle NULL root pointers in insertion?')">🔍 "Hint for NULL pointers"</div>
+                    <div class="chip" onclick="sendLabQuickChip('What is the time complexity of insertion?')">⏱️ "Explain time complexity"</div>
+                    <div class="chip" onclick="sendLabQuickChip('How to test in-order traversal logic?')">🧪 "Testing traversal"</div>
+                `;
+            }
+        }
+
+        function sendLabQuickChip(text) {
+            document.getElementById('lab-user-input').value = text;
+            handleSendLabMessage();
+        }
+
+        function resetLabChat() {
+            labChatHistory = [];
+            const list = document.getElementById('lab-chat-messages');
+            if (!list) return;
+
+            const labName = selectedLab ? selectedLab.title : 'the active lab';
+            list.innerHTML = `
+                <div class="chat-bubble assistant">
+                    👋 <strong>Session active for ${escapeHtml(labName)}!</strong> Ask me any question about the steps or concepts. I will guide you!
+                </div>
+            `;
+        }
+
+        async function handleSendLabMessage() {
+            const input = document.getElementById('lab-user-input');
+            const messageText = input.value.trim();
+            if (!messageText || !selectedLab) return;
+
+            const sendBtn = document.getElementById('lab-send-btn');
+            const spinner = document.getElementById('lab-chat-spinner');
+            const chatList = document.getElementById('lab-chat-messages');
+
+            chatList.innerHTML += `<div class="chat-bubble user">${escapeHtml(messageText)}</div>`;
+            input.value = '';
+            chatList.scrollTop = chatList.scrollHeight;
+
+            sendBtn.disabled = true;
+            spinner.style.display = 'inline-block';
+
+            const payload = {
+                lab_id: selectedLab.id,
+                student_message: messageText,
+                chat_history: labChatHistory
+            };
+
+            try {
+                const response = await fetch('/api/lab-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert(`Error: ${err.detail}`);
+                    return;
+                }
+
+                const data = await response.json();
+                
+                labChatHistory.push({ role: 'user', content: messageText });
+                labChatHistory.push({ role: 'assistant', content: data.reply });
+
+                const modeBadge = data.detected_mode === 'experiment_guide' ? '🔬 Step Router' : '💡 Hint Guide';
+
+                chatList.innerHTML += `
+                    <div class="chat-bubble assistant">
+                        <span class="badge badge-info" style="font-size:0.7rem; margin-bottom:4px; display:inline-block;">${modeBadge}</span><br>
+                        ${formatMarkdownText(data.reply)}
+                    </div>
+                `;
+                chatList.scrollTop = chatList.scrollHeight;
+            } catch (err) {
+                alert(`Error communicating with AI Lab Assistant: ${err.message}`);
+            } finally {
+                sendBtn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        function switchLabRole(role) {
+            const studentBtn = document.getElementById('role-student-btn');
+            const taBtn = document.getElementById('role-ta-btn');
+            const studentView = document.getElementById('student-lab-view');
+            const taView = document.getElementById('ta-lab-view');
+
+            if (role === 'student') {
+                studentBtn.className = 'btn';
+                studentBtn.style.background = 'var(--primary)';
+                taBtn.className = 'btn btn-secondary';
+                studentView.style.display = 'block';
+                taView.style.display = 'none';
+            } else {
+                taBtn.className = 'btn';
+                taBtn.style.background = 'var(--primary)';
+                studentBtn.className = 'btn btn-secondary';
+                taView.style.display = 'block';
+                studentView.style.display = 'none';
+                loadSubmissionsForSelectedLab();
+            }
+        }
+
+        async function handleStudentLabSubmit(event) {
+            event.preventDefault();
+            if (!selectedLab) {
+                alert("Please select a lab first.");
+                return;
+            }
+
+            const btn = document.getElementById('sub-btn');
+            const spinner = document.getElementById('sub-spinner');
+            const successBanner = document.getElementById('sub-success-banner');
+
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+
+            const formData = new FormData();
+            formData.append('lab_id', selectedLab.id);
+            formData.append('student_name', document.getElementById('sub-student-name').value);
+            formData.append('student_id', document.getElementById('sub-student-id').value);
+            
+            const textOverride = document.getElementById('sub-text-content').value;
+            if (textOverride) {
+                formData.append('submission_text_override', textOverride);
+            }
+            
+            const fileInput = document.getElementById('sub-file-input');
+            if (fileInput.files[0]) {
+                formData.append('submission_file', fileInput.files[0]);
+            }
+
+            try {
+                const response = await fetch('/api/submit-lab', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert(`Submission Error: ${err.detail}`);
+                    return;
+                }
+
+                const data = await response.json();
+                document.getElementById('sub-success-details').innerText = `Submission ID #${data.id} submitted for lab '${selectedLab.title}' on ${data.submitted_at}.`;
+                successBanner.style.display = 'flex';
+            } catch (err) {
+                alert(`Error submitting lab: ${err.message}`);
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        function toggleTARubricMode(mode) {
+            const autoInfo = document.getElementById('ta-rubric-auto-info');
+            const manualBox = document.getElementById('ta-rubric-manual-box');
+            if (mode === 'auto') {
+                autoInfo.style.display = 'block';
+                manualBox.style.display = 'none';
+            } else {
+                autoInfo.style.display = 'none';
+                manualBox.style.display = 'block';
+            }
+        }
+
+        async function generateTARubricPreview(event) {
+            if (event) event.preventDefault();
+            const title = document.getElementById('ta-lab-title').value.trim() || "Lab Assignment";
+            const type = document.getElementById('ta-lab-type').value;
+            const desc = document.getElementById('ta-lab-desc').value;
+            const stepsText = document.getElementById('ta-steps-text').value;
+            const answersText = document.getElementById('ta-answers-text').value;
+            const stepsFile = document.getElementById('ta-steps-file').files[0];
+            const answersFile = document.getElementById('ta-answers-file').files[0];
+
+            const combinedText = [desc, stepsText, answersText].filter(Boolean).join('\n\n');
+
+            const formData = new FormData();
+            formData.append('task_title', title);
+            formData.append('task_type', type);
+            formData.append('task_description', desc);
+
+            if (stepsFile) {
+                formData.append('spec_file', stepsFile);
+            } else if (answersFile) {
+                formData.append('spec_file', answersFile);
+            } else if (combinedText) {
+                formData.append('spec_text_override', combinedText);
+            } else {
+                alert("Please enter lab steps, description, or upload a spec file first so the AI can generate a rubric.");
+                return false;
+            }
+
+            const btn = document.querySelector('#ta-rubric-auto-info button');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = '⏳ AI generating rubric...';
+            }
+
+            try {
+                const response = await fetch('/api/suggest-rubric', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert(`Error generating rubric: ${err.detail}`);
+                    return false;
+                }
+
+                const data = await response.json();
+                document.getElementById('ta-rubric-json').value = JSON.stringify(data.criteria, null, 2);
+                alert(`✅ AI generated ${data.criteria.length} rubric criteria for '${title}'!`);
+                toggleTARubricMode('manual');
+                const manualRadio = document.querySelector('input[name="ta-rubric-mode"][value="manual"]');
+                if (manualRadio) manualRadio.checked = true;
+                return true;
+            } catch (err) {
+                alert(`Error generating AI rubric: ${err.message}`);
+                return false;
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = '⚡ Generate AI Rubric Preview Now';
+                }
+            }
+        }
+
+        async function handleCreateLab(event) {
+            event.preventDefault();
+            const btn = document.getElementById('ta-create-btn');
+            const spinner = document.getElementById('ta-create-spinner');
+
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+
+            const rubricMode = document.querySelector('input[name="ta-rubric-mode"]:checked')?.value || 'auto';
+            if (rubricMode === 'auto') {
+                const generated = await generateTARubricPreview(null);
+                if (!generated) {
+                    btn.disabled = false;
+                    spinner.style.display = 'none';
+                    return;
+                }
+            }
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('ta-lab-title').value);
+            formData.append('lab_type', document.getElementById('ta-lab-type').value);
+            formData.append('description', document.getElementById('ta-lab-desc').value);
+            formData.append('steps_and_theory_text', document.getElementById('ta-steps-text').value);
+            formData.append('model_answers_text', document.getElementById('ta-answers-text').value);
+            formData.append('rubric_json', document.getElementById('ta-rubric-json').value);
+
+            const stepsFile = document.getElementById('ta-steps-file');
+            if (stepsFile.files[0]) formData.append('steps_and_theory_file', stepsFile.files[0]);
+
+            const answersFile = document.getElementById('ta-answers-file');
+            if (answersFile.files[0]) formData.append('model_answers_file', answersFile.files[0]);
+
+            try {
+                const response = await fetch('/api/create-lab', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert(`Error creating lab: ${err.detail}`);
+                    return;
+                }
+
+                const newLab = await response.json();
+                alert(`✅ Lab '${newLab.title}' published successfully!`);
+                await loadLabsList();
+                switchLabRole('student');
+            } catch (err) {
+                alert(`Network error creating lab: ${err.message}`);
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        async function loadSubmissionsForSelectedLab() {
+            const select = document.getElementById('ta-submission-lab-select');
+            if (!select || !select.value) return;
+
+            const labId = select.value;
+            const container = document.getElementById('submissions-list-container');
+            container.innerHTML = '<div style="color: var(--text-muted);">Loading submissions...</div>';
+
+            try {
+                const response = await fetch(`/api/submissions/${labId}`);
+                if (!response.ok) return;
+
+                const submissions = await response.json();
+
+                if (submissions.length === 0) {
+                    container.innerHTML = '<div style="color: var(--text-muted); padding: 1rem;">No student submissions recorded for this lab yet.</div>';
+                    return;
+                }
+
+                let html = `
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; color: var(--text-main);">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border-color); text-align: left; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;">
+                                <th style="padding: 0.75rem;">Student</th>
+                                <th style="padding: 0.75rem;">ID</th>
+                                <th style="padding: 0.75rem;">Submitted At</th>
+                                <th style="padding: 0.75rem;">Status</th>
+                                <th style="padding: 0.75rem;">AI Score</th>
+                                <th style="padding: 0.75rem; text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                submissions.forEach(sub => {
+                    const statusBadge = sub.status === 'graded' ? 
+                        `<span class="badge badge-info">Graded</span>` : 
+                        `<span class="badge badge-warning">Submitted</span>`;
+                    
+                    const scoreText = sub.grade_result ? `${sub.grade_result.ai_suggested_grade} / ${sub.grade_result.total_possible_grade} (${sub.grade_result.percentage}%)` : 'Pending';
+
+                    html += `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 0.75rem; font-weight: 600;">${escapeHtml(sub.student_name)}</td>
+                            <td style="padding: 0.75rem; font-family: monospace;">${escapeHtml(sub.student_id)}</td>
+                            <td style="padding: 0.75rem; font-size: 0.85rem; color: var(--text-muted);">${sub.submitted_at}</td>
+                            <td style="padding: 0.75rem;">${statusBadge}</td>
+                            <td style="padding: 0.75rem; font-weight: 700; color: var(--accent-emerald);">${scoreText}</td>
+                            <td style="padding: 0.75rem; text-align: right;">
+                                <button class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;" onclick="triggerAIGradingForSubmission('${sub.id}')">
+                                    🤖 Run AI Grade
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div style="color: var(--accent-rose);">Failed to load submissions: ${err.message}</div>`;
+            }
+        }
+
+        async function triggerAIGradingForSubmission(subId) {
+            try {
+                const response = await fetch(`/api/grade-lab-submission/${subId}`, { method: 'POST' });
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert(`Grading Error: ${err.detail}`);
+                    return;
+                }
+
+                const updatedSub = await response.json();
+                alert(`✅ AI Grading Complete for ${updatedSub.student_name}! Score: ${updatedSub.grade_result.percentage}%`);
+                loadSubmissionsForSelectedLab();
+            } catch (err) {
+                alert(`Error triggering AI grading: ${err.message}`);
+            }
+        }
+
+        async function triggerBatchAIGrading() {
+            const select = document.getElementById('ta-submission-lab-select');
+            if (!select || !select.value) {
+                alert("Please select a lab first.");
+                return;
+            }
+
+            const labId = select.value;
+            const btn = document.getElementById('grade-all-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = '⏳ Batch Grading All...';
+            }
+
+            try {
+                const response = await fetch(`/api/grade-all-submissions/${labId}`, { method: 'POST' });
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert(`Batch Grading Error: ${err.detail}`);
+                    return;
+                }
+
+                const data = await response.json();
+                alert(`✅ Batch AI Grading Complete! Successfully graded ${data.graded_count} of ${data.total_submissions} submission(s).`);
+                loadSubmissionsForSelectedLab();
+            } catch (err) {
+                alert(`Error triggering batch AI grading: ${err.message}`);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = '⚡ Grade All Submissions';
+                }
+            }
+        }
+
+        async function deleteSelectedLab() {
+            const taSelect = document.getElementById('ta-submission-lab-select');
+            const studentSelect = document.getElementById('student-lab-select');
+            
+            let labId = (taSelect && taSelect.value) ? taSelect.value : ((studentSelect && studentSelect.value) ? studentSelect.value : (selectedLab ? selectedLab.id : null));
+            if (!labId && Array.isArray(currentLabsList) && currentLabsList.length > 0) {
+                labId = currentLabsList[0].id;
+            }
+
+            if (!labId) {
+                alert("No lab selected for deletion.");
+                return;
+            }
+
+            const labObj = Array.isArray(currentLabsList) ? currentLabsList.find(l => l.id === labId || l.title === labId) : null;
+            const labTitle = labObj ? labObj.title : labId;
+
+            const confirmed = confirm(`⚠️ Are you sure you want to delete '${labTitle}'?\n\nThis will permanently delete the lab and all student submissions for this lab!`);
+            if (!confirmed) return;
+
+            try {
+                const response = await fetch(`/api/delete-lab/${encodeURIComponent(labId)}`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({ detail: response.statusText }));
+                    alert(`Error deleting lab: ${errData.detail || 'Server error'}`);
+                    return;
+                }
+
+                const data = await response.json();
+                alert(`✅ ${data.message || 'Lab deleted successfully!'}`);
+                await loadLabsList();
+                if (typeof loadSubmissionsForSelectedLab === 'function') {
+                    loadSubmissionsForSelectedLab();
+                }
+            } catch (err) {
+                alert(`Error deleting lab: ${err.message}`);
+            }
+        }
+
+        // Automatically load labs on startup
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLabsList();
+        });
+    </script>
+</body>
+</html>
+

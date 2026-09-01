@@ -1,0 +1,42 @@
+# Environment variables & secrets
+.env
+.env.local
+*.env
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Temp & Upload files
+student_proposal.py
+AI_CONTENT_ACCESS*
+*.docx
+*.pdf
+temp/
+tmp/
+
+# IDE & Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+.cursor/
+sample_test_files/
