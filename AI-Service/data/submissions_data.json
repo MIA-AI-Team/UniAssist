@@ -43,8 +43,11 @@
         "warnings_count": 0,
         "completed_at": "2026-09-04T20:17:27.777712+00:00",
         "extra": null
-      }
-    }
+      },
+      "professor_notes": null
+    },
+    "professor_notes": null,
+    "task_title": null
   },
   {
     "id": "sub-2",
@@ -94,8 +97,11 @@
       ],
       "code_reviews": [],
       "warnings": [],
-      "ai_metadata": null
-    }
+      "ai_metadata": null,
+      "professor_notes": null
+    },
+    "professor_notes": null,
+    "task_title": null
   },
   {
     "id": "sub-3",
@@ -141,8 +147,11 @@
         "warnings_count": 0,
         "completed_at": "2026-09-04T20:17:27.777712+00:00",
         "extra": null
-      }
-    }
+      },
+      "professor_notes": null
+    },
+    "professor_notes": null,
+    "task_title": null
   },
   {
     "id": "sub-4",
@@ -188,8 +197,11 @@
         "warnings_count": 0,
         "completed_at": "2026-09-04T20:17:27.777712+00:00",
         "extra": null
-      }
-    }
+      },
+      "professor_notes": null
+    },
+    "professor_notes": null,
+    "task_title": null
   },
   {
     "id": "sub-5",
@@ -235,8 +247,11 @@
         "warnings_count": 0,
         "completed_at": "2026-09-04T20:17:27.778718+00:00",
         "extra": null
-      }
-    }
+      },
+      "professor_notes": null
+    },
+    "professor_notes": null,
+    "task_title": null
   },
   {
     "id": "sub-6",
@@ -282,8 +297,11 @@
         "warnings_count": 0,
         "completed_at": "2026-09-04T20:17:27.778718+00:00",
         "extra": null
-      }
-    }
+      },
+      "professor_notes": null
+    },
+    "professor_notes": null,
+    "task_title": null
   },
   {
     "id": "sub-7",
@@ -329,8 +347,11 @@
         "warnings_count": 0,
         "completed_at": "2026-09-04T20:17:27.778718+00:00",
         "extra": null
-      }
-    }
+      },
+      "professor_notes": null
+    },
+    "professor_notes": null,
+    "task_title": null
   },
   {
     "id": "sub-8",
@@ -376,8 +397,11 @@
         "warnings_count": 0,
         "completed_at": "2026-09-04T20:17:27.778718+00:00",
         "extra": null
-      }
-    }
+      },
+      "professor_notes": null
+    },
+    "professor_notes": null,
+    "task_title": null
   },
   {
     "id": "sub-9",
@@ -423,7 +447,40 @@
         "warnings_count": 0,
         "completed_at": "2026-09-04T20:17:27.778718+00:00",
         "extra": null
-      }
-    }
+      },
+      "professor_notes": null
+    },
+    "professor_notes": null,
+    "task_title": null
+  },
+  {
+    "id": "sub-test-123",
+    "lab_id": "lab-1",
+    "student_name": "Test Student",
+    "student_id": "STU-999",
+    "submission_text": "Test",
+    "code_files": {},
+    "submitted_at": "2026-09-04",
+    "status": "graded",
+    "grade_result": {
+      "ai_suggested_grade": 80.0,
+      "total_possible_grade": 100.0,
+      "percentage": 95.0,
+      "summary_feedback": "Excellent job!",
+      "criterion_evaluations": [
+        {
+          "criterion_name": "Test",
+          "score_given": 80.0,
+          "max_points": 100.0,
+          "reasoning": "Ok"
+        }
+      ],
+      "code_reviews": [],
+      "warnings": [],
+      "ai_metadata": null,
+      "professor_notes": "Well done, keep it up."
+    },
+    "professor_notes": null,
+    "task_title": null
   }
 ]

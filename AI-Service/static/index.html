@@ -10,9 +10,203 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <!-- KaTeX CSS & JS for rendering LaTeX math formulas -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js">
+        function toggleProfessorEditMode(subId) {
+            const container = document.getElementById('prof-edit-container');
+            const isVisible = container.style.display === 'block';
+            container.style.display = isVisible ? 'none' : 'block';
+            if(!isVisible) {
+                document.getElementById('edit-score').value = parseFloat(document.getElementById('out-pct').innerText) || 0;
+                document.getElementById('edit-summary').value = document.getElementById('out-summary').innerText;
+                document.getElementById('edit-sub-id').value = subId || currentSubmissionId;
+            }
+        }
+        
+        async function saveProfessorFeedback() {
+            const subId = document.getElementById('edit-sub-id').value;
+            const score = parseFloat(document.getElementById('edit-score').value);
+            const summary = document.getElementById('edit-summary').value;
+            const notes = document.getElementById('edit-prof-notes').value;
+            
+            if(!subId) { alert("Submission ID not found."); return; }
+            
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Saving...';
+            
+            try {
+                const res = await fetch(`/api/submission/${subId}/update-feedback`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ score, summary_feedback: summary, professor_notes: notes })
+                });
+                if(res.ok) {
+                    alert('Feedback saved successfully!');
+                    toggleProfessorEditMode();
+                    document.getElementById('out-pct').innerText = score + '%';
+                    document.getElementById('out-summary').innerText = summary;
+                } else {
+                    alert('Failed to save feedback.');
+                }
+            } catch(e) {
+                alert('Error: ' + e);
+            }
+            btn.innerHTML = originalText;
+        }
+
+        async function lookupStudentFeedback() {
+            const studentId = document.getElementById('student-lookup-id').value.trim();
+            if(!studentId) { alert("Please enter a Student ID"); return; }
+            
+            const container = document.getElementById('student-feedback-results');
+            container.innerHTML = '<div>Loading...</div>';
+            
+            try {
+                const res = await fetch(`/api/student-feedback/${studentId}`);
+                if(!res.ok) throw new Error('Failed to fetch');
+                const subs = await res.json();
+                
+                if(subs.length === 0) {
+                    container.innerHTML = '<div style="color:var(--text-muted);">No submissions found for this ID.</div>';
+                    return;
+                }
+                
+                let html = '';
+                subs.forEach(sub => {
+                    const grade = sub.grade_result;
+                    if(!grade) return;
+                    html += `
+                        <div class="card" style="margin-bottom:1.5rem; background:rgba(15,23,42,0.3); border:1px solid var(--border-color);">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <div>
+                                    <h3 style="margin:0;">${escapeHtml(sub.task_title || sub.lab_id)}</h3>
+                                    <div style="font-size:0.85rem; color:var(--text-muted);">${sub.submitted_at}</div>
+                                </div>
+                                <div style="font-size:1.5rem; font-weight:bold; color:var(--accent-emerald);">${grade.percentage}%</div>
+                            </div>
+                            <div style="background:rgba(99,102,241,0.1); padding:1rem; border-radius:8px; margin-bottom:1rem;">
+                                <strong>Summary Feedback:</strong><br>
+                                ${formatMarkdownText(grade.summary_feedback)}
+                            </div>
+                    `;
+                    if(grade.professor_notes) {
+                        html += `
+                            <div style="background:rgba(245,158,11,0.1); padding:1rem; border-radius:8px; border: 1px dashed rgba(245,158,11,0.3); color: var(--accent-amber);">
+                                <strong>👨‍🏫 Professor's Personal Note:</strong><br>
+                                ${escapeHtml(grade.professor_notes)}
+                            </div>
+                        `;
+                    }
+                    html += `</div>`;
+                });
+                container.innerHTML = html;
+            } catch(e) {
+                container.innerHTML = '<div style="color:var(--accent-rose);">Error fetching feedback: ' + e + '</div>';
+            }
+        }
+        
+        let currentSubmissionId = null;
+
+</script>
     <!-- Marked.js for parsing Markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
+        function toggleProfessorEditMode(subId) {
+            const container = document.getElementById('prof-edit-container');
+            const isVisible = container.style.display === 'block';
+            container.style.display = isVisible ? 'none' : 'block';
+            if(!isVisible) {
+                document.getElementById('edit-score').value = parseFloat(document.getElementById('out-pct').innerText) || 0;
+                document.getElementById('edit-summary').value = document.getElementById('out-summary').innerText;
+                document.getElementById('edit-sub-id').value = subId || currentSubmissionId;
+            }
+        }
+        
+        async function saveProfessorFeedback() {
+            const subId = document.getElementById('edit-sub-id').value;
+            const score = parseFloat(document.getElementById('edit-score').value);
+            const summary = document.getElementById('edit-summary').value;
+            const notes = document.getElementById('edit-prof-notes').value;
+            
+            if(!subId) { alert("Submission ID not found."); return; }
+            
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Saving...';
+            
+            try {
+                const res = await fetch(`/api/submission/${subId}/update-feedback`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ score, summary_feedback: summary, professor_notes: notes })
+                });
+                if(res.ok) {
+                    alert('Feedback saved successfully!');
+                    toggleProfessorEditMode();
+                    document.getElementById('out-pct').innerText = score + '%';
+                    document.getElementById('out-summary').innerText = summary;
+                } else {
+                    alert('Failed to save feedback.');
+                }
+            } catch(e) {
+                alert('Error: ' + e);
+            }
+            btn.innerHTML = originalText;
+        }
+
+        async function lookupStudentFeedback() {
+            const studentId = document.getElementById('student-lookup-id').value.trim();
+            if(!studentId) { alert("Please enter a Student ID"); return; }
+            
+            const container = document.getElementById('student-feedback-results');
+            container.innerHTML = '<div>Loading...</div>';
+            
+            try {
+                const res = await fetch(`/api/student-feedback/${studentId}`);
+                if(!res.ok) throw new Error('Failed to fetch');
+                const subs = await res.json();
+                
+                if(subs.length === 0) {
+                    container.innerHTML = '<div style="color:var(--text-muted);">No submissions found for this ID.</div>';
+                    return;
+                }
+                
+                let html = '';
+                subs.forEach(sub => {
+                    const grade = sub.grade_result;
+                    if(!grade) return;
+                    html += `
+                        <div class="card" style="margin-bottom:1.5rem; background:rgba(15,23,42,0.3); border:1px solid var(--border-color);">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <div>
+                                    <h3 style="margin:0;">${escapeHtml(sub.task_title || sub.lab_id)}</h3>
+                                    <div style="font-size:0.85rem; color:var(--text-muted);">${sub.submitted_at}</div>
+                                </div>
+                                <div style="font-size:1.5rem; font-weight:bold; color:var(--accent-emerald);">${grade.percentage}%</div>
+                            </div>
+                            <div style="background:rgba(99,102,241,0.1); padding:1rem; border-radius:8px; margin-bottom:1rem;">
+                                <strong>Summary Feedback:</strong><br>
+                                ${formatMarkdownText(grade.summary_feedback)}
+                            </div>
+                    `;
+                    if(grade.professor_notes) {
+                        html += `
+                            <div style="background:rgba(245,158,11,0.1); padding:1rem; border-radius:8px; border: 1px dashed rgba(245,158,11,0.3); color: var(--accent-amber);">
+                                <strong>👨‍🏫 Professor's Personal Note:</strong><br>
+                                ${escapeHtml(grade.professor_notes)}
+                            </div>
+                        `;
+                    }
+                    html += `</div>`;
+                });
+                container.innerHTML = html;
+            } catch(e) {
+                container.innerHTML = '<div style="color:var(--accent-rose);">Error fetching feedback: ' + e + '</div>';
+            }
+        }
+        
+        let currentSubmissionId = null;
+
+</script>
 
 
     
@@ -539,8 +733,10 @@
             <button class="tab-btn" onclick="switchTab('labs-tab')">
                 <span>🧪</span> 3. Labs Assistance & Submissions
             </button>
+            <button class="tab-btn" onclick="switchTab('student-feedback-tab')">
+                <span>🎓</span> 4. Student Feedback Portal
+            </button>
         </div>
-
 
         <!-- TAB 1: RUBRIC GENERATOR & REFINEMENT -->
         <div id="rubric-tab" class="tab-content">
@@ -652,6 +848,17 @@
                         </div>
                     </div>
 
+                                        <div class="form-grid">
+                        <div class="form-group">
+                            <label>Student Name (Optional)</label>
+                            <input type="text" id="e-student-name" placeholder="e.g. Jane Doe">
+                        </div>
+                        <div class="form-group">
+                            <label>Student ID (Optional)</label>
+                            <input type="text" id="e-student-id" placeholder="e.g. STU-001">
+                        </div>
+                    </div>
+
                     <div class="form-grid">
                         <div class="form-group">
                             <label>1. Upload Task Specification File (PDF / DOCX)</label>
@@ -736,6 +943,27 @@
 
                 <div id="out-warnings" style="display:none; margin-bottom: 1.5rem; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.25); color: var(--accent-amber); font-size: 0.9rem;"></div>
 
+                <div style="margin-top: 1rem; margin-bottom: 1.5rem; text-align: right;">
+                    <button class="btn btn-secondary" onclick="toggleProfessorEditMode()" id="prof-edit-btn">✏️ Edit Feedback (Professor Mode)</button>
+                </div>
+                
+                <div id="prof-edit-container" style="display: none; background: rgba(15,23,42,0.6); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border: 1px dashed var(--accent-indigo);">
+                    <h3 style="margin-top:0; color: var(--accent-indigo);">Professor Edit Mode</h3>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Final Score (%)</label>
+                        <input type="number" id="edit-score" step="0.1">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Summary Feedback</label>
+                        <textarea id="edit-summary" rows="4"></textarea>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Professor's Note to Student</label>
+                        <textarea id="edit-prof-notes" rows="3" placeholder="Add personal note..."></textarea>
+                    </div>
+                    <button class="btn" style="background: var(--accent-emerald);" onclick="saveProfessorFeedback()">💾 Save & Confirm Final Feedback</button>
+                    <input type="hidden" id="edit-sub-id">
+                </div>
                 <h3 class="card-title" style="margin-bottom: 1rem;">Criterion Breakdown</h3>
 
                 <div id="out-criteria-breakdown"></div>
@@ -979,6 +1207,22 @@
                 </div>
             </div>
         </div>
+
+        <!-- TAB 4: STUDENT FEEDBACK PORTAL -->
+        <div id="student-feedback-tab" class="tab-content" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">🎓 Student Feedback Portal</h2>
+                    <p class="card-subtitle">Enter your Student ID to retrieve your grades and feedback.</p>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                    <input type="text" id="student-lookup-id" placeholder="e.g. STU-100" style="flex:1;">
+                    <button class="btn" onclick="lookupStudentFeedback()">Fetch Feedback</button>
+                </div>
+                <div id="student-feedback-results"></div>
+            </div>
+        </div>
+
     </main>
 
     <script>
@@ -1398,6 +1642,8 @@
                 formData.append('submission_file', subFileInput.files[0]);
             } else if (subTextOverride) {
                 formData.append('submission_text_override', subTextOverride);
+            formData.append('student_name', document.getElementById('e-student-name').value);
+            formData.append('student_id', document.getElementById('e-student-id').value);
             } else {
                 alert('Please upload a student submission file or paste submission code/text.');
                 btn.disabled = false;
@@ -2021,7 +2267,104 @@
         window.addEventListener('DOMContentLoaded', () => {
             loadLabsList();
         });
-    </script>
+    
+        function toggleProfessorEditMode(subId) {
+            const container = document.getElementById('prof-edit-container');
+            const isVisible = container.style.display === 'block';
+            container.style.display = isVisible ? 'none' : 'block';
+            if(!isVisible) {
+                document.getElementById('edit-score').value = parseFloat(document.getElementById('out-pct').innerText) || 0;
+                document.getElementById('edit-summary').value = document.getElementById('out-summary').innerText;
+                document.getElementById('edit-sub-id').value = subId || currentSubmissionId;
+            }
+        }
+        
+        async function saveProfessorFeedback() {
+            const subId = document.getElementById('edit-sub-id').value;
+            const score = parseFloat(document.getElementById('edit-score').value);
+            const summary = document.getElementById('edit-summary').value;
+            const notes = document.getElementById('edit-prof-notes').value;
+            
+            if(!subId) { alert("Submission ID not found."); return; }
+            
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Saving...';
+            
+            try {
+                const res = await fetch(`/api/submission/${subId}/update-feedback`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ score, summary_feedback: summary, professor_notes: notes })
+                });
+                if(res.ok) {
+                    alert('Feedback saved successfully!');
+                    toggleProfessorEditMode();
+                    document.getElementById('out-pct').innerText = score + '%';
+                    document.getElementById('out-summary').innerText = summary;
+                } else {
+                    alert('Failed to save feedback.');
+                }
+            } catch(e) {
+                alert('Error: ' + e);
+            }
+            btn.innerHTML = originalText;
+        }
+
+        async function lookupStudentFeedback() {
+            const studentId = document.getElementById('student-lookup-id').value.trim();
+            if(!studentId) { alert("Please enter a Student ID"); return; }
+            
+            const container = document.getElementById('student-feedback-results');
+            container.innerHTML = '<div>Loading...</div>';
+            
+            try {
+                const res = await fetch(`/api/student-feedback/${studentId}`);
+                if(!res.ok) throw new Error('Failed to fetch');
+                const subs = await res.json();
+                
+                if(subs.length === 0) {
+                    container.innerHTML = '<div style="color:var(--text-muted);">No submissions found for this ID.</div>';
+                    return;
+                }
+                
+                let html = '';
+                subs.forEach(sub => {
+                    const grade = sub.grade_result;
+                    if(!grade) return;
+                    html += `
+                        <div class="card" style="margin-bottom:1.5rem; background:rgba(15,23,42,0.3); border:1px solid var(--border-color);">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <div>
+                                    <h3 style="margin:0;">${escapeHtml(sub.task_title || sub.lab_id)}</h3>
+                                    <div style="font-size:0.85rem; color:var(--text-muted);">${sub.submitted_at}</div>
+                                </div>
+                                <div style="font-size:1.5rem; font-weight:bold; color:var(--accent-emerald);">${grade.percentage}%</div>
+                            </div>
+                            <div style="background:rgba(99,102,241,0.1); padding:1rem; border-radius:8px; margin-bottom:1rem;">
+                                <strong>Summary Feedback:</strong><br>
+                                ${formatMarkdownText(grade.summary_feedback)}
+                            </div>
+                    `;
+                    if(grade.professor_notes) {
+                        html += `
+                            <div style="background:rgba(245,158,11,0.1); padding:1rem; border-radius:8px; border: 1px dashed rgba(245,158,11,0.3); color: var(--accent-amber);">
+                                <strong>👨‍🏫 Professor's Personal Note:</strong><br>
+                                ${escapeHtml(grade.professor_notes)}
+                            </div>
+                        `;
+                    }
+                    html += `</div>`;
+                });
+                container.innerHTML = html;
+            } catch(e) {
+                container.innerHTML = '<div style="color:var(--accent-rose);">Error fetching feedback: ' + e + '</div>';
+            }
+        }
+        
+        let currentSubmissionId = null;
+
+</script>
 </body>
 </html>
 

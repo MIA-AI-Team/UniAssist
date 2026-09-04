@@ -582,6 +582,8 @@ async def api_grade_submission(
     spec_text_override: Optional[str] = Form(None),
     submission_file: Optional[UploadFile] = File(None),
     submission_text_override: Optional[str] = Form(None),
+    student_name: Optional[str] = Form(None),
+    student_id: Optional[str] = Form(None),
 ):
     """
     Grade a student submission against task spec and rubric criteria.
@@ -640,6 +642,26 @@ async def api_grade_submission(
                 code_files=code_files_dict,
             )
         )
+        
+        if student_id:
+            import uuid
+            from datetime import datetime
+            sub_id = f"sub-{uuid.uuid4().hex[:8]}"
+            new_sub = LabSubmission(
+                id=sub_id,
+                lab_id="direct-eval",
+                student_name=student_name or "Unknown Student",
+                student_id=student_id,
+                submission_text=sub_text,
+                code_files=code_files_dict,
+                submitted_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+                status="graded",
+                grade_result=grading_response,
+                task_title=task_title
+            )
+            SUBMISSIONS_DB.append(new_sub)
+            save_submissions_to_disk()
+            
         return grading_response.model_dump()
     except GradingResponseError as e:
         raise HTTPException(status_code=502, detail=str(e))
@@ -648,6 +670,36 @@ async def api_grade_submission(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI Engine grading error: {e}")
 
+from pydantic import BaseModel
+class UpdateFeedbackRequest(BaseModel):
+    score: float
+    summary_feedback: str
+    professor_notes: Optional[str] = None
+
+@app.post("/api/submission/{submission_id}/update-feedback")
+def update_feedback(submission_id: str, req: UpdateFeedbackRequest):
+    for sub in SUBMISSIONS_DB:
+        if sub.id == submission_id:
+            if sub.grade_result:
+                sub.grade_result.percentage = req.score
+                sub.grade_result.summary_feedback = req.summary_feedback
+                sub.grade_result.professor_notes = req.professor_notes
+            save_submissions_to_disk()
+            return {"status": "success"}
+    raise HTTPException(status_code=404, detail="Submission not found")
+
+@app.get("/api/student-feedback/{student_id}")
+def get_student_feedback(student_id: str):
+    results = []
+    for sub in SUBMISSIONS_DB:
+        if sub.student_id == student_id:
+            sub_dict = sub.model_dump()
+            if sub_dict.get("grade_result"):
+                # Shield internal rubric criteria from the student
+                sub_dict["grade_result"]["criterion_evaluations"] = []
+                sub_dict["grade_result"]["code_reviews"] = []
+            results.append(sub_dict)
+    return results
 
 
 @app.post("/api/student-chat")

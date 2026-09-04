@@ -25,3 +25,5 @@ class LabSubmission(BaseModel):
     submitted_at: str
     status: str = "submitted"
     grade_result: Optional[SubmissionGradingResponse] = None
+    professor_notes: Optional[str] = None
+    task_title: Optional[str] = None

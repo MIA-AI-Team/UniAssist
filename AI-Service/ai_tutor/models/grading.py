@@ -28,3 +28,4 @@ class SubmissionGradingResponse(BaseModel):
     code_reviews: List[CodeReviewFinding] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
     ai_metadata: Optional[AIMetadata] = None
+    professor_notes: Optional[str] = None
