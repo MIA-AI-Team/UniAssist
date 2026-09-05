@@ -7,12 +7,15 @@ from typing import Optional
 from ai_tutor.metrics import metrics_collector
 from ai_tutor.engine import (
     AIEvaluationEngine,
+    AnalyticsResponseError,
     ChatResponseError,
     GradingResponseError,
     RubricResponseError,
 )
 from ai_tutor.parsers import prepare_submission_for_grading
 from ai_tutor.models import (
+    CohortAnalyticsRequest,
+    CohortAnalyticsResponse,
     GradeSubmissionRequest,
     LabAssistantChatRequest,
     LabChatResponse,
@@ -96,10 +99,23 @@ class AIService:
             student_message=request.student_message,
         )
 
+    def analyze_cohort_patterns(self, request: CohortAnalyticsRequest) -> CohortAnalyticsResponse:
+        """Staff-facing cohort insights. Backend aggregates DB rows and anonymizes before calling."""
+        return self._engine.analyze_cohort_patterns(
+            task_title=request.task_title,
+            task_type=request.task_type,
+            task_description=request.task_description,
+            rubric_criteria_names=request.rubric_criteria_names,
+            grades=request.grades,
+            code_reviews=request.code_reviews,
+            criterion_stats=request.criterion_stats,
+        )
+
 
 __all__ = [
     "AIService",
     "GradingResponseError",
     "RubricResponseError",
     "ChatResponseError",
+    "AnalyticsResponseError",
 ]

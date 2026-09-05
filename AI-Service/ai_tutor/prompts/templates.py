@@ -60,6 +60,66 @@ Respond strictly with a valid JSON object adhering to this structure:
 }}
 """
 
+COHORT_ANALYTICS_SYSTEM_PROMPT = """You are an expert University Teaching Analytics Assistant.
+You analyze ANONYMIZED cohort-level grading data for a single task to help professors and TAs.
+
+RULES:
+1. Never invent student names or identities. Inputs are anonymized aggregates only.
+2. Focus on shared errors, repeated code-review findings, and likely misconceptions across the class.
+3. Prefer patterns supported by the provided counts/grades/findings; mark uncertain claims cautiously.
+4. Give actionable teaching focus items (what to re-teach or clarify next).
+5. Output STRICTLY valid JSON matching the required schema.
+"""
+
+COHORT_ANALYTICS_USER_PROMPT = """Analyze cohort performance for this university task and identify shared problems.
+
+--- TASK ---
+Title: {task_title}
+Type: {task_type}
+Description: {task_description}
+Rubric criteria: {rubric_criteria_names}
+
+--- COHORT STATS ---
+Student count (latest attempts): {student_count}
+Average grade %: {average_percentage}
+Fail count (below 50%): {fail_count}
+
+--- GRADE / FEEDBACK SAMPLES (anonymized) ---
+{grades_section}
+
+--- CODE REVIEW PATTERNS (anonymized) ---
+{code_reviews_section}
+
+--- CRITERION STATS (optional) ---
+{criterion_stats_section}
+
+Respond strictly with a valid JSON object:
+{{
+  "task_title": "{task_title}",
+  "student_count": {student_count},
+  "summary": "Short overview of class performance patterns",
+  "common_issues": [
+    {{
+      "title": "Short issue title",
+      "description": "What students are doing wrong",
+      "severity": "info|warning|critical",
+      "affected_estimate": "e.g. many students or ~40%",
+      "evidence": "Which grades/reviews support this"
+    }}
+  ],
+  "misconceptions": [
+    {{
+      "concept": "Concept name",
+      "description": "How students seem to misunderstand it",
+      "suggested_remediation": "What staff should re-teach or clarify"
+    }}
+  ],
+  "teaching_focus": [
+    "Actionable teaching focus item"
+  ]
+}}
+"""
+
 RUBRIC_REFINEMENT_SYSTEM_PROMPT = """You are an expert University AI Evaluation Assistant.
 Your job is to refine an existing evaluation rubric according to staff feedback instructions.
 

@@ -36,3 +36,7 @@ class Config:
 
     MIN_RUBRIC_CRITERIA: int = int(os.getenv("MIN_RUBRIC_CRITERIA", "1"))
     MAX_RUBRIC_CRITERIA: int = int(os.getenv("MAX_RUBRIC_CRITERIA", "20"))
+
+    MIN_COHORT_SIZE_FOR_PATTERNS: int = int(os.getenv("MIN_COHORT_SIZE_FOR_PATTERNS", "3"))
+    MAX_COHORT_FEEDBACK_SNIPPETS: int = int(os.getenv("MAX_COHORT_FEEDBACK_SNIPPETS", "40"))
+    MAX_COHORT_CODE_REVIEW_ROWS: int = int(os.getenv("MAX_COHORT_CODE_REVIEW_ROWS", "60"))

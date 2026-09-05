@@ -2,6 +2,7 @@
 
 from ai_tutor.engine import (
     AIEvaluationEngine,
+    AnalyticsResponseError,
     ChatResponseError,
     GradingResponseError,
     RubricResponseError,
@@ -12,4 +13,5 @@ __all__ = [
     "GradingResponseError",
     "RubricResponseError",
     "ChatResponseError",
+    "AnalyticsResponseError",
 ]

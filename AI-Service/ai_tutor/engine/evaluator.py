@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from ai_tutor.metrics import metrics_collector
 from ai_tutor.config import Config
 from ai_tutor.engine.exceptions import (
+    AnalyticsResponseError,
     ChatResponseError,
     GradingResponseError,
     RubricResponseError,
@@ -14,7 +15,13 @@ from ai_tutor.models import (
     AIMetadata,
     ChatMessage,
     CodeReviewFinding,
+    CohortAnalyticsResponse,
+    CohortCodeReviewSnapshot,
+    CohortCriterionSnapshot,
+    CohortGradeSnapshot,
+    CommonIssue,
     CriterionEvaluation,
+    Misconception,
     RubricCriteriaItem,
     RubricSuggestionResponse,
     SubmissionGradingResponse,
@@ -32,6 +39,8 @@ from ai_tutor.prompts import (
     STUDENT_SOCRATIC_TUTOR_USER_PROMPT,
     LAB_ASSISTANT_SYSTEM_PROMPT,
     LAB_ASSISTANT_USER_PROMPT,
+    COHORT_ANALYTICS_SYSTEM_PROMPT,
+    COHORT_ANALYTICS_USER_PROMPT,
     get_task_type_guidance,
 )
 
@@ -265,6 +274,114 @@ class AIEvaluationEngine:
                 record.parse_success = False
                 logger.error(f"Grading failed: {e}")
                 raise GradingResponseError(f"AI grading response was invalid: {e}") from e
+
+    def analyze_cohort_patterns(
+        self,
+        task_title: str,
+        task_type: str = "lab",
+        task_description: str = "",
+        rubric_criteria_names: Optional[List[str]] = None,
+        grades: Optional[List[CohortGradeSnapshot]] = None,
+        code_reviews: Optional[List[CohortCodeReviewSnapshot]] = None,
+        criterion_stats: Optional[List[CohortCriterionSnapshot]] = None,
+    ) -> CohortAnalyticsResponse:
+        """
+        Analyze anonymized cohort aggregates for shared errors/misconceptions.
+        Backend owns auth and DB aggregation; this method only interprets prepared data.
+        """
+        grades = list(grades or [])
+        code_reviews = list(code_reviews or [])
+        criterion_stats = list(criterion_stats or [])
+        rubric_criteria_names = list(rubric_criteria_names or [])
+
+        if not grades and not code_reviews and not criterion_stats:
+            raise ValueError(
+                "Cohort analytics requires at least one of: grades, code_reviews, or criterion_stats."
+            )
+
+        student_count = len(grades)
+        percentages = [
+            (g.grade / g.max_grade) * 100.0 for g in grades if g.max_grade > 0
+        ]
+        average_percentage = round(sum(percentages) / len(percentages), 2) if percentages else 0.0
+        fail_count = sum(1 for p in percentages if p < 50.0)
+
+        warnings: List[str] = []
+        if student_count < Config.MIN_COHORT_SIZE_FOR_PATTERNS:
+            warnings.append(
+                f"Cohort size ({student_count}) is below "
+                f"{Config.MIN_COHORT_SIZE_FOR_PATTERNS}; patterns may be unreliable."
+            )
+
+        grades_for_prompt = grades[: Config.MAX_COHORT_FEEDBACK_SNIPPETS]
+        reviews_for_prompt = code_reviews[: Config.MAX_COHORT_CODE_REVIEW_ROWS]
+        if len(grades) > len(grades_for_prompt):
+            warnings.append(
+                f"Only the first {len(grades_for_prompt)} grade/feedback rows were sent to the model."
+            )
+        if len(code_reviews) > len(reviews_for_prompt):
+            warnings.append(
+                f"Only the first {len(reviews_for_prompt)} code-review rows were sent to the model."
+            )
+
+        grades_section = self._format_cohort_grades(grades_for_prompt) or "No grade rows provided."
+        code_reviews_section = (
+            self._format_cohort_code_reviews(reviews_for_prompt) or "No code-review rows provided."
+        )
+        criterion_stats_section = (
+            self._format_cohort_criterion_stats(criterion_stats) or "No criterion stats provided."
+        )
+        criteria_label = ", ".join(rubric_criteria_names) if rubric_criteria_names else "Not provided"
+
+        user_prompt = COHORT_ANALYTICS_USER_PROMPT.format(
+            task_title=task_title,
+            task_type=task_type,
+            task_description=task_description or "No description provided.",
+            rubric_criteria_names=criteria_label,
+            student_count=student_count,
+            average_percentage=average_percentage,
+            fail_count=fail_count,
+            grades_section=grades_section,
+            code_reviews_section=code_reviews_section,
+            criterion_stats_section=criterion_stats_section,
+        )
+
+        with metrics_collector.track("analyze_cohort_patterns") as record:
+            if self.mock_mode:
+                response = self._mock_cohort_analytics(
+                    task_title=task_title,
+                    student_count=student_count,
+                    average_percentage=average_percentage,
+                    fail_count=fail_count,
+                    code_reviews=code_reviews,
+                    criterion_stats=criterion_stats,
+                    warnings=warnings,
+                )
+                response.ai_metadata = self._build_metadata(record, warnings=response.warnings)
+                return response
+
+            try:
+                json_str = self._call_llm(
+                    system_prompt=COHORT_ANALYTICS_SYSTEM_PROMPT,
+                    user_prompt=user_prompt,
+                )
+                record.provider = self._last_llm_info.get("provider")
+                record.model_used = self._last_llm_info.get("model")
+                data = self._clean_and_parse_json(json_str)
+                response = CohortAnalyticsResponse(**data)
+                response.student_count = student_count
+                response.task_title = task_title
+                response.warnings = list(dict.fromkeys([*(response.warnings or []), *warnings]))
+                response = self._normalize_cohort_analytics(response)
+                response.ai_metadata = self._build_metadata(record, warnings=response.warnings)
+                return response
+            except AnalyticsResponseError:
+                record.parse_success = False
+                raise
+            except Exception as e:
+                record.parse_success = False
+                logger.error(f"Cohort analytics failed: {e}")
+                raise AnalyticsResponseError(f"AI cohort analytics response was invalid: {e}") from e
 
     def socratic_tutor_chat(
         self,
@@ -606,6 +723,134 @@ class AIEvaluationEngine:
             cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
             cleaned = re.sub(r"\s*```$", "", cleaned)
         return json.loads(cleaned)
+
+    def _format_cohort_grades(self, grades: List[CohortGradeSnapshot]) -> str:
+        lines = []
+        for i, g in enumerate(grades, start=1):
+            pct = round((g.grade / g.max_grade) * 100.0, 1) if g.max_grade else 0.0
+            feedback = (g.feedback or "").strip() or "(no feedback)"
+            if len(feedback) > 280:
+                feedback = feedback[:277] + "..."
+            lines.append(f"{i}. grade={g.grade}/{g.max_grade} ({pct}%) | feedback: {feedback}")
+        return "\n".join(lines)
+
+    def _format_cohort_code_reviews(self, reviews: List[CohortCodeReviewSnapshot]) -> str:
+        lines = []
+        for i, r in enumerate(reviews, start=1):
+            path = r.file_path or "(unspecified file)"
+            lines.append(
+                f"{i}. [{r.severity}] count={r.count} file={path} | {r.finding.strip()}"
+            )
+        return "\n".join(lines)
+
+    def _format_cohort_criterion_stats(self, stats: List[CohortCriterionSnapshot]) -> str:
+        lines = []
+        for s in stats:
+            ratio = round((s.average_score / s.max_points) * 100.0, 1) if s.max_points else 0.0
+            lines.append(
+                f"- {s.criterion_name}: avg {s.average_score}/{s.max_points} ({ratio}%), "
+                f"low_score_count={s.low_score_count}"
+            )
+        return "\n".join(lines)
+
+    def _normalize_cohort_analytics(self, response: CohortAnalyticsResponse) -> CohortAnalyticsResponse:
+        warnings = list(response.warnings or [])
+        if not response.summary or not response.summary.strip():
+            raise AnalyticsResponseError("Cohort analytics summary is empty.")
+
+        allowed = {"info", "warning", "critical"}
+        for issue in response.common_issues:
+            sev = (issue.severity or "warning").strip().lower()
+            if sev not in allowed:
+                warnings.append(f"Normalized unknown severity '{issue.severity}' to 'warning'.")
+                issue.severity = "warning"
+            else:
+                issue.severity = sev
+
+        if not response.common_issues and not response.misconceptions and not response.teaching_focus:
+            warnings.append("Model returned no common issues, misconceptions, or teaching focus items.")
+
+        response.warnings = warnings
+        return response
+
+    def _mock_cohort_analytics(
+        self,
+        task_title: str,
+        student_count: int,
+        average_percentage: float,
+        fail_count: int,
+        code_reviews: List[CohortCodeReviewSnapshot],
+        criterion_stats: List[CohortCriterionSnapshot],
+        warnings: List[str],
+    ) -> CohortAnalyticsResponse:
+        common_issues: List[CommonIssue] = []
+        misconceptions: List[Misconception] = []
+        teaching_focus: List[str] = []
+
+        if code_reviews:
+            top = sorted(code_reviews, key=lambda r: r.count, reverse=True)[0]
+            common_issues.append(
+                CommonIssue(
+                    title="Repeated code-review finding",
+                    description=top.finding,
+                    severity=top.severity if top.severity in {"info", "warning", "critical"} else "warning",
+                    affected_estimate=f"seen {top.count} time(s) across the cohort",
+                    evidence=f"Top aggregated finding on {top.file_path or 'unspecified file'}",
+                )
+            )
+            teaching_focus.append(f"Revisit the issue: {top.finding[:120]}")
+
+        weak_criteria = [
+            s for s in criterion_stats
+            if s.max_points > 0 and (s.average_score / s.max_points) < 0.6
+        ]
+        for s in weak_criteria[:3]:
+            misconceptions.append(
+                Misconception(
+                    concept=s.criterion_name,
+                    description=f"Class average is low on '{s.criterion_name}'.",
+                    suggested_remediation=f"Re-teach or give a short example focused on '{s.criterion_name}'.",
+                )
+            )
+            teaching_focus.append(f"Strengthen understanding of '{s.criterion_name}'")
+
+        if fail_count > 0:
+            common_issues.append(
+                CommonIssue(
+                    title="Students below passing threshold",
+                    description=f"{fail_count} of {student_count} latest attempts scored below 50%.",
+                    severity="critical" if fail_count >= max(1, student_count // 3) else "warning",
+                    affected_estimate=f"{fail_count}/{student_count}",
+                    evidence="Derived from anonymized grade percentages.",
+                )
+            )
+
+        if not common_issues:
+            common_issues.append(
+                CommonIssue(
+                    title="No dominant shared error detected",
+                    description="Mock analysis did not find a strong repeated code-review pattern.",
+                    severity="info",
+                    affected_estimate="n/a",
+                    evidence="Limited or empty code-review aggregates.",
+                )
+            )
+
+        if not teaching_focus:
+            teaching_focus.append(f"Review class average ({average_percentage}%) and sample feedback themes.")
+
+        return CohortAnalyticsResponse(
+            task_title=task_title,
+            student_count=student_count,
+            summary=(
+                f"Mock cohort summary for '{task_title}': "
+                f"{student_count} students, average {average_percentage}%, {fail_count} below 50%."
+            ),
+            common_issues=common_issues,
+            misconceptions=misconceptions,
+            teaching_focus=teaching_focus,
+            warnings=list(warnings),
+        )
 
     def _mock_suggest_rubric(self, task_title: str, task_type: str) -> RubricSuggestionResponse:
         criteria = [

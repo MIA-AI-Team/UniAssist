@@ -9,6 +9,7 @@ from ai_tutor.config import Config
 from ai_tutor.service import AIService
 from ai_tutor.engine import (
     AIEvaluationEngine,
+    AnalyticsResponseError,
     ChatResponseError,
     GradingResponseError,
     RubricResponseError,
@@ -23,5 +24,6 @@ __all__ = [
     "GradingResponseError",
     "RubricResponseError",
     "ChatResponseError",
+    "AnalyticsResponseError",
     "__version__",
 ]

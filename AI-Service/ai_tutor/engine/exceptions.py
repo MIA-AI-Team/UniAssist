@@ -8,3 +8,7 @@ class RubricResponseError(Exception):
 
 class ChatResponseError(Exception):
     """Raised when the LLM chat response fails."""
+
+
+class AnalyticsResponseError(Exception):
+    """Raised when the LLM cohort analytics response cannot be parsed or validated."""

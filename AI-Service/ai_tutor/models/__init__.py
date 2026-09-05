@@ -9,12 +9,21 @@ from ai_tutor.models.chat import (
     LabChatResponse,
 )
 from ai_tutor.models.lab import LabItem, LabSubmission
+from ai_tutor.models.analytics import (
+    CohortGradeSnapshot,
+    CohortCodeReviewSnapshot,
+    CohortCriterionSnapshot,
+    CommonIssue,
+    Misconception,
+    CohortAnalyticsResponse,
+)
 from ai_tutor.models.requests import (
     RubricSuggestRequest,
     RubricRefineRequest,
     GradeSubmissionRequest,
     SocraticChatRequest,
     LabAssistantChatRequest,
+    CohortAnalyticsRequest,
 )
 
 __all__ = [
@@ -31,9 +40,16 @@ __all__ = [
     "LabChatResponse",
     "LabItem",
     "LabSubmission",
+    "CohortGradeSnapshot",
+    "CohortCodeReviewSnapshot",
+    "CohortCriterionSnapshot",
+    "CommonIssue",
+    "Misconception",
+    "CohortAnalyticsResponse",
     "RubricSuggestRequest",
     "RubricRefineRequest",
     "GradeSubmissionRequest",
     "SocraticChatRequest",
     "LabAssistantChatRequest",
+    "CohortAnalyticsRequest",
 ]
