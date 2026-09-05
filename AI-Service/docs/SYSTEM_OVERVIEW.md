@@ -118,13 +118,17 @@ Groq (primary) / Gemini (fallback) / mock mode
 
 - Helps students with task context without dumping full solutions.
 - Takes reference text, chat history, and the new student message.
+- **Continue later:** backend loads `CHAT_MESSAGES` for a session and passes them as `persisted_messages` or `chat_history`.
+- **Scoped context:** pass `session` (`session_id`, `task_id`, `submission_id`) so the turn stays tied to the right task/submission; ids are echoed on the response and in `ai_metadata.extra`.
 
-**API:** `AIService.socratic_chat(SocraticChatRequest)` → `reply`
+**API:** `AIService.socratic_chat(SocraticChatRequest)` → `reply`, optional `session_id`  
+**Helper:** `AIService.build_chat_history(persisted_messages)` maps DB `sender_type` → AI roles.
 
 ### 3.6 Lab assistant chat
 
 - Modes: experiment guide vs coding hints (`detected_mode`).
 - Uses lab steps/theory + optional model answers (anti-leak sanitization blocks obvious solution dumps).
+- Same **CHAT_SESSIONS / CHAT_MESSAGES** continue-later + task scoping as Socratic chat.
 
 **API:** `AIService.lab_assistant_chat(LabAssistantChatRequest)`
 
@@ -193,8 +197,10 @@ Root shims (`ai_service.py`, `evaluator.py`, …) re-export the package for olde
 |---------|--------|
 | Login, roles (professor / TA / student), authorize staff APIs | **Backend** |
 | Tasks, submissions, rubrics, files, final grade confirmation | **Backend** |
+| `CHAT_SESSIONS` / `CHAT_MESSAGES` create, load, append | **Backend** |
 | Extract/prepare text, call `AIService`, save AI outputs | **Backend** |
 | Rubric/grade/chat/cohort generation + validation | **AI Service** |
+| Convert stored chat rows → `chat_history` helpers | **AI Service** (optional helper) |
 | Cohort anonymization before analytics | **Backend** |
 
 ---
@@ -221,6 +227,7 @@ Copy `.env.example` → `.env`:
 - `MOCK_MODE` = `true` for offline
 - `AI_ENGINE_VERSION` / `PROMPT_VERSION` (copied into `ai_metadata`)
 - Context budget variables for long documents
+- `MAX_CHAT_HISTORY_MESSAGES` (default 40) — how many prior messages are sent to the model
 
 ---
 

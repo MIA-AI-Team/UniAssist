@@ -4,11 +4,14 @@ from ai_metrics import AIMetricsCollector, metrics_collector
 from ai_service import AIService, AnalyticsResponseError
 from evaluator import ChatResponseError, RubricResponseError
 from models import (
+    ChatSessionScope,
     CohortAnalyticsRequest,
     CohortCodeReviewSnapshot,
     CohortCriterionSnapshot,
     CohortGradeSnapshot,
     GradeSubmissionRequest,
+    LabAssistantChatRequest,
+    PersistedChatMessage,
     RubricCriteriaItem,
     RubricSuggestRequest,
     SocraticChatRequest,
@@ -82,6 +85,57 @@ def test_ai_service_chat_invalid_llm_raises(monkeypatch):
                 reference_text="BST lab spec",
             )
         )
+
+
+def test_build_chat_history_from_persisted_messages(service):
+    history = service.build_chat_history(
+        [
+            PersistedChatMessage(sender_type="user", content="Stuck on insert"),
+            PersistedChatMessage(sender_type="assistant", content="What have you tried?"),
+            PersistedChatMessage(sender_type="system", content="internal note"),
+            PersistedChatMessage(sender_type="user", content="I tried a loop"),
+        ]
+    )
+    assert len(history) == 3
+    assert history[0].role == "user"
+    assert history[1].role == "assistant"
+    assert history[2].content == "I tried a loop"
+
+
+def test_socratic_chat_with_session_scope_and_persisted_history(service):
+    response = service.socratic_chat(
+        SocraticChatRequest(
+            reference_text="Implement BST insert and search.",
+            task_title="Lab 1: BST",
+            student_message="How do I handle an empty tree?",
+            persisted_messages=[
+                PersistedChatMessage(sender_type="user", content="Where do I start?"),
+                PersistedChatMessage(sender_type="assistant", content="What is the base case?"),
+            ],
+            session=ChatSessionScope(session_id=10, task_id=3, submission_id=55),
+        )
+    )
+    assert response.reply
+    assert response.session_id == 10
+    assert response.ai_metadata is not None
+    assert response.ai_metadata.extra["session_id"] == 10
+    assert response.ai_metadata.extra["task_id"] == 3
+    assert response.ai_metadata.extra["submission_id"] == 55
+
+
+def test_lab_assistant_chat_with_session_scope(service):
+    response = service.lab_assistant_chat(
+        LabAssistantChatRequest(
+            lab_title="RC Lab",
+            lab_type="experiment",
+            steps_and_theory="Step 1: wire the circuit",
+            student_message="What is step 1?",
+            session=ChatSessionScope(session_id=22, task_id=8),
+        )
+    )
+    assert response.reply
+    assert response.session_id == 22
+    assert response.ai_metadata.extra["task_id"] == 8
 
 
 def test_ai_service_cohort_analytics_mock(service):

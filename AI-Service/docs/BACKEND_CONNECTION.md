@@ -20,6 +20,8 @@ from ai_tutor.models import (
     RubricCriteriaItem,
     SocraticChatRequest,
     LabAssistantChatRequest,
+    ChatSessionScope,
+    PersistedChatMessage,
     CohortAnalyticsRequest,
     CohortGradeSnapshot,
     CohortCodeReviewSnapshot,
@@ -49,12 +51,14 @@ Install / path: keep the `AI-Service` root (or the `ai_tutor` package) on `PYTHO
 |----------------|---------|------------|
 | Authenticate user / enforce professor vs TA vs student | ✅ | ❌ |
 | Load/store `TASKS`, `SUBMISSIONS`, `RUBRICS`, `FILES` | ✅ | ❌ |
+| Own `CHAT_SESSIONS` / `CHAT_MESSAGES` (create, load, append) | ✅ | ❌ |
 | Extract text from uploaded files (or use AI parsers) | ✅ (or use helpers) | Helpers in `ai_tutor.parsers` |
 | Call `AIService.*` with prepared text | ✅ | ✅ execute |
 | Persist `ai_suggested_grade`, reviews, `ai_metadata` | ✅ | ❌ |
 | Confirm final grade (`staff_confirmed`) | ✅ professor only | ❌ |
 | Anonymize cohort data before analytics | ✅ | ❌ |
 | Generate rubrics / grades / chat / cohort insights | ❌ | ✅ |
+| Map `CHAT_MESSAGES` → `chat_history` | ✅ can DIY | ✅ `build_chat_history` / `persisted_messages` |
 
 ---
 
@@ -176,41 +180,94 @@ result = ai.grade_submission(
 
 `final_grade` / `confirmed_by` / `staff_confirmed` are **backend-only** after professor action.
 
-### 4.4 Socratic student chat
+### 4.4 Persistent chat sessions (`CHAT_SESSIONS` / `CHAT_MESSAGES`)
 
-```python
-result = ai.socratic_chat(
-    SocraticChatRequest(
-        task_title="Lab 1",
-        reference_text="<spec excerpts or retrieved chunks>",
-        chat_history=[{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}],
-        student_message="I'm stuck on insert",
-    )
-)
-# result.reply
+Use these tables so students can **continue later** and chats stay **scoped** to a task (and optional submission).
+
+#### Recommended flow
+
+```text
+1. Auth student
+2. Find or create CHAT_SESSIONS (user_id, task_id, optional submission_id, status=active)
+3. Load CHAT_MESSAGES for session_id ORDER BY created_at ASC
+4. Load task reference / lab steps from task_id (not from a global chat bag)
+5. Call AIService.socratic_chat or lab_assistant_chat
+6. INSERT user message + assistant reply into CHAT_MESSAGES
+7. UPDATE CHAT_SESSIONS.updated_at
 ```
 
-Backend loads/saves history if you use `CHAT_SESSIONS` / `CHAT_MESSAGES`.
+#### Field mapping
 
-### 4.5 Lab assistant chat
+| DB | AI request |
+|----|------------|
+| `CHAT_SESSIONS.id` | `session.session_id` |
+| `CHAT_SESSIONS.task_id` | `session.task_id` + load `reference_text` / lab steps from that task |
+| `CHAT_SESSIONS.submission_id` | `session.submission_id` (optional) |
+| `CHAT_MESSAGES.sender_type` + `content` | `persisted_messages[]` or prebuilt `chat_history[]` |
+| — | `student_message` = new user turn |
+| Response `reply` | new `CHAT_MESSAGES` row with `sender_type='assistant'` |
+| Response `session_id` | same session to append against |
+
+`sender_type` values: `user` | `assistant` | `system`  
+AI roles: `user` | `assistant` | `system` (system rows are skipped by default when converting).
+
+#### Socratic student chat
+
+```python
+# Backend already loaded messages for session 10 / task 3
+result = ai.socratic_chat(
+    SocraticChatRequest(
+        task_title="Lab 1: BST",
+        reference_text="<spec excerpts for task_id=3>",
+        student_message="How do I handle an empty tree?",
+        persisted_messages=[
+            PersistedChatMessage(sender_type="user", content="Where do I start?"),
+            PersistedChatMessage(sender_type="assistant", content="What is the base case?"),
+        ],
+        session=ChatSessionScope(session_id=10, task_id=3, submission_id=55),
+    )
+)
+# result.reply → save as assistant message
+# result.session_id == 10
+# result.ai_metadata.extra contains session_id / task_id / submission_id
+```
+
+Or build history yourself:
+
+```python
+history = ai.build_chat_history(persisted_rows)  # trims to MAX_CHAT_HISTORY_MESSAGES
+result = ai.socratic_chat(
+    SocraticChatRequest(
+        reference_text="...",
+        chat_history=history,
+        student_message="...",
+        session=ChatSessionScope(session_id=10, task_id=3),
+    )
+)
+```
+
+#### Lab assistant chat
 
 ```python
 result = ai.lab_assistant_chat(
     LabAssistantChatRequest(
         lab_title="RC Circuit Lab",
         lab_type="experiment",  # or coding
-        steps_and_theory="<procedure>",
-        model_answers="<TA key — never leak>",
-        chat_history=[],
+        steps_and_theory="<procedure for task_id>",
+        model_answers="<TA key — never leak to student UI>",
         student_message="What do I measure in step 2?",
+        persisted_messages=[...],  # prior CHAT_MESSAGES
+        session=ChatSessionScope(session_id=22, task_id=8),
     )
 )
-# result.reply, result.detected_mode
+# result.reply, result.detected_mode, result.session_id
 ```
 
 Anti-leak sanitization runs on the AI side; still never send model answers to the student UI.
 
-### 4.6 Cohort analytics (class-wide)
+**Auth:** only the session owner (student) may append; staff may read for audit if your product allows it.
+
+### 4.5 Cohort analytics (class-wide)
 
 Backend aggregates **latest** attempts for a task (`is_latest = true`), **strips names/ids**, then:
 
@@ -289,6 +346,7 @@ Not required by AI logic; useful for your logs / tracing. May appear in metrics 
 | Overall grade + feedback | `SUBMISSIONS` | — |
 | Criterion breakdown | optional JSON | Dedicated score rows |
 | Code reviews | `CODE_REVIEWS` | Link `commit_id` for projects |
+| Chat turns | `CHAT_SESSIONS` + `CHAT_MESSAGES` | Scope with `task_id` / `submission_id` |
 | `ai_metadata` | JSON column / audit table | Searchable by `operation` |
 | Cohort insights | cache or recompute | Optional staff notes table |
 
@@ -305,6 +363,7 @@ GROQ_API_KEY=...
 GEMINI_API_KEY=...
 AI_ENGINE_VERSION=1.4.0
 PROMPT_VERSION=2.0.0
+MAX_CHAT_HISTORY_MESSAGES=40
 ```
 
 Health/ops (demo app): `GET /api/ai/health`, `GET /api/ai/metrics` — or call `ai.metrics_summary()` from your own admin route.
@@ -339,8 +398,8 @@ Full automated coverage: from `AI-Service/` run `pytest -v`.
 
 ## 10. Quick FAQ
 
-**Q: Do we need chat tables for MVP?**  
-A: Not for grading. Add `CHAT_SESSIONS` / `CHAT_MESSAGES` only if you persist tutor conversations.
+**Q: Do we need chat tables?**  
+A: Yes if students should continue chats later and keep context on a task. Backend owns `CHAT_SESSIONS` / `CHAT_MESSAGES`; AI accepts `session` + `persisted_messages` / `chat_history`.
 
 **Q: Who anonymizes cohort analytics?**  
 A: Backend, before calling `analyze_cohort_patterns`.

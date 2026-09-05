@@ -8,6 +8,7 @@ from ai_tutor.models.analytics import (
     CohortGradeSnapshot,
 )
 from ai_tutor.models.chat import ChatMessage
+from ai_tutor.models.chat_session import ChatSessionScope, PersistedChatMessage
 from ai_tutor.models.rubric import RubricCriteriaItem
 
 
@@ -41,20 +42,40 @@ class GradeSubmissionRequest(BaseModel):
 
 
 class SocraticChatRequest(BaseModel):
+    """
+    Student tutor turn. Backend loads CHAT_MESSAGES for session_id into chat_history
+    (or persisted_messages) and scopes context via task_id / submission_id.
+    """
+
     reference_text: str = ""
     chat_history: List[ChatMessage] = Field(default_factory=list)
+    persisted_messages: List[PersistedChatMessage] = Field(
+        default_factory=list,
+        description="Optional CHAT_MESSAGES rows; converted to chat_history if chat_history is empty",
+    )
     student_message: str
     task_title: Optional[str] = None
+    session: Optional[ChatSessionScope] = None
     request_metadata: Optional[Dict[str, Any]] = None
 
 
 class LabAssistantChatRequest(BaseModel):
+    """
+    Lab assistant turn. Same session scoping as SocraticChatRequest for continue-later
+    and task-scoped context (CHAT_SESSIONS.task_id / submission_id).
+    """
+
     lab_title: str
     lab_type: str = "experiment"
     steps_and_theory: str = ""
     model_answers: str = ""
     chat_history: List[ChatMessage] = Field(default_factory=list)
+    persisted_messages: List[PersistedChatMessage] = Field(
+        default_factory=list,
+        description="Optional CHAT_MESSAGES rows; converted to chat_history if chat_history is empty",
+    )
     student_message: str
+    session: Optional[ChatSessionScope] = None
     request_metadata: Optional[Dict[str, Any]] = None
 
 

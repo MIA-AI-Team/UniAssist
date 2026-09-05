@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import List, Optional
 
+from ai_tutor.config import Config
 from ai_tutor.metrics import metrics_collector
 from ai_tutor.engine import (
     AIEvaluationEngine,
@@ -14,18 +15,24 @@ from ai_tutor.engine import (
 )
 from ai_tutor.parsers import prepare_submission_for_grading
 from ai_tutor.models import (
+    ChatMessage,
+    ChatSessionScope,
     CohortAnalyticsRequest,
     CohortAnalyticsResponse,
     GradeSubmissionRequest,
     LabAssistantChatRequest,
     LabChatResponse,
+    PersistedChatMessage,
     RubricRefineRequest,
     RubricSuggestRequest,
     RubricSuggestionResponse,
     SocraticChatRequest,
     StudentChatResponse,
     SubmissionGradingResponse,
+    chat_history_from_persisted,
+    trim_chat_history,
 )
+from ai_tutor.models.chat_session import scope_as_metadata
 
 
 class AIService:
@@ -81,23 +88,41 @@ class AIService:
             prep_warnings=prep_warnings,
         )
 
+    def build_chat_history(
+        self,
+        persisted_messages: List[PersistedChatMessage],
+        *,
+        max_messages: Optional[int] = None,
+    ) -> List[ChatMessage]:
+        """
+        Convert CHAT_MESSAGES rows into AI chat_history (continue-later).
+
+        Backend: load messages for CHAT_SESSIONS.id ordered by created_at ASC.
+        """
+        limit = Config.MAX_CHAT_HISTORY_MESSAGES if max_messages is None else max_messages
+        return chat_history_from_persisted(persisted_messages, max_messages=limit)
+
     def socratic_chat(self, request: SocraticChatRequest) -> StudentChatResponse:
-        return self._engine.socratic_tutor_chat(
+        history = self._resolve_chat_history(request.chat_history, request.persisted_messages)
+        response = self._engine.socratic_tutor_chat(
             reference_text=request.reference_text,
-            chat_history=request.chat_history,
+            chat_history=history,
             student_message=request.student_message,
             task_title=request.task_title,
         )
+        return self._attach_session(response, request.session, request.request_metadata)
 
     def lab_assistant_chat(self, request: LabAssistantChatRequest) -> LabChatResponse:
-        return self._engine.lab_assistant_chat(
+        history = self._resolve_chat_history(request.chat_history, request.persisted_messages)
+        response = self._engine.lab_assistant_chat(
             lab_title=request.lab_title,
             lab_type=request.lab_type,
             steps_and_theory=request.steps_and_theory,
             model_answers=request.model_answers,
-            chat_history=request.chat_history,
+            chat_history=history,
             student_message=request.student_message,
         )
+        return self._attach_session(response, request.session, request.request_metadata)
 
     def analyze_cohort_patterns(self, request: CohortAnalyticsRequest) -> CohortAnalyticsResponse:
         """Staff-facing cohort insights. Backend aggregates DB rows and anonymizes before calling."""
@@ -110,6 +135,31 @@ class AIService:
             code_reviews=request.code_reviews,
             criterion_stats=request.criterion_stats,
         )
+
+    def _resolve_chat_history(
+        self,
+        chat_history: List[ChatMessage],
+        persisted_messages: List[PersistedChatMessage],
+    ) -> List[ChatMessage]:
+        if chat_history:
+            return trim_chat_history(chat_history, Config.MAX_CHAT_HISTORY_MESSAGES)
+        if persisted_messages:
+            return chat_history_from_persisted(
+                persisted_messages,
+                max_messages=Config.MAX_CHAT_HISTORY_MESSAGES,
+            )
+        return []
+
+    def _attach_session(self, response, session: Optional[ChatSessionScope], request_metadata: Optional[dict]):
+        if session is not None:
+            response.session_id = session.session_id
+        if response.ai_metadata is not None:
+            extra = dict(response.ai_metadata.extra or {})
+            extra.update(scope_as_metadata(session))
+            if request_metadata:
+                extra.update(request_metadata)
+            response.ai_metadata.extra = extra or None
+        return response
 
 
 __all__ = [

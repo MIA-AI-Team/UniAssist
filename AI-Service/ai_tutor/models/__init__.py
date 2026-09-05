@@ -8,6 +8,14 @@ from ai_tutor.models.chat import (
     LabChatRequest,
     LabChatResponse,
 )
+from ai_tutor.models.chat_session import (
+    ChatSessionScope,
+    PersistedChatMessage,
+    chat_history_from_persisted,
+    role_to_sender_type,
+    sender_type_to_role,
+    trim_chat_history,
+)
 from ai_tutor.models.lab import LabItem, LabSubmission
 from ai_tutor.models.analytics import (
     CohortGradeSnapshot,
@@ -38,6 +46,12 @@ __all__ = [
     "StudentChatResponse",
     "LabChatRequest",
     "LabChatResponse",
+    "ChatSessionScope",
+    "PersistedChatMessage",
+    "chat_history_from_persisted",
+    "role_to_sender_type",
+    "sender_type_to_role",
+    "trim_chat_history",
     "LabItem",
     "LabSubmission",
     "CohortGradeSnapshot",
