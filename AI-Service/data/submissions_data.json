@@ -41,7 +41,7 @@
         "scores_adjusted": false,
         "output_sanitized": false,
         "warnings_count": 0,
-        "completed_at": "2026-09-04T20:17:27.777712+00:00",
+        "completed_at": "2026-09-05T10:41:40.462595+00:00",
         "extra": null
       },
       "professor_notes": null
@@ -145,7 +145,7 @@
         "scores_adjusted": false,
         "output_sanitized": false,
         "warnings_count": 0,
-        "completed_at": "2026-09-04T20:17:27.777712+00:00",
+        "completed_at": "2026-09-05T10:41:40.462595+00:00",
         "extra": null
       },
       "professor_notes": null
@@ -195,7 +195,7 @@
         "scores_adjusted": false,
         "output_sanitized": false,
         "warnings_count": 0,
-        "completed_at": "2026-09-04T20:17:27.777712+00:00",
+        "completed_at": "2026-09-05T10:41:40.462595+00:00",
         "extra": null
       },
       "professor_notes": null
@@ -245,7 +245,7 @@
         "scores_adjusted": false,
         "output_sanitized": false,
         "warnings_count": 0,
-        "completed_at": "2026-09-04T20:17:27.778718+00:00",
+        "completed_at": "2026-09-05T10:41:40.462595+00:00",
         "extra": null
       },
       "professor_notes": null
@@ -295,7 +295,7 @@
         "scores_adjusted": false,
         "output_sanitized": false,
         "warnings_count": 0,
-        "completed_at": "2026-09-04T20:17:27.778718+00:00",
+        "completed_at": "2026-09-05T10:41:40.462595+00:00",
         "extra": null
       },
       "professor_notes": null
@@ -345,7 +345,7 @@
         "scores_adjusted": false,
         "output_sanitized": false,
         "warnings_count": 0,
-        "completed_at": "2026-09-04T20:17:27.778718+00:00",
+        "completed_at": "2026-09-05T10:41:40.462595+00:00",
         "extra": null
       },
       "professor_notes": null
@@ -395,7 +395,7 @@
         "scores_adjusted": false,
         "output_sanitized": false,
         "warnings_count": 0,
-        "completed_at": "2026-09-04T20:17:27.778718+00:00",
+        "completed_at": "2026-09-05T10:41:40.462595+00:00",
         "extra": null
       },
       "professor_notes": null
@@ -445,7 +445,7 @@
         "scores_adjusted": false,
         "output_sanitized": false,
         "warnings_count": 0,
-        "completed_at": "2026-09-04T20:17:27.778718+00:00",
+        "completed_at": "2026-09-05T10:41:40.462595+00:00",
         "extra": null
       },
       "professor_notes": null
@@ -463,22 +463,142 @@
     "submitted_at": "2026-09-04",
     "status": "graded",
     "grade_result": {
-      "ai_suggested_grade": 80.0,
+      "ai_suggested_grade": 90.0,
       "total_possible_grade": 100.0,
       "percentage": 95.0,
       "summary_feedback": "Excellent job!",
       "criterion_evaluations": [
         {
-          "criterion_name": "Test",
-          "score_given": 80.0,
-          "max_points": 100.0,
-          "reasoning": "Ok"
+          "criterion_name": "Hardware Wiring & Measurement Correctness",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Hardware Wiring & Measurement Correctness' with minor improvements possible."
+        },
+        {
+          "criterion_name": "Theoretical Analysis & Derivations",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Theoretical Analysis & Derivations' with minor improvements possible."
         }
       ],
       "code_reviews": [],
       "warnings": [],
-      "ai_metadata": null,
+      "ai_metadata": {
+        "ai_engine_version": "1.4.0",
+        "prompt_version": "2.0.0",
+        "operation": "grade_submission",
+        "provider": null,
+        "model_used": null,
+        "latency_ms": 0.0,
+        "parse_success": true,
+        "prompt_truncated": false,
+        "scores_adjusted": false,
+        "output_sanitized": false,
+        "warnings_count": 0,
+        "completed_at": "2026-09-05T10:41:40.462595+00:00",
+        "extra": null
+      },
       "professor_notes": "Well done, keep it up."
+    },
+    "professor_notes": null,
+    "task_title": null
+  },
+  {
+    "id": "sub-11",
+    "lab_id": "lab-1",
+    "student_name": "John Doe",
+    "student_id": "STU-100",
+    "submission_text": "Measured tau = 10ms",
+    "code_files": {},
+    "submitted_at": "2026-09-05 13:35:38",
+    "status": "graded",
+    "grade_result": {
+      "ai_suggested_grade": 90.0,
+      "total_possible_grade": 100.0,
+      "percentage": 90.0,
+      "summary_feedback": "Mock grading result: 90.0% across criteria.",
+      "criterion_evaluations": [
+        {
+          "criterion_name": "Hardware Wiring & Measurement Correctness",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Hardware Wiring & Measurement Correctness' with minor improvements possible."
+        },
+        {
+          "criterion_name": "Theoretical Analysis & Derivations",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Theoretical Analysis & Derivations' with minor improvements possible."
+        }
+      ],
+      "code_reviews": [],
+      "warnings": [],
+      "ai_metadata": {
+        "ai_engine_version": "1.4.0",
+        "prompt_version": "2.0.0",
+        "operation": "grade_submission",
+        "provider": null,
+        "model_used": null,
+        "latency_ms": 0.0,
+        "parse_success": true,
+        "prompt_truncated": false,
+        "scores_adjusted": false,
+        "output_sanitized": false,
+        "warnings_count": 0,
+        "completed_at": "2026-09-05T10:41:40.462595+00:00",
+        "extra": null
+      },
+      "professor_notes": null
+    },
+    "professor_notes": null,
+    "task_title": null
+  },
+  {
+    "id": "sub-12",
+    "lab_id": "lab-1",
+    "student_name": "John Doe",
+    "student_id": "STU-100",
+    "submission_text": "Measured tau = 10ms",
+    "code_files": {},
+    "submitted_at": "2026-09-05 13:41:40",
+    "status": "graded",
+    "grade_result": {
+      "ai_suggested_grade": 90.0,
+      "total_possible_grade": 100.0,
+      "percentage": 90.0,
+      "summary_feedback": "Mock grading result: 90.0% across criteria.",
+      "criterion_evaluations": [
+        {
+          "criterion_name": "Hardware Wiring & Measurement Correctness",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Hardware Wiring & Measurement Correctness' with minor improvements possible."
+        },
+        {
+          "criterion_name": "Theoretical Analysis & Derivations",
+          "score_given": 45.0,
+          "max_points": 50.0,
+          "reasoning": "Strong performance on 'Theoretical Analysis & Derivations' with minor improvements possible."
+        }
+      ],
+      "code_reviews": [],
+      "warnings": [],
+      "ai_metadata": {
+        "ai_engine_version": "1.4.0",
+        "prompt_version": "2.0.0",
+        "operation": "grade_submission",
+        "provider": null,
+        "model_used": null,
+        "latency_ms": 0.0,
+        "parse_success": true,
+        "prompt_truncated": false,
+        "scores_adjusted": false,
+        "output_sanitized": false,
+        "warnings_count": 0,
+        "completed_at": "2026-09-05T10:41:40.462595+00:00",
+        "extra": null
+      },
+      "professor_notes": null
     },
     "professor_notes": null,
     "task_title": null

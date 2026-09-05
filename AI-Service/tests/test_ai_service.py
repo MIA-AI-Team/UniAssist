@@ -1,12 +1,15 @@
 import pytest
 
 from ai_metrics import AIMetricsCollector, metrics_collector
-from ai_service import AIService
+from ai_service import AIService, AnalyticsResponseError
 from evaluator import ChatResponseError, RubricResponseError
 from models import (
+    CohortAnalyticsRequest,
+    CohortCodeReviewSnapshot,
+    CohortCriterionSnapshot,
+    CohortGradeSnapshot,
     GradeSubmissionRequest,
     RubricCriteriaItem,
-    RubricRefineRequest,
     RubricSuggestRequest,
     SocraticChatRequest,
 )
@@ -77,6 +80,89 @@ def test_ai_service_chat_invalid_llm_raises(monkeypatch):
             SocraticChatRequest(
                 student_message="Help me with this lab",
                 reference_text="BST lab spec",
+            )
+        )
+
+
+def test_ai_service_cohort_analytics_mock(service):
+    response = service.analyze_cohort_patterns(
+        CohortAnalyticsRequest(
+            task_title="Lab 3: Recursion",
+            task_type="coding",
+            rubric_criteria_names=["Correctness", "Base cases"],
+            grades=[
+                CohortGradeSnapshot(grade=40, max_grade=100, feedback="Missed base case handling."),
+                CohortGradeSnapshot(grade=55, max_grade=100, feedback="Recursive call incorrect."),
+                CohortGradeSnapshot(grade=70, max_grade=100, feedback="Mostly correct with minor bugs."),
+                CohortGradeSnapshot(grade=30, max_grade=100, feedback="No base case; stack overflow risk."),
+            ],
+            code_reviews=[
+                CohortCodeReviewSnapshot(
+                    severity="critical",
+                    finding="Missing recursion base case",
+                    file_path="solution.py",
+                    count=6,
+                ),
+                CohortCodeReviewSnapshot(
+                    severity="warning",
+                    finding="Inefficient repeated recomputation",
+                    file_path="solution.py",
+                    count=3,
+                ),
+            ],
+            criterion_stats=[
+                CohortCriterionSnapshot(
+                    criterion_name="Base cases",
+                    average_score=8,
+                    max_points=25,
+                    low_score_count=5,
+                ),
+            ],
+        )
+    )
+    assert response.student_count == 4
+    assert response.task_title == "Lab 3: Recursion"
+    assert response.summary
+    assert response.common_issues
+    assert response.teaching_focus
+    assert response.ai_metadata is not None
+    assert response.ai_metadata.operation == "analyze_cohort_patterns"
+
+
+def test_ai_service_cohort_analytics_requires_data(service):
+    with pytest.raises(ValueError, match="requires at least one"):
+        service.analyze_cohort_patterns(
+            CohortAnalyticsRequest(task_title="Empty Task")
+        )
+
+
+def test_ai_service_cohort_analytics_small_cohort_warning(service):
+    response = service.analyze_cohort_patterns(
+        CohortAnalyticsRequest(
+            task_title="Tiny cohort",
+            grades=[
+                CohortGradeSnapshot(grade=80, max_grade=100, feedback="ok"),
+            ],
+        )
+    )
+    assert response.student_count == 1
+    assert any("below" in w.lower() for w in response.warnings)
+
+
+def test_ai_service_cohort_analytics_invalid_llm_raises(monkeypatch):
+    svc = AIService()
+    svc.engine.mock_mode = False
+    monkeypatch.setattr(svc.engine, "_call_llm", lambda *a, **k: "not-json")
+
+    with pytest.raises(AnalyticsResponseError):
+        svc.analyze_cohort_patterns(
+            CohortAnalyticsRequest(
+                task_title="Lab X",
+                grades=[
+                    CohortGradeSnapshot(grade=50, max_grade=100, feedback="weak"),
+                    CohortGradeSnapshot(grade=60, max_grade=100, feedback="ok"),
+                    CohortGradeSnapshot(grade=40, max_grade=100, feedback="fail"),
+                ],
             )
         )
 
