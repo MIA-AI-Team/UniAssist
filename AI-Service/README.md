@@ -5,7 +5,8 @@ An end-to-end, university-focused AI assistant built with **FastAPI**, **Groq (G
 | | |
 |---|---|
 | **Status** | MVP Engine, API & Dashboard Ready |
-| **Full Design Doc** | [DATABASE_DESIGN.md](./DATABASE_DESIGN.md) |
+| **System overview** | [docs/SYSTEM_OVERVIEW.md](./docs/SYSTEM_OVERVIEW.md) |
+| **Backend integration** | [docs/BACKEND_CONNECTION.md](./docs/BACKEND_CONNECTION.md) |
 
 ---
 
