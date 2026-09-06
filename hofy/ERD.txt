@@ -1,0 +1,52 @@
+# Simplified ERD
+
+USERS
+  |
+  +---- STUDENTS
+  |
+  +---- (professor / ta via role)
+  |
+  +---- COURSES
+          |
+          +---- COURSE_STUDENTS ---- STUDENTS
+          |
+          +---- LECTURES
+          |       |
+          |       +---- FILES
+          |               |
+          |               +---- DOCUMENT_CHUNKS -> Vector DB
+          |
+          +---- ASSIGNMENTS
+          |       |
+          |       +---- SUBMISSIONS
+          |       |       |
+          |       |       +---- AI_EVALUATIONS
+          |       |
+          |       +---- RUBRICS
+          |
+          +---- QUIZZES
+          |       |
+          |       +---- QUIZ_QUESTIONS
+          |               |
+          |               +---- QUIZ_OPTIONS
+          |
+          +---- CHAT_SESSIONS
+          |       |
+          |       +---- CHAT_MESSAGES
+          |       |
+          |       +---- CHAT_FEEDBACK
+          |
+          +---- TOPICS
+                  |
+                  +---- STUDENT_MASTERY
+
+STUDENTS
+  |
+  +---- LEARNING_PLANS
+
+AI Context:
+Student + Course + Lecture + Mastery + Learning Plan
+        + Recent Chat + RAG chunks
+                    |
+                    v
+               LLM (GPT/Claude)
