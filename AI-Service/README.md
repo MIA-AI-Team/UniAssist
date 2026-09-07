@@ -15,7 +15,7 @@ An end-to-end, university-focused AI assistant built with **FastAPI**, **Groq (G
 ### 1. 📝 AI Rubric Generator & Interactive Refinement
 - **Specification Parsing**: Upload task specification files (**PDF, DOCX, TXT**) or paste specification text to automatically generate domain-tailored evaluation rubrics.
 - **Interactive AI Re-prompting**: Refine rubrics dynamically with staff instructions (e.g. *"Make each criterion out of 20 points"* or *"Add weight for memory management"*).
-- **Manual Rubric Editing**: TAs and professors can manually add, edit, or remove criteria and point allocations on the web UI.
+- **Manual Rubric Editing**: TAs and professors can manually add, edit, or remove criteria and point allocations via API / backend UI.
 
 ### 2. 🔍 Submission Evaluator & Code Reviewer
 - **Multi-Format Uploads**: Grade student submissions submitted as **PDF, DOCX, TXT, PY, CPP, HPP, or ZIP archives**.
@@ -427,19 +427,22 @@ Fill in your API keys in `.env`:
 - `GROQ_API_KEY=gsk_...` (or `GEMINI_API_KEY=...`)
 - Set `MOCK_MODE=true` to test the system offline without external API keys.
 
-### 4. Launch the Web Application
+### 4. Launch the API
 ```bash
 python app.py
 ```
-Or directly via `uvicorn`:
+Or via `uvicorn`:
 ```bash
 uvicorn app:app --reload --port 8000
 ```
-Open your browser to: **http://127.0.0.1:8000**
+- Swagger docs: **http://127.0.0.1:8000/docs**
+- Health: **http://127.0.0.1:8000/api/ai/health**
+- Docker: `docker compose up --build` (API only; no web UI)
 
 ### 5. Run the Test Suite
 ```bash
-pytest
+cd AI-Service
+pytest -v
 ```
 
 ---
@@ -448,7 +451,10 @@ pytest
 
 | Endpoint | Method | Description |
 |---|---|---|
-| `/` | `GET` | Serves web dashboard UI (`static/index.html`) |
+| `/` | `GET` | API service info (JSON) |
+| `/docs` | `GET` | OpenAPI / Swagger UI (FastAPI built-in) |
+| `/api/ai/health` | `GET` | AI health check |
+| `/api/ai/metrics` | `GET` | AI ops metrics |
 | `/api/suggest-rubric` | `POST` | Generates initial AI rubric from spec file or text |
 | `/api/refine-rubric` | `POST` | Refines existing rubric using staff prompt feedback |
 | `/api/grade-submission` | `POST` | Grades a student submission against spec & rubric |
@@ -458,7 +464,7 @@ pytest
 | `/api/create-lab` | `POST` | Creates a new lab session with spec, theory, & model answers |
 | `/api/delete-lab/{lab_id}` | `DELETE` | Deletes a lab session and its submissions |
 | `/api/submit-lab` | `POST` | Submits student work for a lab |
-| `/api/lab-assistant-chat` | `POST` | Live AI Lab Assistant chat (Step guidance / Hint mode) |
+| `/api/lab-chat` | `POST` | Live AI Lab Assistant chat (Step guidance / Hint mode) |
 | `/api/grade-all-submissions/{lab_id}` | `POST` | Batch grades all submissions for a specified lab |
 
 ---
@@ -479,26 +485,16 @@ pytest
 ## 📂 Repository Layout
 
 ```
-AI TUTOR/
-├── app.py                 # FastAPI Web Server & REST Endpoints
-├── evaluator.py           # Core AI Evaluation & Lab Assistant Engine
-├── file_parser.py         # File Extractor (PDF, DOCX, TXT, PY, CPP, ZIP)
-├── models.py              # Pydantic Schemas & Data Models
-├── config.py              # System Configuration & Environment Loader
-├── prompts.py             # System & User Prompts for AI Tasks
-├── static/                # Frontend UI Assets
-│   └── index.html         # Interactive Web Dashboard
-├── data/                  # Persistent Database Storage
-│   ├── labs_data.json     # Lab configurations database
-│   └── submissions_data.json # Student submissions database
-├── test_app.py            # API Integration Tests
-├── test_evaluator.py      # AI Evaluation Engine Unit Tests
-├── test_file_parser.py    # File Parser Unit Tests
-├── test_file_upload.py    # Demo script for file upload & grading
-├── sample_test_files/     # Sample Lab Specs & Submissions for Testing
-├── requirements.txt       # Python Dependencies
-├── .env.example           # Environment Configuration Template
-└── .gitignore             # Git Ignore Configuration
+AI-Service/
+├── app.py                 # FastAPI REST API (no web UI)
+├── ai_tutor/              # AI package (AIService, engine, models, …)
+├── Dockerfile             # API-only container
+├── docker-compose.yml
+├── data/                  # Demo JSON persistence
+├── tests/                 # pytest suite
+├── docs/                  # SYSTEM_OVERVIEW, BACKEND_CONNECTION, POSTMAN_TESTS
+├── requirements.txt
+└── .env.example
 ```
 
 ---

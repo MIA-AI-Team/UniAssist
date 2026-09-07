@@ -41,7 +41,7 @@ Install / path: keep the `AI-Service` root (or the `ai_tutor` package) on `PYTHO
 
 ### Optional: HTTP demo only
 
-`app.py` exposes `/api/suggest-rubric`, `/api/grade-submission`, etc. for the local dashboard. Production backend should own HTTP and call `AIService` from your API layer.
+`app.py` exposes `/api/suggest-rubric`, `/api/grade-submission`, etc. for HTTP/Postman/Docker. Production backend can call those routes or (preferred) import `AIService` in-process.
 
 ---
 

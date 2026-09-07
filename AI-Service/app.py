@@ -7,8 +7,6 @@ from typing import Optional, List, Dict
 
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 
 from ai_tutor import AIService, ChatResponseError, GradingResponseError, RubricResponseError
 from ai_tutor.config import Config
@@ -29,10 +27,10 @@ from ai_tutor.models import (
 
 logger = logging.getLogger("AIEvaluationApp")
 
-app = FastAPI(title="AI Evaluation Assistant Web App", version="1.4.0")
+app = FastAPI(title="AI Evaluation Assistant API", version="1.4.0")
 
 
-# Enable CORS for local development
+# Enable CORS for local development / Docker
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -44,11 +42,6 @@ app.add_middleware(
 # Initialize AI Service (backend integration entry point)
 engine = AIEvaluationEngine()
 ai_service = AIService(engine)
-
-# Ensure static directory exists
-STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
-os.makedirs(STATIC_DIR, exist_ok=True)
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -141,13 +134,16 @@ LABS_DB: Dict[str, LabItem] = load_labs_from_disk()
 SUBMISSIONS_DB: List[LabSubmission] = load_submissions_from_disk()
 
 
-@app.get("/", response_class=HTMLResponse)
-def get_dashboard():
-    index_path = os.path.join(STATIC_DIR, "index.html")
-    if os.path.exists(index_path):
-        with open(index_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>AI Evaluation Assistant Web App Running!</h1>"
+@app.get("/")
+def get_root():
+    """API service info (no web UI)."""
+    return {
+        "service": "AI Evaluation Assistant API",
+        "version": "1.4.0",
+        "docs": "/docs",
+        "health": "/api/ai/health",
+        "metrics": "/api/ai/metrics",
+    }
 
 
 @app.get("/api/ai/health")

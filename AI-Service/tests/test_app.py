@@ -35,10 +35,13 @@ SAMPLE_RUBRIC = json.dumps([
 ])
 
 
-def test_dashboard_loads(client):
+def test_api_root(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert "AI Evaluation Assistant" in response.text
+    body = response.json()
+    assert body["service"] == "AI Evaluation Assistant API"
+    assert body["health"] == "/api/ai/health"
+    assert body["docs"] == "/docs"
 
 
 def test_suggest_rubric_with_text_override(client):

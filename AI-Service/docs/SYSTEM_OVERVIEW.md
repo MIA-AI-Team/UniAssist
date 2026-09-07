@@ -147,11 +147,12 @@ Groq (primary) / Gemini (fallback) / mock mode
 - In-process collector: `AIService.metrics_summary()` / `recent_metrics()`.
 - Demo health/metrics routes exist on `app.py` (`/api/ai/health`, `/api/ai/metrics`).
 
-### 3.9 Demo FastAPI app + dashboard (local)
+### 3.9 FastAPI API server
 
-- `app.py` + `static/index.html`: temporary UI for labs, uploads, rubric, grading, chat.
-- JSON under `data/` for local persistence — **not** production storage.
-- Backend should call **`AIService` directly**, not treat demo routes as the permanent contract.
+- `app.py`: REST endpoints for health, rubric, grading, labs, chat (no web UI).
+- JSON under `data/` for local/demo persistence — **not** production storage.
+- Docker runs this API only (`uvicorn app:app`). Backend should prefer calling **`AIService`** in-process when integrated.
+- Interactive API docs: `/docs` (Swagger) and `/redoc`.
 
 ### 3.10 Reliability behaviors
 
@@ -176,15 +177,17 @@ AI-Service/
 │   ├── models/              # requests/responses (rubric, grading, chat, analytics, …)
 │   ├── prompts/templates.py
 │   └── parsers/submission.py
-├── app.py                   # demo HTTP + dashboard
+├── app.py                   # FastAPI REST API
+├── Dockerfile               # API-only image
+├── docker-compose.yml
 ├── tests/                   # pytest suite
-├── static/                  # demo UI
 ├── data/                    # demo JSON store
 ├── pytest.ini
 ├── .env.example
 └── docs/
-    ├── SYSTEM_OVERVIEW.md   # this file
-    └── BACKEND_CONNECTION.md
+    ├── SYSTEM_OVERVIEW.md
+    ├── BACKEND_CONNECTION.md
+    └── POSTMAN_TESTS.md
 ```
 
 Root shims (`ai_service.py`, `evaluator.py`, …) re-export the package for older imports.
@@ -233,13 +236,25 @@ Copy `.env.example` → `.env`:
 
 ## 8. Quick start (beyond tests)
 
+### Local
+
 ```bash
 cd AI-Service
 pip install -r requirements.txt
-# optional: copy .env.example → .env and set keys
+# optional: copy .env.example to .env and set keys
 uvicorn app:app --reload
 ```
 
-Dashboard: open the URL printed by Uvicorn (usually `http://127.0.0.1:8000`).
+Open `http://127.0.0.1:8000/docs` (Swagger) or `http://127.0.0.1:8000/api/ai/health`.
 
-Backend integration examples: see [BACKEND_CONNECTION.md](./BACKEND_CONNECTION.md).
+### Docker (API only)
+
+```bash
+cd AI-Service
+docker build -t ai-tutor-service .
+docker run --rm -p 8000:8000 ai-tutor-service
+# or: docker compose up --build
+```
+
+Postman: [POSTMAN_TESTS.md](./POSTMAN_TESTS.md)  
+Backend integration: [BACKEND_CONNECTION.md](./BACKEND_CONNECTION.md).
