@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ai_tutor.backend.database import Base
+from backend.database import Base
 
 if TYPE_CHECKING:
-    from ai_tutor.backend.models.repository import Repository
-    from ai_tutor.backend.models.users import Student
-    from ai_tutor.backend.models.tasks import Task
+    from backend.models.repository import Repository
+    from backend.models.users import Student
+    from backend.models.tasks import Task
 
 
 class Team(Base):

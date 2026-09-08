@@ -5,12 +5,12 @@ import datetime as dt
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, JSON, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import TYPE_CHECKING
-from ai_tutor.backend.database import Base
-from ai_tutor.backend.models.enums import TaskType
+from backend.database import Base
+from backend.models.enums import TaskType
 
 if TYPE_CHECKING:
-    from ai_tutor.backend.models.rubric import Rubric
-    from ai_tutor.backend.models.submissions import Submission
+    from backend.models.rubric import Rubric
+    from backend.models.submissions import Submission
 class Task(Base):
     __tablename__ = "tasks"
 

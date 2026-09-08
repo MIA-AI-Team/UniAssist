@@ -4,8 +4,8 @@ import asyncio
 from alembic import context
 from sqlalchemy import pool
 
-from ai_tutor.backend.database import Base, engine
-from ai_tutor.backend.models import *
+from backend.database import Base, engine
+from backend.models import *
 
 config = context.config
 

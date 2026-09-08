@@ -2,8 +2,8 @@
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from ai_tutor.backend.models.enums import UserRole
-from ai_tutor.backend.database import Base
+from backend.models.enums import UserRole
+from backend.database import Base
 from sqlalchemy import (
     DateTime,
     Enum,

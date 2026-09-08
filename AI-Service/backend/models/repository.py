@@ -1,9 +1,9 @@
 from __future__ import annotations
  
 import datetime as dt
-from ai_tutor.backend.models.enums import ReviewType, Severity
+from backend.models.enums import ReviewType, Severity
 from typing import TYPE_CHECKING
-from ai_tutor.backend.database import Base
+from backend.database import Base
 
 from sqlalchemy import (
     DateTime,
@@ -16,8 +16,8 @@ from sqlalchemy import (
 from sqlalchemy.orm import  Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
-    from ai_tutor.backend.models.submissions import Submission
-    from ai_tutor.backend.models.teams import Team
+    from backend.models.submissions import Submission
+    from backend.models.teams import Team
     
 class Repository(Base):
     __tablename__ = "repositories"

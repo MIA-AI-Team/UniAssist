@@ -2,7 +2,7 @@ from __future__ import annotations
  
 import datetime as dt
 from typing import TYPE_CHECKING
-from ai_tutor.backend.database import Base
+from backend.database import Base
 
 from sqlalchemy import (
     Boolean,
@@ -15,14 +15,14 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import  Mapped, mapped_column, relationship
-from ai_tutor.backend.models.enums import SubmissionStatus
+from backend.models.enums import SubmissionStatus
 
 if TYPE_CHECKING:
-    from ai_tutor.backend.models.tasks import Task
-    from ai_tutor.backend.models.rubric import Rubric
-    from ai_tutor.backend.models.repository import CodeReview
-    from ai_tutor.backend.models.file import File
-    from ai_tutor.backend.models.chat import ChatSession
+    from backend.models.tasks import Task
+    from backend.models.rubric import Rubric
+    from backend.models.repository import CodeReview
+    from backend.models.file import File
+    from backend.models.chat import ChatSession
 class Submission(Base):
     __tablename__ = "submissions"
     __table_args__ = (

@@ -6,15 +6,15 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import DateTime, Enum, Float, ForeignKey, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ai_tutor.backend.database import Base
-from ai_tutor.backend.models.enums import SenderType
+from backend.database import Base
+from backend.models.enums import SenderType
 
 if TYPE_CHECKING:
-    from ai_tutor.backend.models.repository import CodeReview
-    from ai_tutor.backend.models.file import Embedding
-    from ai_tutor.backend.models.submissions import Submission
-    from ai_tutor.backend.models.tasks import Task
-    from ai_tutor.backend.models.users import User
+    from backend.models.repository import CodeReview
+    from backend.models.file import Embedding
+    from backend.models.submissions import Submission
+    from backend.models.tasks import Task
+    from backend.models.users import User
 
 
 class ChatSession(Base):
