@@ -1,84 +1,121 @@
-"""
-DB queries for authentication.
-    - register_user()  — create USERS row + role extension row
-    - login_user()     — verify credentials, return token
-"""
 
 from __future__ import annotations
 
 from fastapi import HTTPException
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.security import hash_password, verify_password, create_access_token
-from backend.models.users import User, Admin, Staff, Student
-from backend.schemas.auth import RegisterRequest, RegisterResponse, LoginRequest, LoginResponse
+from backend.core.security import (
+    create_access_token,
+    hash_password,
+    verify_password,
+)
+from backend.models.users import Admin, Staff, Student, User
+from backend.repository.user_repository import get_user_by_email, get_student_by_number
+from backend.schemas.auth import (
+    LoginRequest,
+    LoginResponse,
+    RegisterRequest,
+    RegisterResponse,
+)
 
 
-# TODO consider the workflow for handling the student numbers
-
-
-async def register_user(data: RegisterRequest, db: AsyncSession) -> RegisterResponse:
+async def register_user(
+    data: RegisterRequest,
+    db: AsyncSession,
+) -> RegisterResponse:
     """
-    Create a USERS row and the matching role extension row.
+    Register a new user and create the corresponding
+    role extension row.
 
     Raises:
         HTTPException 400 — email already registered
-        HTTPException 422 — missing required fields for the given role
+        HTTPException 422 — invalid role or missing role fields
     """
 
-    # 1. Check email not already taken
-    existing = await db.execute(select(User).where(User.email == data.email))
-    if existing.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Email already registered.")
+    existing_user = await get_user_by_email(data.email, db)
 
-    # 2. Validate role
-    allowed_roles = {"admin", "professor", "teaching_assistant", "student"}
+    if existing_user is not None:
+        raise HTTPException(
+            status_code=400,
+            detail="Email already registered.",
+        )
+
+    allowed_roles = {
+        "admin",
+        "professor",
+        "teaching_assistant",
+        "student",
+    }
+
     if data.role not in allowed_roles:
-        raise HTTPException(status_code=422, detail=f"Invalid role. Must be one of: {allowed_roles}")
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid role. Must be one of: {allowed_roles}",
+        )
 
-    # 3. Create USERS row
+    if data.role == "student":
+        _validate_fields(
+            required={
+                "student_number": data.student_number,
+                "cohort_year": data.cohort_year,
+                "major": data.major,
+            },
+            role="student",
+        )
+        existing_student = await get_student_by_number( data.student_number, db, )
+        if existing_student is not None:
+            raise HTTPException(
+                status_code=400,
+                detail="Student number already registered.",
+            )
+
+    elif data.role in {"professor", "teaching_assistant"}:
+        _validate_fields(
+            required={
+                "staff_role": data.staff_role,
+                "department": data.department,
+            },
+            role=data.role,
+        )
+
     user = User(
         name=data.name,
         email=data.email,
         password_hash=hash_password(data.password),
         role=data.role,
     )
+
     db.add(user)
-    await db.flush()  # get user.id without committing yet
+    await db.flush()
 
-    # 4. Create role extension row
     if data.role == "student":
-        _validate_fields( # Validate required fields for students
-            required={"student_number": data.student_number, "cohort_year": data.cohort_year, "major": data.major},
-            role="student",
+        db.add(
+            Student(
+                user_id=user.id,
+                student_number=data.student_number,
+                cohort_year=data.cohort_year,
+                major=data.major,
+                github_username=data.github_username,
+            )
         )
-        db.add(Student(
-            user_id=user.id,
-            student_number=data.student_number,
-            cohort_year=data.cohort_year,
-            major=data.major,
-            github_username=data.github_username,
-        ))
 
-    elif data.role in ("professor", "teaching_assistant"):
-        _validate_fields(
-            required={"staff_role": data.staff_role, "department": data.department},
-            role=data.role,
+    elif data.role in {"professor", "teaching_assistant"}:
+        db.add(
+            Staff(
+                user_id=user.id,
+                staff_role=data.staff_role,
+                department=data.department,
+            )
         )
-        db.add(Staff(
-            user_id=user.id,
-            staff_role=data.staff_role,
-            department=data.department,
-        ))
 
     elif data.role == "admin":
-        db.add(Admin(
-            user_id=user.id,
-            permission_level="standard",
-        ))
+        db.add(
+            Admin(
+                user_id=user.id,
+                permission_level="standard",
+            )
+        )
 
-    # 5. Commit everything together
     await db.commit()
     await db.refresh(user)
 
@@ -90,26 +127,35 @@ async def register_user(data: RegisterRequest, db: AsyncSession) -> RegisterResp
     )
 
 
-
-
-async def login_user(data: LoginRequest, db: AsyncSession) -> LoginResponse:
+async def login_user(
+    data: LoginRequest,
+    db: AsyncSession,
+) -> LoginResponse:
     """
-    Verify email + password, return a signed JWT.
+    Verify credentials and return a signed JWT.
 
     Raises:
-        HTTPException 401 — email not found or wrong password
+        HTTPException 401 — invalid email or password
     """
 
-    # 1. Find user by email
-    result = await db.execute(select(User).where(User.email == data.email))
-    user: User | None = result.scalar_one_or_none()
+    user = await get_user_by_email(data.email, db)
 
-    # 2. Verify password — same error message for both cases to avoid user enumeration
-    if not user or not verify_password(data.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Invalid email or password.")
+    # Use the same error for both cases to prevent
+    # user enumeration.
+    if user is None or not verify_password(
+        data.password,
+        user.password_hash,
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password.",
+        )
 
-    # 3. Generate token
-    token = create_access_token(user_id=user.id, role=user.role)
+    #  Generate access token
+    token = create_access_token(
+        user_id=user.id,
+        role=user.role,
+    )
 
     return LoginResponse(
         access_token=token,
@@ -120,18 +166,25 @@ async def login_user(data: LoginRequest, db: AsyncSession) -> LoginResponse:
     )
 
 
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
+def _validate_fields(
+    required: dict,
+    role: str,
+) -> None:
+    """
+    Validate fields required by a specific role.
 
-def _validate_fields(required: dict, role: str) -> None:
-    """Raise 422 if any required field for a role is missing."""
-    missing = [field for field, value in required.items() if not value]
+    Raises:
+        HTTPException 422 — required field is missing
+    """
+
+    missing = [
+        field
+        for field, value in required.items()
+        if value is None or value == ""
+    ]
+
     if missing:
         raise HTTPException(
             status_code=422,
             detail=f"Missing required fields for role '{role}': {missing}",
         )
-
-
-

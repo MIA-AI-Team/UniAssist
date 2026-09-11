@@ -27,7 +27,11 @@ class File(Base):
     uploaded_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc), nullable=False)
 
     owner: Mapped[User] = relationship("User")
-    task: Mapped[Task | None] = relationship("Task")
+    task: Mapped["Task | None"] = relationship(
+        "Task",
+        foreign_keys=[task_id],
+        back_populates="files",
+    )
     submission: Mapped[Submission | None] = relationship(back_populates="files")
     embeddings: Mapped[list[Embedding]] = relationship(back_populates="file", cascade="all, delete-orphan")
 

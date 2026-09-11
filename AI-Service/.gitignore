@@ -2,7 +2,6 @@
 .env
 .env.local
 *.env
-
 # Python bytecode & cache
 __pycache__/
 *.py[cod]
@@ -40,3 +39,5 @@ Thumbs.db
 
 .cursor/
 sample_test_files/
+# Upload folder when testing
+uploads/

@@ -1,16 +1,18 @@
 from __future__ import annotations
 
 import datetime as dt
-
+from typing import TYPE_CHECKING
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, JSON, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from typing import TYPE_CHECKING
 from backend.database import Base
 from backend.models.enums import TaskType
 
 if TYPE_CHECKING:
+    from backend.models.file import File
     from backend.models.rubric import Rubric
     from backend.models.submissions import Submission
+
+
 class Task(Base):
     __tablename__ = "tasks"
 
@@ -23,12 +25,59 @@ class Task(Base):
     target_major: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_by: Mapped[int] = mapped_column(ForeignKey("staff.user_id"), nullable=False)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    
+    reference_file_id: Mapped[int | None] = mapped_column(
+        ForeignKey(
+            "files.id", 
+            ondelete="SET NULL", 
+            use_alter=True, 
+            name="fk_tasks_reference_file_id"
+        ), 
+        nullable=True
+    )
 
-    lab_details: Mapped["TaskLabDetails | None"] = relationship(back_populates="task", uselist=False, cascade="all, delete-orphan")
-    assignment_details: Mapped["TaskAssignmentDetails | None"] = relationship(back_populates="task", uselist=False, cascade="all, delete-orphan")
-    project_details: Mapped["TaskProjectDetails | None"] = relationship(back_populates="task", uselist=False, cascade="all, delete-orphan")
-    rubrics: Mapped[list["Rubric"]] = relationship(back_populates="task")
-    submissions: Mapped[list["Submission"]] = relationship(back_populates="task")
+    reference_file: Mapped["File | None"] = relationship(
+        "File",
+        foreign_keys=[reference_file_id],
+        uselist=False,
+    )
+
+    files: Mapped[list["File"]] = relationship(
+        "File",
+        foreign_keys="File.task_id",
+        back_populates="task",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    lab_details: Mapped["TaskLabDetails | None"] = relationship(
+        back_populates="task", 
+        uselist=False, 
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+    assignment_details: Mapped["TaskAssignmentDetails | None"] = relationship(
+        back_populates="task", 
+        uselist=False, 
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+    project_details: Mapped["TaskProjectDetails | None"] = relationship(
+        back_populates="task", 
+        uselist=False, 
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+    rubrics: Mapped[list["Rubric"]] = relationship(
+        back_populates="task", 
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+    submissions: Mapped[list["Submission"]] = relationship(
+        back_populates="task", 
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
 
 
 class TaskLabDetails(Base):
@@ -36,7 +85,6 @@ class TaskLabDetails(Base):
 
     task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"), primary_key=True)
     scheduled_date: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    reference_file_id: Mapped[int] = mapped_column(ForeignKey("files.id"), nullable=False)
 
     task: Mapped["Task"] = relationship(back_populates="lab_details")
 
