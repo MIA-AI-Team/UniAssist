@@ -1,4 +1,4 @@
-# AI Evaluation Service — FastAPI (API only)
+# AI Evaluation Service — FastAPI (API only, no web UI)
 FROM python:3.12-slim
 
 WORKDIR /app

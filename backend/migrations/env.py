@@ -16,7 +16,8 @@ target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
-    url = str(engine.url).replace("+asyncmy", "")
+    # Strip async driver suffix for offline Alembic URL
+    url = str(engine.url).replace("+asyncpg", "").replace("+asyncmy", "")
     
     context.configure(
         url=url,

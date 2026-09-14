@@ -27,6 +27,10 @@ AI_CONTENT_ACCESS*
 *.pdf
 temp/
 tmp/
+uploads/*
+!uploads/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep
 
 # IDE & Editor settings
 .vscode/

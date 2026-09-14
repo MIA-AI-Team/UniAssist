@@ -1,6 +1,6 @@
 # System Overview — AI Evaluation Service
 
-**Package:** `ai_tutor` (`AI-Service/`)  
+**Package:** `ai_tutor` (`ai-service/`)  
 **Backend entry point:** `from ai_tutor import AIService`  
 **Integration details:** [BACKEND_CONNECTION.md](./BACKEND_CONNECTION.md)
 
@@ -8,7 +8,7 @@
 
 ## 1. How to run pytest
 
-All tests live under `AI-Service/tests/`. Config is in `pytest.ini`:
+All tests live under `ai-service/tests/`. Config is in `pytest.ini`:
 
 ```ini
 [pytest]
@@ -18,10 +18,10 @@ pythonpath = .
 
 ### Steps
 
-1. Open a terminal in the **AI-Service** folder (not the parent `AI-TUTOR` folder):
+1. Open a terminal in the **ai-service** folder (not the parent `AI-TUTOR` folder):
 
 ```bash
-cd AI-Service
+cd ai-service
 ```
 
 2. Install dependencies if needed:
@@ -55,7 +55,7 @@ python -m pytest -v
 
 ### Notes
 
-- Run from `AI-Service/` so `pythonpath = .` puts the project root on the import path (`app`, `ai_tutor`, shims).
+- Run from `ai-service/` so `pythonpath = .` puts the project root on the import path (`app`, `ai_tutor`, shims).
 - Tests use **mock mode** where needed — no API keys required for the suite.
 - You should see all tests **passed** (currently 41+ including cohort analytics).
 
@@ -168,7 +168,7 @@ Groq (primary) / Gemini (fallback) / mock mode
 ## 4. Package layout
 
 ```text
-AI-Service/
+ai-service/
 ├── ai_tutor/
 │   ├── service.py           # AIService — call this
 │   ├── config.py
@@ -239,7 +239,7 @@ Copy `.env.example` → `.env`:
 ### Local
 
 ```bash
-cd AI-Service
+cd ai-service
 pip install -r requirements.txt
 # optional: copy .env.example to .env and set keys
 uvicorn app:app --reload
@@ -250,7 +250,7 @@ Open `http://127.0.0.1:8000/docs` (Swagger) or `http://127.0.0.1:8000/api/ai/hea
 ### Docker (API only)
 
 ```bash
-cd AI-Service
+cd ai-service
 docker build -t ai-tutor-service .
 docker run --rm -p 8000:8000 ai-tutor-service
 # or: docker compose up --build

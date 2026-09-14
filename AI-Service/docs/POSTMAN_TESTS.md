@@ -10,7 +10,7 @@ Use these requests against the running container or local server.
 
 ## 0. Run the API (Docker)
 
-From `AI-Service/`:
+From `ai-service/`:
 
 ```bash
 # Build image

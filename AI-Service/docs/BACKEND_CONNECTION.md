@@ -31,7 +31,7 @@ from ai_tutor.models import (
 ai = AIService()  # reads env / Config; uses mock if no API keys
 ```
 
-Install / path: keep the `AI-Service` root (or the `ai_tutor` package) on `PYTHONPATH`, or install the package when you publish it.
+Install / path: keep the `ai-service` root (or the `ai_tutor` package) on `PYTHONPATH`, or install the package when you publish it.
 
 ### Not recommended for production
 
@@ -354,7 +354,7 @@ Not required by AI logic; useful for your logs / tracing. May appear in metrics 
 
 ## 8. Environment the AI process needs
 
-Copy `AI-Service/.env.example` → `.env` on the host that runs AI calls:
+Copy `ai-service/.env.example` → `.env` on the host that runs AI calls:
 
 ```env
 PRIMARY_PROVIDER=groq
@@ -392,7 +392,7 @@ g = ai.grade_submission(
 assert g.ai_suggested_grade is not None
 ```
 
-Full automated coverage: from `AI-Service/` run `pytest -v`.
+Full automated coverage: from `ai-service/` run `pytest -v`.
 
 ---
 
