@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 FROM node:24-bookworm-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
