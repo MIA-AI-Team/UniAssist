@@ -38,7 +38,8 @@ async def get_current_user(
         )
         if not token_data.sub:
             raise credentials_exception
-    except JWTError:
+        user_id = int(token_data.sub)
+    except (JWTError, ValueError, TypeError):
         raise credentials_exception
 
     result = await db.execute(
@@ -46,11 +47,15 @@ async def get_current_user(
             selectinload(User.student),
             selectinload(User.staff),
             selectinload(User.admin)
-        ).where(User.id == int(token_data.sub)))
+        ).where(User.id == user_id))
     user = result.scalar_one_or_none()
 
     if user is None:
         raise credentials_exception
+
+    if not user.is_active:
+        raise HTTPException(status_code=401, detail="Account is suspended.",
+                            headers={"X-Error-Code": "account_suspended"})
 
     return user
 
@@ -68,6 +73,10 @@ def require_roles(allowed_roles: Sequence[str]):
         return current_user
 
     return role_checker
+
+
+require_admin = require_roles(["admin"])
+require_academic = require_roles(["student", "professor", "teaching_assistant"])
 
 async def require_professor( current_user: User = Depends(get_current_user), ) -> User:
 

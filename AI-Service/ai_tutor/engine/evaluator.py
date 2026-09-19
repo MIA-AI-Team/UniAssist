@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+from threading import local
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ai_tutor.metrics import metrics_collector
@@ -57,10 +58,19 @@ class AIEvaluationEngine:
         self.mock_mode = Config.MOCK_MODE
         self._groq_client = None
         self._gemini_client = None
-        self._last_llm_info: Dict[str, Optional[str]] = {"provider": None, "model": None}
+        self._llm_state = local()
 
         if not self.mock_mode:
             self._init_clients()
+
+    @property
+    def _last_llm_info(self) -> Dict[str, Optional[str]]:
+        # Backend AI calls run concurrently in worker threads. Provenance must be call-local.
+        return getattr(self._llm_state, "info", {"provider": None, "model": None})
+
+    @_last_llm_info.setter
+    def _last_llm_info(self, value: Dict[str, Optional[str]]) -> None:
+        self._llm_state.info = value
 
     def _init_clients(self):
         if Config.GROQ_API_KEY:
@@ -69,7 +79,7 @@ class AIEvaluationEngine:
                 self._groq_client = Groq(api_key=Config.GROQ_API_KEY)
                 logger.info("Groq client initialized successfully.")
             except Exception as e:
-                logger.warning(f"Failed to initialize Groq client: {e}")
+                logger.warning("Failed to initialize Groq client")
 
         if Config.GEMINI_API_KEY:
             try:
@@ -77,7 +87,7 @@ class AIEvaluationEngine:
                 self._gemini_client = genai.Client(api_key=Config.GEMINI_API_KEY)
                 logger.info("Google Gemini client initialized successfully.")
             except Exception as e:
-                logger.warning(f"Failed to initialize Gemini client: {e}")
+                logger.warning("Failed to initialize Gemini client")
 
         if not self._groq_client and not self._gemini_client:
             logger.info("No active API keys found. Running in MOCK_MODE.")
@@ -105,7 +115,7 @@ class AIEvaluationEngine:
         reference_text: str,
     ) -> RubricSuggestionResponse:
         ref_content = reference_text or task_description or f"Detailed task specification for '{task_title}' ({task_type})."
-        ref_for_prompt, _ = self._budget_text(ref_content, Config.MAX_REFERENCE_CHARS, "reference")
+        ref_for_prompt, truncated = self._budget_text(ref_content, Config.MAX_REFERENCE_CHARS, "reference")
 
         user_prompt = RUBRIC_SUGGESTION_USER_PROMPT.format(
             task_title=task_title,
@@ -116,6 +126,7 @@ class AIEvaluationEngine:
         )
 
         with metrics_collector.track("suggest_rubric") as record:
+            record.prompt_truncated = truncated
             if self.mock_mode:
                 response = self._mock_suggest_rubric(task_title, task_type)
                 response.ai_metadata = self._build_metadata(record)
@@ -138,7 +149,7 @@ class AIEvaluationEngine:
                 raise
             except Exception as e:
                 record.parse_success = False
-                logger.error(f"Rubric suggestion failed: {e}")
+                logger.error("Rubric suggestion failed")
                 raise RubricResponseError(f"AI rubric response was invalid: {e}") from e
 
     def refine_rubric(
@@ -158,7 +169,7 @@ class AIEvaluationEngine:
                 formatted_prev.append(f"{idx}. {item.get('name')} ({item.get('max_points')} pts): {item.get('description')}")
         prev_str = "\n".join(formatted_prev)
         ref_content = reference_text or task_description or f"Task specification for '{task_title}' ({task_type})."
-        ref_for_prompt, _ = self._budget_text(ref_content, Config.MAX_REFERENCE_CHARS, "reference")
+        ref_for_prompt, truncated = self._budget_text(ref_content, Config.MAX_REFERENCE_CHARS, "reference")
 
         user_prompt = RUBRIC_REFINEMENT_USER_PROMPT.format(
             task_title=task_title,
@@ -170,6 +181,7 @@ class AIEvaluationEngine:
         )
 
         with metrics_collector.track("refine_rubric") as record:
+            record.prompt_truncated = truncated
             if self.mock_mode:
                 response = self._mock_suggest_rubric(task_title, task_type)
                 response.ai_metadata = self._build_metadata(record)
@@ -192,7 +204,7 @@ class AIEvaluationEngine:
                 raise
             except Exception as e:
                 record.parse_success = False
-                logger.error(f"Rubric refinement failed: {e}")
+                logger.error("Rubric refinement failed")
                 raise RubricResponseError(f"AI rubric refinement response was invalid: {e}") from e
 
     def grade_submission(
@@ -272,7 +284,7 @@ class AIEvaluationEngine:
                 raise
             except Exception as e:
                 record.parse_success = False
-                logger.error(f"Grading failed: {e}")
+                logger.error("Grading failed")
                 raise GradingResponseError(f"AI grading response was invalid: {e}") from e
 
     def analyze_cohort_patterns(
@@ -284,6 +296,7 @@ class AIEvaluationEngine:
         grades: Optional[List[CohortGradeSnapshot]] = None,
         code_reviews: Optional[List[CohortCodeReviewSnapshot]] = None,
         criterion_stats: Optional[List[CohortCriterionSnapshot]] = None,
+        response_language: str = "en",
     ) -> CohortAnalyticsResponse:
         """
         Analyze anonymized cohort aggregates for shared errors/misconceptions.
@@ -358,11 +371,19 @@ class AIEvaluationEngine:
                     warnings=warnings,
                 )
                 response.ai_metadata = self._build_metadata(record, warnings=response.warnings)
+                if response_language == "ar":
+                    response.summary = f"تقرير تجريبي لنتائج {student_count} طلاب. متوسط النسبة {average_percentage}٪."
+                    response.common_issues = []
+                    response.misconceptions = []
+                    response.teaching_focus = ["راجع إحصاءات المعايير لتحديد ما يحتاج إلى شرح إضافي؛ هذا اقتراح تجريبي وليس استنتاجاً من نموذج حقيقي."]
+                    response.warnings = [*warnings, "التحليل التجريبي لا يثبت وجود مفاهيم خاطئة لدى الطلاب."]
                 return response
 
             try:
                 json_str = self._call_llm(
-                    system_prompt=COHORT_ANALYTICS_SYSTEM_PROMPT,
+                    system_prompt=COHORT_ANALYTICS_SYSTEM_PROMPT + (
+                        "\nWrite the summary, issues, misconceptions and suggestions in Arabic." if response_language == "ar"
+                        else "\nWrite the summary, issues, misconceptions and suggestions in English."),
                     user_prompt=user_prompt,
                 )
                 record.provider = self._last_llm_info.get("provider")
@@ -380,7 +401,7 @@ class AIEvaluationEngine:
                 raise
             except Exception as e:
                 record.parse_success = False
-                logger.error(f"Cohort analytics failed: {e}")
+                logger.error("Cohort analytics failed")
                 raise AnalyticsResponseError(f"AI cohort analytics response was invalid: {e}") from e
 
     def socratic_tutor_chat(
@@ -389,13 +410,14 @@ class AIEvaluationEngine:
         chat_history: List[ChatMessage],
         student_message: str,
         task_title: Optional[str] = None,
+        response_language: str = "en",
     ) -> StudentChatResponse:
         history_formatted = "\n".join(
             f"[{msg.role.upper()}]: {msg.content}" for msg in chat_history
         ) if chat_history else "No previous chat history."
 
         ref_content = reference_text.strip() if reference_text and reference_text.strip() else f"Task: {task_title or 'University Assignment'}"
-        ref_for_prompt, _ = self._budget_text(ref_content, Config.MAX_REFERENCE_CHARS, "reference")
+        ref_for_prompt, truncated = self._budget_text(ref_content, Config.MAX_REFERENCE_CHARS, "reference")
 
         user_prompt = STUDENT_SOCRATIC_TUTOR_USER_PROMPT.format(
             reference_text=ref_for_prompt,
@@ -404,14 +426,18 @@ class AIEvaluationEngine:
         )
 
         with metrics_collector.track("socratic_tutor_chat") as record:
+            record.prompt_truncated = truncated
             if self.mock_mode:
                 response = self._mock_socratic_tutor_response(student_message)
+                if response_language == "ar":
+                    response.reply = "يمكنني مساعدتك بتلميحات دون تقديم الحل الكامل. ما الذي جرّبته حتى الآن، وأين واجهت صعوبة؟"
                 response.ai_metadata = self._build_metadata(record)
                 return response
 
             try:
                 ai_reply = self._call_llm(
-                    system_prompt=STUDENT_SOCRATIC_TUTOR_SYSTEM_PROMPT,
+                    system_prompt=STUDENT_SOCRATIC_TUTOR_SYSTEM_PROMPT + (
+                        "\nRespond in Arabic." if response_language == "ar" else "\nRespond in English."),
                     user_prompt=user_prompt,
                     response_json=False,
                 )
@@ -423,7 +449,7 @@ class AIEvaluationEngine:
                 )
             except Exception as e:
                 record.parse_success = False
-                logger.error(f"Socratic chat failed: {e}")
+                logger.error("Socratic chat failed")
                 raise ChatResponseError(f"AI Socratic tutor failed: {e}") from e
 
     def lab_assistant_chat(
@@ -434,13 +460,14 @@ class AIEvaluationEngine:
         model_answers: str,
         chat_history: List[ChatMessage],
         student_message: str,
+        response_language: str = "en",
     ) -> LabChatResponse:
         history_formatted = "\n".join(
             f"[{msg.role.upper()}]: {msg.content}" for msg in chat_history
         ) if chat_history else "No previous chat history."
 
-        steps_for_prompt, _ = self._budget_text(steps_and_theory or "", Config.MAX_REFERENCE_CHARS, "lab steps")
-        answers_for_prompt, _ = self._budget_text(model_answers or "", Config.MAX_GRADING_KEY_CHARS, "model answers")
+        steps_for_prompt, steps_truncated = self._budget_text(steps_and_theory or "", Config.MAX_REFERENCE_CHARS, "lab steps")
+        answers_for_prompt, answers_truncated = self._budget_text(model_answers or "", Config.MAX_GRADING_KEY_CHARS, "model answers")
 
         user_prompt = LAB_ASSISTANT_USER_PROMPT.format(
             lab_title=lab_title,
@@ -453,14 +480,18 @@ class AIEvaluationEngine:
         detected_mode = "experiment_guide" if lab_type == "experiment" else "coding_hint"
 
         with metrics_collector.track("lab_assistant_chat") as record:
+            record.prompt_truncated = steps_truncated or answers_truncated
             if self.mock_mode:
                 response = self._mock_lab_assistant_response(lab_title, lab_type, student_message)
+                if response_language == "ar":
+                    response.reply = "سأرشدك لفهم خطوات المعمل دون كشف الحلول. ما الخطوة التي تعمل عليها، وما الذي لاحظته؟"
                 response.ai_metadata = self._build_metadata(record)
                 return response
 
             try:
                 ai_reply = self._call_llm(
-                    system_prompt=LAB_ASSISTANT_SYSTEM_PROMPT,
+                    system_prompt=LAB_ASSISTANT_SYSTEM_PROMPT + (
+                        "\nRespond in Arabic." if response_language == "ar" else "\nRespond in English."),
                     user_prompt=user_prompt,
                     response_json=False,
                 )
@@ -475,7 +506,7 @@ class AIEvaluationEngine:
                 )
             except Exception as e:
                 record.parse_success = False
-                logger.error(f"Lab assistant chat failed: {e}")
+                logger.error("Lab assistant chat failed")
                 raise ChatResponseError(f"AI Lab assistant failed: {e}") from e
 
     def _call_llm(self, system_prompt: str, user_prompt: str, response_json: bool = True) -> str:
@@ -497,7 +528,7 @@ class AIEvaluationEngine:
                     self._last_llm_info = {"provider": "groq", "model": model_name}
                     return response.choices[0].message.content
                 except Exception as e:
-                    logger.warning(f"Groq model ({model_name}) failed: {e}")
+                    logger.warning("Groq model attempt failed")
 
         if self._gemini_client:
             text = self._call_gemini(system_prompt, user_prompt, response_json)
@@ -526,7 +557,7 @@ class AIEvaluationEngine:
                 return response.text
             except Exception as e:
                 last_error = e
-                logger.warning(f"Gemini model ({model_name}) failed: {e}")
+                logger.warning("Gemini model attempt failed")
 
         raise RuntimeError(f"All Gemini models failed. Last error: {last_error}")
 
@@ -817,7 +848,7 @@ class AIEvaluationEngine:
         if fail_count > 0:
             common_issues.append(
                 CommonIssue(
-                    title="Students below passing threshold",
+                    title="Released results below the descriptive 50% band",
                     description=f"{fail_count} of {student_count} latest attempts scored below 50%.",
                     severity="critical" if fail_count >= max(1, student_count // 3) else "warning",
                     affected_estimate=f"{fail_count}/{student_count}",

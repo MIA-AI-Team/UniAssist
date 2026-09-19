@@ -34,7 +34,7 @@ async def get_submission(
     result = await db.execute(
         select(Submission)
         .where(Submission.id == submission_id)
-        .options(selectinload(Submission.files))
+        .options(selectinload(Submission.files), selectinload(Submission.rubric).selectinload(Rubric.criteria), selectinload(Submission.code_reviews))
     )
 
     submission = result.scalar_one_or_none()

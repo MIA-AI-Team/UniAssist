@@ -28,12 +28,12 @@ class Rubric(Base):
     __table_args__ = (UniqueConstraint("task_id", "version", name="uq_rubric_task_version"),)
  
     id: Mapped[int] = mapped_column(primary_key=True)
-    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"))
+    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"))
     version: Mapped[int] = mapped_column(Integer)
     source: Mapped[RubricSource] = mapped_column(Enum(RubricSource))
     status: Mapped[RubricStatus] = mapped_column(Enum(RubricStatus), default=RubricStatus.pending)
     reviewed_by: Mapped[int | None] = mapped_column(ForeignKey("staff.user_id"), nullable=True)
-    reviewed_at: Mapped[dt.datetime | None] = mapped_column(DateTime, nullable=True)
+    reviewed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[dt.datetime] = mapped_column(
     DateTime(timezone=True), 
     default=lambda: datetime.now(timezone.utc)
@@ -57,5 +57,3 @@ class RubricCriteria(Base):
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
  
     rubric: Mapped["Rubric"] = relationship(back_populates="criteria")
- 
- 

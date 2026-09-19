@@ -1,6 +1,6 @@
 
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func, true
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.models.enums import UserRole
 from backend.database import Base
@@ -24,6 +24,8 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
     role: Mapped[UserRole] = mapped_column(Enum(UserRole))
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=true(), default=True)
+    profile_version: Mapped[int] = mapped_column(Integer, nullable=False, server_default="1", default=1)
     created_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -63,5 +65,3 @@ class Student(Base):
     github_username: Mapped[str | None] = mapped_column(String(255), nullable=True)
  
     user: Mapped["User"] = relationship(back_populates="student")
- 
- 

@@ -17,6 +17,7 @@ aiofiles>=23.1.0
 # File text extraction (used by embedding/task context via ai_tutor parsers)
 pypdf>=4.0.0
 python-docx>=1.0.0
+httpx==0.28.1
 # AI layer deps (backend imports ai_tutor in-process)
 groq>=0.4.0
 google-genai>=0.1.0

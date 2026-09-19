@@ -19,7 +19,7 @@ class FileUploadResponse(BaseModel):
     file_name: Optional[str] = None
     file_type: str
     purpose: str
-    storage_path: str
+    size_bytes: int | None = None
     uploaded_at: dt.datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -27,11 +27,12 @@ class FileUploadResponse(BaseModel):
 
 class FileInfoResponse(BaseModel):
     file_id: int
+    file_name: Optional[str] = None
     file_type: str
     purpose: str
     task_id: Optional[int] = None
     submission_id: Optional[int] = None
-    storage_path: str
+    size_bytes: int | None = None
     uploaded_at: dt.datetime
 
     model_config = ConfigDict(from_attributes=True)

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Literal
 
 from pydantic import BaseModel, Field
 
@@ -48,6 +48,7 @@ class SocraticChatRequest(BaseModel):
     """
 
     reference_text: str = ""
+    response_language: Literal["en", "ar"] = "en"
     chat_history: List[ChatMessage] = Field(default_factory=list)
     persisted_messages: List[PersistedChatMessage] = Field(
         default_factory=list,
@@ -66,6 +67,7 @@ class LabAssistantChatRequest(BaseModel):
     """
 
     lab_title: str
+    response_language: Literal["en", "ar"] = "en"
     lab_type: str = "experiment"
     steps_and_theory: str = ""
     model_answers: str = ""
@@ -88,6 +90,7 @@ class CohortAnalyticsRequest(BaseModel):
     """
 
     task_title: str
+    response_language: Literal["en", "ar"] = "en"
     task_type: str = "lab"
     task_description: str = ""
     rubric_criteria_names: List[str] = Field(default_factory=list)

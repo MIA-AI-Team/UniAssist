@@ -1,7 +1,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, Literal
 from pydantic import BaseModel, EmailStr, Field
 
 
@@ -13,7 +13,7 @@ class RegisterRequest(BaseModel):
     name: str = Field(min_length=2, max_length=150)
     email: EmailStr
     password: str = Field(min_length=8, description="Plain-text password — hashed before storage")
-    role: str = Field(description="admin | professor | teaching_assistant | student")
+    role: Literal["professor", "teaching_assistant", "student"]
 
     # Student-only fields
     student_number: Optional[str] = Field(default=None, description="Required if role=student")
@@ -58,3 +58,15 @@ class LoginResponse(BaseModel):
 class TokenPayload(BaseModel):
     sub: str        # user_id as string
     role: str
+
+class IdentityResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    role: str
+    student_number: Optional[str] = None
+    cohort_year: Optional[int] = None
+    major: Optional[str] = None
+    department: Optional[str] = None
+    github_username: Optional[str] = None
+    profile_version: int

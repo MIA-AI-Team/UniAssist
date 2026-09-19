@@ -14,6 +14,7 @@ from backend.models.tasks import Task, TaskLabDetails, TaskAssignmentDetails, Ta
 from backend.models.enums import TaskType
 from  backend.repository import _get_task, get_file_by_id
 from backend.repository.embedding_repository import link_embeddings_to_task
+from backend.services.access import fail
 
 
 
@@ -29,6 +30,11 @@ async def create_task(data: dict, created_by: int,  db: AsyncSession) -> Task:
     if task_type not in [t.value for t in TaskType]:
         raise HTTPException(status_code=400, detail=f"Invalid task type: {task_type}. Must be lab | assignment | project")
     reference_file_id = data.get("reference_file_id")
+    if task_type == "lab":
+        if not reference_file_id or not data.get("scheduled_date"):
+            fail("lab_fields_required", "Labs require a reference PDF and scheduled date.", 422)
+        if data["due_date"] < data["scheduled_date"]:
+            fail("invalid_dates", "Due date must not precede the scheduled date.", 422)
 
     # Convert 0 or empty values from Swagger/forms to None
     if reference_file_id in (0, "", None):
@@ -41,6 +47,10 @@ async def create_task(data: dict, created_by: int,  db: AsyncSession) -> Task:
                 status_code=404,
                 detail=f"Reference file with ID {reference_file_id} not found."
             )
+        if file_record.owner_id != created_by or file_record.purpose != "reference" or file_record.task_id is not None:
+            fail("reference_forbidden", "Choose an unlinked reference file uploaded by you.", 403)
+        if task_type == "lab" and file_record.file_type != "pdf":
+            fail("lab_pdf_required", "The lab reference must be a PDF.", 422)
     
 
     task = Task(
@@ -51,7 +61,7 @@ async def create_task(data: dict, created_by: int,  db: AsyncSession) -> Task:
         target_cohort_year=data["target_cohort_year"],
         target_major=data.get("target_major"),
         created_by=created_by,
-        reference_file_id=data.get("reference_file_id"),
+        reference_file_id=reference_file_id,
 
     )
     db.add(task)
@@ -78,6 +88,7 @@ async def create_task(data: dict, created_by: int,  db: AsyncSession) -> Task:
             require_team=data.get("require_team", True),
         ))
     if reference_file_id:
+        file_record.task_id = task.id
         await link_embeddings_to_task(reference_file_id, task.id, db)
     await db.commit()
     await db.refresh(task)

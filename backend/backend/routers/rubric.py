@@ -23,6 +23,7 @@ from backend.services.rubric_service import (
     create_manual_rubric,
 )
 from backend.schemas.rubric import RubricUploadResponse, CreateRubricRequest, RefineRequest, StatusRequest
+from backend.schemas.rubric import RubricCreatedResponse, RubricListItem
 
 
 router = APIRouter(
@@ -33,7 +34,7 @@ router = APIRouter(
 
 
 
-@router.post("/suggest", status_code=201)
+@router.post("/suggest", status_code=201, response_model=RubricUploadResponse)
 async def suggest(
     task_id: int,
     db: AsyncSession = Depends(get_db),
@@ -52,7 +53,7 @@ async def suggest(
         status=rubric.status,
     )
 
-@router.post("/refine", status_code=201)
+@router.post("/refine", status_code=201, response_model=RubricUploadResponse)
 async def refine(
     task_id: int,
     body: RefineRequest,
@@ -77,7 +78,7 @@ async def refine(
         status=rubric.status,
     )
 
-@router.post("/create", status_code=201)
+@router.post("/create", status_code=201, response_model=RubricCreatedResponse)
 async def create(
     task_id: int,
     body: CreateRubricRequest,
@@ -107,7 +108,7 @@ async def create(
         ],
     }
 
-@router.patch("/status")
+@router.patch("/status", response_model=RubricUploadResponse)
 async def update_status(
     body: StatusRequest,
     task_id:int,
@@ -134,7 +135,7 @@ async def update_status(
     )
 
 
-@router.get("")
+@router.get("", response_model=list[RubricListItem])
 async def list_all_rubrics(
     task_id: int,
     db: AsyncSession = Depends(get_db),

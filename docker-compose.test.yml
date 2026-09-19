@@ -1,0 +1,54 @@
+# Isolated verification stack. Never points at the user's database or upload directory.
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: verify
+      POSTGRES_PASSWORD: verify-local-only
+      POSTGRES_DB: verify
+    ports: ["15432:5432"]
+    volumes: ["verify_db:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U verify -d verify"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  migrate:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://verify:verify-local-only@db:5432/verify
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db: {condition: service_healthy}
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://verify:verify-local-only@db:5432/verify
+      SECRET_KEY: isolated-verification-jwt-key-not-for-production
+      MOCK_MODE: "true"
+      GITHUB_FIXTURE_MODE: "true"
+    ports: ["18001:8000"]
+    volumes: ["verify_uploads:/app/uploads"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+  frontend:
+    build: {context: ./frontend, target: runner}
+    environment:
+      BACKEND_INTERNAL_URL: http://backend:8000
+      APP_URL: http://localhost:13000
+      SESSION_SECRET: isolated-verification-cookie-key-not-for-production
+    ports: ["13000:3000"]
+    depends_on:
+      backend: {condition: service_healthy}
+volumes:
+  verify_db:
+  verify_uploads:

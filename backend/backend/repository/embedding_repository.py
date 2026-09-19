@@ -4,6 +4,7 @@ from sqlalchemy import select , update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.models.file import Embedding
+from backend.models.tasks import Task
 
 
 async def get_reference_text(
@@ -12,7 +13,7 @@ async def get_reference_text(
 ) -> str:
     result = await db.execute(
         select(Embedding)
-        .where(Embedding.task_id == task_id)
+        .where(Embedding.file_id == select(Task.reference_file_id).where(Task.id == task_id).scalar_subquery())
         .order_by(Embedding.chunk_index.asc())
     )
 
@@ -37,4 +38,4 @@ async def link_embeddings_to_task(
         .where(Embedding.file_id == file_id)
         .values(task_id=task_id)
     )
-    await db.commit()
+    await db.flush()

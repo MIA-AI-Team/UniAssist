@@ -15,7 +15,6 @@ from fastapi import HTTPException
 
 async def _get_rubric_with_criteria(db: AsyncSession,rubric_id: int=None, task_id:int=None, version:int=None  ) -> Rubric:
     """Helper to fetch a rubric with its criteria eagerly loaded."""
-    print(f"_get_rubric_with_criteria called with rubric_id={rubric_id}, task_id={task_id}, version={version}")
     if rubric_id is not None:
         result = await db.execute(
             select(Rubric)
@@ -25,6 +24,8 @@ async def _get_rubric_with_criteria(db: AsyncSession,rubric_id: int=None, task_i
         rubric = result.scalar_one_or_none()
         if rubric is None:
             raise HTTPException(status_code=404, detail=f"Rubric {rubric_id} not found.")
+        if task_id is not None and rubric.task_id != task_id:
+            raise HTTPException(status_code=422, detail="Rubric does not belong to this task.")
         return rubric
     elif task_id is not None and version ==0:
         result = await db.execute(
@@ -101,6 +102,8 @@ async def  create_rubric(
     status,
     db: AsyncSession,
 ) -> Rubric:
+    from backend.models.tasks import Task
+    await db.execute(select(Task.id).where(Task.id == task_id).with_for_update())
     version = await get_next_rubric_version(task_id, db)
 
     rubric = Rubric(
@@ -118,7 +121,7 @@ async def  create_rubric(
             RubricCriteria(
                 rubric_id=rubric.id,
                 name=criterion.name,
-                description=criterion.description,
+                description=criterion.description or "",
                 max_points=criterion.max_points,
                 sort_order=(
                     criterion.sort_order

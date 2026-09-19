@@ -1,565 +1,243 @@
-# AI Evaluation Assistant For Universities
+# UniAssist database design — implemented foundations and planned expansion
 
-**Audience:** team review (product + engineering)  
-**Status:** proposed for MVP  
-**Last updated:** 2026-08-26  
+This reference describes the current schema and separates it from planned workflows.
+For exact runtime contracts, read [FRONTEND_API_GUIDE.md](FRONTEND_API_GUIDE.md).
+For scope, rollout and resumption, read [BACKEND_UI_INTEGRATION_PLAN.md](BACKEND_UI_INTEGRATION_PLAN.md).
 
-**UML diagrams (use case, class, activity):** see [README.md](./README.md)
+## 1. Product and authority
 
----
+UniAssist is a task-centered university workspace, not a full LMS. Work types are lab,
+assignment and project; there are no course/enrollment/attendance entities.
 
-## 1. Purpose of this document
+Students submit individual attempts. TAs prepare tasks/rubrics and evaluate work; only professors
+accept/reject rubrics and confirm final grades. Admin account management is implemented without academic content access.
+Role checks are application-layer checks against the authenticated database identity; do not claim
+that an ordinary foreign key alone enforces professor status.
 
-This document describes the **database design for the MVP** of our AI Evaluation Assistant.
+## 2. Academic rules
 
-Please review for:
+- Tasks are visible to matching cohort and major; null target major means all majors in the cohort.
+- Labs are visible immediately. scheduled_date is informational; due_date controls submission.
+  The previous one-day visibility rule is superseded. Labs require a reference PDF and scheduled date;
+  due_date must not precede scheduled_date.
+- An accepted rubric is required to submit. It is not required to read a task or use tutoring.
+- Assignments with allow_late=true may accept attempts after their deadline. All other submissions
+  close at the deadline, and every type closes after a professor-confirmed grade for that student.
+- There is no reopen/publish/draft task workflow in the current API.
+- Each attempt permanently retains its rubric, text and linked artifact. Only the latest pending
+  attempt may be evaluated. New versions/attempts never overwrite historical work.
+- Approved rubric names/descriptions/points are student-visible before submission. Keep private
+  answers out of these public fields. AI scores, feedback and findings remain hidden until confirmation.
+- Individual projects work with require_team=false. Team-required projects require consented,
+  staff-approved membership; submissions and grades remain individual.
+- Tutoring is private and available whenever task access is allowed, including after deadlines/release.
 
-1. Does this match the product we agreed to build?
-2. Are any MVP tables missing or unnecessary?
-3. Are the open questions at the end blocking before we implement?
-
----
-
-## 2. What we are building (and what we are not)
-
-### We are building
-
-An **AI assistant for university staff** that helps run and evaluate:
-
-| Activity | What the system does |
-|---|---|
-| **Labs** | Staff uploads a reference PDF; AI matches the lab to students (cohort + date + major); AI suggests a rubric; staff accepts; AI grades submissions; staff confirms grades |
-| **Assignments** | Staff creates an assignment for a cohort/major; students submit files; same AI rubric → grade → staff confirm flow |
-| **Projects** | Team-based work with a linked GitHub repo; AI reviews the **final** submission (not every commit); staff confirms grades |
-
-### We are not building (MVP)
-
-- A full course / LMS platform (no course catalog, enrollment portal, or timetable)
-- Auto-final grades with no human review
-- Chat monitoring (Discord / Slack / WhatsApp)
-- Deep collaboration analytics dashboards
-
-Those ideas are listed under **Post-MVP** at the end so they are not lost.
-
----
-
-## 3. Roles
-
-| Role | Who | Main capabilities |
-|---|---|---|
-| `admin` | System administrator | Manage users and system settings |
-| `professor` | Teaching staff | Create tasks, review rubrics, **confirm final grades** |
-| `teaching_assistant` | Teaching staff | Create tasks, review rubrics — **cannot confirm final grades** |
-| `student` | Learner | View assigned tasks, submit work, see confirmed grades/feedback |
-
-**Modeling note:** Professors and TAs share one `STAFF` extension table; the
-`staff_role` column separates them.
-
-**Decision — grade authority:** only a `professor` may set
-`SUBMISSIONS.status = staff_confirmed`. A TA can prepare everything up to that
-point (create the task, accept the rubric, review AI output), but the final
-grade needs a professor. Enforced in the application layer and by a check that
-`confirmed_by` points to a staff row with `staff_role = 'professor'`.
-
----
-
-## 4. Core workflows (how data is used)
-
-### 4.1 Lab matching (no manual enrollment)
-
-1. Staff creates a **lab** task and uploads a reference PDF.
-2. Lab is targeted by `cohort_year` + `scheduled_date` + `major`.
-3. The lab is visible **only on `scheduled_date`** — not before, not after.
-4. Students submit work; files are linked to the **submission**.
-5. AI suggests a rubric → staff accepts/rejects → AI grades → professor confirms.
-
-**Decision — visibility window:** labs appear for exactly one day. Practical
-consequence to agree on: the submission window closes with the day, so
-`due_date` for a lab should fall on `scheduled_date`. If a student misses the
-day, a staff member has to reopen it manually.
-
-### 4.2 Assignment flow
-
-1. Staff creates an **assignment** with due date and target cohort/major.
-2. Students submit files against that task.
-3. Same rubric and grading flow as labs.
-
-### 4.3 Project flow (GitHub)
-
-1. Staff creates a **project** task.
-2. Students form **teams**; each team links a GitHub repository.
-3. System syncs commits (mapped via each student’s `github_username`).
-4. On the final submission, AI runs code review **once** (not on every commit).
-5. Professor confirms the grade **per student**.
-
-**Decision — individual grades:** even on team projects, every student gets
-their own grade. The team is context (shared repo, shared deliverable), not the
-unit of grading, so each team member has their own `SUBMISSIONS` row carrying
-`team_id`. This is what makes commit-level attribution useful: two students on
-the same repo can receive different grades.
-
-### 4.4 Grading rule (all task types)
-
-```
-pending → ai_graded → staff_confirmed
-```
-
-A grade is **never final** until a **professor** confirms it.
-
-**Decision — resubmissions allowed:** a student may submit more than once for
-the same task. Each attempt is a new `SUBMISSIONS` row with an incremented
-`attempt_number`; the newest row has `is_latest = true`. Only the latest attempt
-is graded and code-reviewed, but earlier attempts are kept for history.
-
----
-
-## 5. MVP scope: what is in the schema
-
-### In scope (MVP tables)
-
-| Area | Tables |
-|---|---|
-| Identity | `USERS`, `ADMINS`, `STAFF`, `STUDENTS` |
-| Work items | `TASKS`, `TASK_LAB_DETAILS`, `TASK_ASSIGNMENT_DETAILS`, `TASK_PROJECT_DETAILS` |
-| Rubrics | `RUBRICS`, `RUBRIC_CRITERIA` |
-| Delivery | `SUBMISSIONS`, `FILES`, `EMBEDDINGS` |
-| Teams & GitHub | `TEAMS`, `TEAM_MEMBERS`, `REPOSITORIES`, `COMMITS`, `CODE_REVIEWS` |
-
-### Out of scope for MVP (deferred)
-
-| Deferred idea | Why deferred |
-|---|---|
-| `COURSE` / `SECTION` / academic term | Full LMS; MVP uses cohort + major targeting instead |
-| Chat monitoring tables | Privacy, API complexity, not needed to ship grading |
-| Collaboration analytics tables | Valuable later; not required for first grading release |
-| Extra activity types (quiz, presentation, …) | MVP supports only `lab`, `assignment`, `project` |
-
----
-
-## 6. Entity-Relationship Diagram (MVP)
+## 3. Entity map
 
 ```mermaid
 erDiagram
-    USERS ||--o| ADMINS : extends
-    USERS ||--o| STAFF : extends
-    USERS ||--o| STUDENTS : extends
-    USERS ||--o{ FILES : uploads
-
+    USERS ||--o| STUDENTS : profile
+    USERS ||--o| STAFF : profile
+    USERS ||--o| ADMINS : profile
     STAFF ||--o{ TASKS : creates
-    STAFF ||--o{ RUBRICS : reviews
-
-    TASKS ||--o| TASK_LAB_DETAILS : "if type=lab"
-    TASKS ||--o| TASK_ASSIGNMENT_DETAILS : "if type=assignment"
-    TASKS ||--o| TASK_PROJECT_DETAILS : "if type=project"
-    TASKS ||--o{ RUBRICS : has
-    TASKS ||--o{ SUBMISSIONS : receives
-    TASKS ||--o{ TEAMS : organizes
-    TASKS ||--o{ FILES : "task-level files"
-
-    TASK_LAB_DETAILS }o--|| FILES : "reference PDF"
-
-    RUBRICS ||--o{ RUBRIC_CRITERIA : contains
+    TASKS ||--o| TASK_LAB_DETAILS : lab
+    TASKS ||--o| TASK_ASSIGNMENT_DETAILS : assignment
+    TASKS ||--o| TASK_PROJECT_DETAILS : project
+    TASKS ||--o{ RUBRICS : versions
+    RUBRICS ||--o{ RUBRIC_CRITERIA : defines
     RUBRICS ||--o{ SUBMISSIONS : applied_to
-
-    STUDENTS ||--o{ SUBMISSIONS : submits
-    STUDENTS ||--o{ TEAM_MEMBERS : joins
-    STUDENTS ||--o{ COMMITS : authors
-
-    SUBMISSIONS ||--o{ FILES : "submission files"
-    SUBMISSIONS ||--o{ CODE_REVIEWS : "final review"
-    TEAMS ||--o{ TEAM_MEMBERS : has
-    TEAMS ||--o{ REPOSITORIES : links
-    TEAMS ||--o{ SUBMISSIONS : "team submit (projects)"
-
-    TASKS ||--o{ REPOSITORIES : "project repos"
-    REPOSITORIES ||--o{ COMMITS : contains
-    COMMITS ||--o| CODE_REVIEWS : "final commit reviewed"
-
-    FILES ||--o{ EMBEDDINGS : chunked_into
-
-    USERS {
-        int id PK
-        string name
-        string email
-        string password_hash
-        string role "admin|professor|teaching_assistant|student"
-        datetime created_at
-    }
-
-    ADMINS {
-        int user_id PK "FK -> USERS.id"
-        string permission_level
-    }
-
-    STAFF {
-        int user_id PK "FK -> USERS.id"
-        string staff_role "professor|teaching_assistant"
-        string department
-    }
-
-    STUDENTS {
-        int user_id PK "FK -> USERS.id"
-        string student_number
-        int cohort_year
-        string major
-        string github_username "nullable"
-    }
-
-    TASKS {
-        int id PK
-        string type "lab|assignment|project"
-        string title
-        text description
-        datetime due_date
-        int target_cohort_year
-        string target_major "nullable = all majors"
-        int created_by FK
-        datetime created_at
-    }
-
-    TASK_LAB_DETAILS {
-        int task_id PK "FK -> TASKS.id"
-        datetime scheduled_date
-        int reference_file_id FK
-    }
-
-    TASK_ASSIGNMENT_DETAILS {
-        int task_id PK "FK -> TASKS.id"
-        string allowed_file_types "e.g. pdf,zip,ipynb"
-        boolean allow_late
-    }
-
-    TASK_PROJECT_DETAILS {
-        int task_id PK "FK -> TASKS.id"
-        string default_repo_provider "github"
-        boolean require_team
-    }
-
-    RUBRICS {
-        int id PK
-        int task_id FK
-        int version "1, 2, 3 ... per task"
-        string source "ai_suggested|staff_created"
-        string status "pending|accepted|rejected|replaced"
-        int reviewed_by FK "professor or TA"
-        datetime reviewed_at
-        datetime created_at
-    }
-
-    RUBRIC_CRITERIA {
-        int id PK
-        int rubric_id FK
-        string name
-        text description
-        float max_points
-        int sort_order
-    }
-
-    SUBMISSIONS {
-        int id PK
-        int task_id FK
-        int student_id FK "always set - grades are individual"
-        int team_id FK "nullable - team context for projects"
-        int rubric_id FK
-        int attempt_number "1, 2, 3 ... resubmissions allowed"
-        boolean is_latest "only the latest attempt is graded"
-        datetime submitted_at
-        float ai_suggested_grade
-        float final_grade
-        string status "pending|ai_graded|staff_confirmed"
-        int confirmed_by FK "professor only"
-        datetime confirmed_at
-        text feedback
-    }
-
-    TEAMS {
-        int id PK
-        int task_id FK
-        string name
-    }
-
-    TEAM_MEMBERS {
-        int team_id FK
-        int student_id FK
-    }
-
-    REPOSITORIES {
-        int id PK
-        int task_id FK
-        int team_id FK
-        string repo_url
-        string provider "github"
-    }
-
-    COMMITS {
-        int id PK
-        int repository_id FK
-        int student_id FK "nullable until mapped"
-        string commit_hash
-        string author_name
-        string author_github_username
-        text message
-        datetime committed_at
-    }
-
-    CODE_REVIEWS {
-        int id PK
-        int submission_id FK
-        int commit_id FK "final commit reviewed"
-        string review_type "static_analysis|ai_code_review"
-        string severity "info|warning|critical"
-        text finding
-        string file_path
-        int line_number
-        datetime created_at
-    }
-
-    FILES {
-        int id PK
-        int owner_id FK
-        int task_id FK "nullable"
-        int submission_id FK "nullable"
-        string purpose "reference|submission|other"
-        string file_type
-        string storage_path
-        datetime uploaded_at
-    }
-
-    EMBEDDINGS {
-        int id PK
-        int file_id FK
-        int chunk_index
-        text chunk_text
-        string vector_id "pointer to vector DB"
-        string model_version
-        datetime created_at
-    }
+    TASKS ||--o{ GRADING_GUIDANCE : private_versions
+    GRADING_GUIDANCE |o--o{ SUBMISSIONS : used_for_grading
+    TASKS ||--o{ TEACHING_REPORTS : released_insights
+    RUBRICS ||--o{ TEACHING_REPORTS : analyzed_group
+    STUDENTS ||--o{ SUBMISSIONS : owns
+    TASKS ||--o{ SUBMISSIONS : receives
+    SUBMISSIONS ||--o{ FILES : artifact
+    SUBMISSIONS ||--o{ CODE_REVIEWS : findings
+    FILES ||--o{ EMBEDDINGS : text_chunks
+    TASKS |o--o{ FILES : groups
+    USERS ||--o{ CHAT_SESSIONS : owns
+    TASKS |o--o{ CHAT_SESSIONS : context
+    SUBMISSIONS |o--o{ CHAT_SESSIONS : optional_context
+    CHAT_SESSIONS ||--o{ CHAT_MESSAGES : history
+    CHAT_SESSIONS ||--o{ CHAT_TURNS : request_state
+    CHAT_SESSIONS ||--o{ CHAT_SHARES : consent_snapshots
+    STAFF ||--o{ CHAT_SHARES : selected_recipient
+    TASKS ||--o| TASK_TUTOR_SETTINGS : guidance_mode
+    CHAT_MESSAGES ||--o{ CHAT_MESSAGE_SOURCES : provenance
+    TASKS ||--o{ TEAMS : approved_rosters
+    TEAMS ||--o{ TEAM_MEMBERS : roster
+    STUDENTS ||--o{ TEAM_MEMBERS : membership
+    TEAMS ||--o{ TEAM_INVITATIONS : consent_requests
+    STUDENTS ||--o{ TEAM_INVITATIONS : receives
+    TEAMS ||--o{ TEAM_EVENTS : frozen_history
+    TEAMS |o--o{ SUBMISSIONS : individual_context
+    TEAMS ||--o{ REPOSITORIES : approved_links
+    REPOSITORIES ||--o{ COMMITS : evidence
+    REPOSITORIES ||--o{ REPOSITORY_EVENTS : audit
+    REPOSITORIES ||--o{ REPOSITORY_SNAPSHOTS : frozen_archives
+    STUDENTS ||--o{ REPOSITORY_SNAPSHOTS : owns
+    REPOSITORY_SNAPSHOTS |o--o{ SUBMISSIONS : submitted_evidence
 ```
 
----
+TASKS.reference_file_id designates the public reference file; it is no longer stored on
+TASK_LAB_DETAILS. CHAT_TURNS references its user message and optional assistant message.
+The diagram shows relationships, not proof that all entities have a public API.
 
-## 7. Table reference
+## 4. Implemented tables and persistence
 
-### 7.1 Identity
+| Area | Tables and important fields |
+| --- | --- |
+| Identity | USERS identity/password hash/role; STUDENTS number/cohort/major/GitHub username; STAFF role/department; ADMINS permission level |
+| Task | TASKS title/description/due/cohort/major/creator/reference_file_id; typed detail tables |
+| Lab | TASK_LAB_DETAILS scheduled_date; reference points from parent TASKS |
+| Assignment | TASK_ASSIGNMENT_DETAILS allowed_file_types JSON and allow_late |
+| Project | TASK_PROJECT_DETAILS default_repo_provider and require_team |
+| Rubric | RUBRICS task/version/source/status/reviewer/timestamps; RUBRIC_CRITERIA name/description/max_points/sort_order |
+| Attempts | SUBMISSIONS task/student/optional team/rubric/attempt_number/is_latest/status, submission_text, grading and release audit |
+| Persisted evaluation | SUBMISSIONS total_possible_grade, criterion_evaluations JSON, ai_warnings JSON, nullable is_mock; CODE_REVIEWS evidence |
+| Files | FILES owner/task/submission/purpose/type/private path/original_filename/uploaded_at |
+| Reference text | EMBEDDINGS file/task/chunk index/text/vector placeholder/model_version |
+| Chat | CHAT_SESSIONS owner/task/optional submission/title/language/request_id/context_snapshot/timestamps |
+| History | CHAT_MESSAGES session/sender/content/timestamp; CHAT_MESSAGE_SOURCES optional embedding/finding links |
+| Tutor turns | CHAT_TURNS session/request_id/message IDs/status/attempt_count/generation/lease_until/error/mock/context metadata |
+| Consent | CHAT_SHARES session/recipient/request ID/cutoff turn/frozen snapshot/creation/revocation timestamps |
+| Lab guidance | TASK_TUTOR_SETTINGS task/mode/updated_by/updated_at; absent row means experiment |
+| Private marking | GRADING_GUIDANCE task/version/content/request ID/author/time; SUBMISSIONS.grading_guidance_id records the version used |
+| Teaching reports | TEACHING_REPORTS task/rubric/version/language/request ID/author/time, input fingerprint/snapshot, result/mock/safe metadata |
 
-#### `USERS`
-Base account for everyone. `role` drives which extension row exists.
+Older lost submission text remains empty, and unknown original filenames/mock provenance remain null.
+Downloads use a safe filename fallback; do not manufacture historical values.
 
-#### `ADMINS` / `STAFF` / `STUDENTS`
-Role-specific fields:
+EMBEDDINGS currently contains text chunks with placeholder vector IDs and model version
+none:text-chunk-only. There is no functioning external vector database or semantic retrieval.
+Reference context selects only the file designated by TASKS.reference_file_id, never student uploads.
 
-- **Staff:** department + `staff_role` (`professor` | `teaching_assistant`)
-- **Students:** `student_number`, `cohort_year`, `major`, `github_username` (needed to map Git commits to students)
+Professor task deletion cascades through related academic records. Physical upload bytes remain on
+disk until an explicit retention/cleanup policy is implemented; removed records cannot be downloaded.
 
-### 7.2 Tasks
+## 5. Tutoring transactions
 
-#### `TASKS`
-One table for all work items. `type` is `lab`, `assignment`, or `project`.
+- Session request IDs are unique per user (nullable for legacy rows); turn request IDs are unique per session.
+- A turn persists a user message before provider execution. It can be pending, completed or failed.
+- A short per-user PostgreSQL advisory transaction lock serializes deduplication, rate checks and
+  reservation. No database transaction is held throughout the provider call.
+- One nonexpired pending turn per conversation. A generation token fences late responses.
+- Completed duplicate requests replay the existing result. Failed requests require explicit retry.
+- Pending leases expire after provider timeout plus grace; interrupted turns become retryable.
+- GET presents expiration without writing; a retry reserves a new generation. This guarantees one
+  visible completed reply per turn, not exactly-once billing at the external provider.
+- Context uses public task/reference/approved rubric and optional owned submission text; feedback
+  enters only after release. No private model answers or implicit artifact ingestion.
+- Provider context uses completed bounded history, not failed prompts or client-supplied roles.
+- Existing legacy user/assistant messages have a paginated owner-only read path and enter bounded
+  history. System messages are excluded; old provenance remains unknown. Shares include new completed
+  turns only, never unpaired legacy history.
+- Shares persist immutable preview-validated snapshots to one staff recipient. Revoke timestamps block
+  further recipient reads without changing original messages. Unique session/request ID deduplicates writes.
+- Turn context_info stores actual public materials used, not invented citations/relevance scores.
+  ai_metadata stores sanitized provider/model/version/latency information; no opaque provider diagnostics.
 
-**Visibility (MVP rule):** a student sees a task when:
+## 6. Teams and planned workflows
 
-- `target_cohort_year` matches their `cohort_year`, **and**
-- `target_major` is null **or** matches their `major`
+TEAMS/TEAM_MEMBERS now have main APIs/UI. Migration f6a20260918 adds TEAM_INVITATIONS,
+TEAM_EVENTS, approval snapshots and SUBMISSIONS.team_snapshot:
 
-Labs additionally use `TASK_LAB_DETAILS.scheduled_date` (e.g. show on that day).
+- Student invitations accepted by every member, then staff approval of complete roster.
+- At most one active team per student/task; roster changes invalidate approval and lock after first submission.
+- Grades remain individual, one student-owned submission at a time; team is context, not grading authority.
+- TEAMS stores creator/create-request UUID, status, version, approved_roster JSON and locked_at.
+- TEAM_MEMBERS retains inactive memberships, task_id and nullable accepted_at; a partial unique
+  index on (task_id, student_id) WHERE active enforces one active membership per task.
+- TEAM_INVITATIONS preserves pending/accepted/declined/cancelled records and response times;
+  a partial unique index prevents duplicate pending team/student invitations.
+- TEAM_EVENTS stores actor, request UUID/hash, action, version, timestamp and immutable roster JSON.
+  (actor_id, request_id) is unique. Submission snapshots copy the exact approved roster.
+- Actor-then-task advisory locks serialize roster mutations; submissions take the same task lock
+  before the existing student/task attempt lock. Version checks prevent approval of stale rosters.
+- Task deletion cascades through team records. Otherwise history is preserved; archiving releases
+  memberships without deleting events. No team relationship grants access to individual work.
+- Legacy rows use status=legacy with unknown creator/consent/approval; old snapshots remain null.
+  locked_at is backfilled only from actual historical submission timestamps. Membership slots remain
+  reserved, and legacy records are read-only/review-blocked pending a separate remediation process.
+- Duplicate historical task/student memberships abort migration before changes; never discard them.
 
-#### `TASK_LAB_DETAILS`
-Lab-only fields: scheduled date + reference PDF (`reference_file_id` → `FILES`).
+REPOSITORIES/COMMITS now have public-GitHub APIs/UI (f7a20260919):
 
-#### `TASK_ASSIGNMENT_DETAILS`
-Light assignment settings: allowed file types, whether late submissions are allowed.
+- Repository links store canonical public identity (full_name plus numeric github_id), proposer/request
+  UUID, status/version, approved_team_version, last successful sync/error, partial-history and fixture flags.
+- Partial unique (team_id) WHERE status='approved' permits only one active repository. Replacements
+  supersede old links, preserving records and evidence. A changed approved roster requires reapproval.
+- Unique (repository_id,commit_hash) makes imports idempotent. GitHub username metadata is not a
+  verified student association. attributed_by/attributed_at record reviewed assignments or clearing.
+- REPOSITORY_EVENTS is immutable actor/request-deduplicated proposal/approval/sync/correction audit.
+  Attribution corrections preserve old/new student IDs. Counts never grade contribution or effort.
+- REPOSITORY_SNAPSHOTS holds owner, request UUID, SHA, original compressed archive BYTEA and JSON
+  provenance (digest, manifest, source ID, approval versions, selected-commit attribution and fixture
+  flag). Archive data is deferred in ORM reads; downloads/assessment load it only after authorization.
+- SUBMISSIONS.repository_snapshot_id is nullable; upload and repository evidence are mutually exclusive,
+  with optional explanation text. A snapshot is student-owned, not a team-shared artifact. Historical
+  attempts stay null. Resubmissions may reuse immutable evidence after current eligibility checks.
+- Roster/task locks serialize repository approval/replacement, captures and submissions. Capture is
+  staged and does not lock membership; successful attempt creation locks the roster as before. Failed
+  sync retains prior data and persists only a sanitized error; no successful event is fabricated.
+- Grading verifies the archive digest and reads stored bounded contents, not live GitHub. Branch changes,
+  unavailable sources, link replacements and later attribution corrections do not rewrite submitted data.
+- Archives remain in PostgreSQL across restart. Backups/capacity/retention must account for staged and
+  submitted archives. There is no snapshot deletion API or automatic cleanup. Task deletion cascades
+  through repository, snapshot and submission records consistently.
+- Legacy links remain status=legacy without invented identity/approval. Existing commits/student IDs
+  remain stored but are not represented as reviewed attribution. Duplicate repository/SHA rows abort
+  migration before changes for manual review; no legacy records are silently discarded.
 
-#### `TASK_PROJECT_DETAILS`
-Project settings: default repo provider (GitHub), whether a team is required.
+Administrative status/audit and durable operations use f8a20260919:
 
-### 7.3 Rubrics
+- USERS.is_active defaults true for preserved and new accounts; profile_version starts at 1.
+  Login and authenticated requests consult current status/role. Account corrections increment the
+  version; TA/professor transitions also update STAFF.staff_role. No role-class conversion/deletion.
+- AUDIT_EVENTS holds actor ID (nullable operator), action, target type/ID, changed field names and time.
+  Application writes are append-only, transactional with changes, and contain no values/private content.
+  Target IDs intentionally are not cascading foreign keys: task deletion cannot erase the audit trail.
+- AI_OPERATIONS holds operation, allowlisted provider, outcome=started|success|error, measured latency,
+  nullable actual-mock/truncation flags and creation time (indexed). Independent transactions retain
+  failures on academic rollback. Started rows may survive process interruption; unknown flags are not
+  fabricated. No prompt/reply/key/transcript/identity or arbitrary provider metadata is persisted.
+- Bootstrap and account changes share a PostgreSQL advisory lock; last-active-admin checks and
+  expected_version protect concurrent edits/suspensions. Existing admins remain active for operator
+  review, not automatically deleted. No audits/metrics are backfilled from historical private data.
+- Academic corrections affect future access; historical approved rosters, submissions and attribution
+  remain frozen. GitHub username changes do not establish commit identity. No automatic cleanup or
+  retention job exists. Include operational tables in backups and choose retention separately.
 
-#### `RUBRICS`
-Human-in-the-loop checkpoint:
+Private grading guidance and teaching reports are implemented by f5a20260918. Both are immutable,
+task-scoped and deduplicated by task/request ID. Guidance versions are unique per task; an empty
+latest version means no key content for subsequent grading. Historical evaluation pointers stay null.
+Reports store staff-visible aggregate snapshots, not identities or student work. Latest confirmed
+attempts per student are grouped by rubric; group/criterion thresholds prevent undersized analysis.
+Original criterion evidence is never rewritten by professor overrides. A hash of released numeric
+evidence detects stale reports; generation never changes grades. Advisory task locks prevent concurrent
+duplicate generation; bounded synchronous provider failures roll back report writes. Foreign-key
+cascades preserve professor task deletion, and report/guidance history otherwise remains intact.
 
-| Field | Meaning |
-|---|---|
-| `version` | Attempt number for this task: 1, 2, 3 … |
-| `source` | `ai_suggested` or `staff_created` |
-| `status` | `pending` → `accepted`, `rejected`, or `replaced` |
+## 7. Integrity and compatibility
 
-Only an **accepted** rubric is used for grading.
+Current database constraints include unique user email, student number, rubric task/version,
+submission task/student/attempt number, team/member composite key, and chat request uniqueness.
 
-**Decision — keep rubric history:** rubrics are never overwritten or deleted. If
-the AI suggests a rubric and staff reject it, that row stays with
-`status = rejected` and the next suggestion is inserted as a new row with the
-next `version`. If an already-accepted rubric is superseded, the old row moves to
-`status = replaced`.
+Accepted-rubric transitions and latest-attempt creation use application transaction locks.
+Do not describe these as partial unique database indexes unless migrations actually add them.
+Professor confirmation and team eligibility also require application authorization checks.
 
-Two reasons this matters:
+Repository/commit uniqueness includes a legacy-data preflight; conflicts are reported rather than
+resolved by deleting user records. Future constraints require the same treatment.
+GitHub usernames are currently neither proof of identity nor a unique constraint.
 
-- **Audit:** `SUBMISSIONS.rubric_id` points at the exact rubric version used, so
-  a grade given in week 3 stays explainable even after the rubric changes.
-- **AI quality:** the rejected rows are the training signal for how often staff
-  disagree with AI suggestions.
+Migration head: f8a20260919 (account status/version and content-free audit/AI operations after f7a20260919).
+Test both fresh PostgreSQL and historical-schema upgrades. Preserve migration identities and never
+recreate a user's database or delete volumes to make an upgrade succeed.
 
-Rule: at most **one** rubric per task may be in `accepted` state at a time.
+## 8. Deferred capabilities
 
-#### `RUBRIC_CRITERIA`
-Structured criteria (name, description, max points, order) so AI grading is reproducible and staff can edit weights clearly. Prefer this over one free-text blob.
-
-### 7.4 Submissions and files
-
-#### `SUBMISSIONS`
-Tracks AI grade, final grade, rubric used, and confirmation audit trail (`confirmed_by`, `confirmed_at`).
-
-**Individual vs team:** grading is always individual, so `student_id` is
-**always set**.
-
-| Task type | `student_id` | `team_id` |
-|---|---|---|
-| Lab / assignment | set | null |
-| Project | set (one row per team member) | set (which team they worked in) |
-
-**Resubmissions:** multiple attempts per student per task are allowed.
-
-| Field | Meaning |
-|---|---|
-| `attempt_number` | 1 for the first submission, then 2, 3 … |
-| `is_latest` | `true` on exactly one row per (task, student) |
-
-Grading, code review, and the gradebook all read the row where
-`is_latest = true`. Older attempts stay in the table so staff can see whether a
-student improved between attempts.
-
-Open follow-up for the team (not schema-blocking): should resubmission be
-allowed **after** the due date, and should a resubmission reset a grade that a
-professor already confirmed? Suggested default: resubmission is blocked once
-`status = staff_confirmed` unless a professor reopens the task.
-
-#### `FILES`
-Stores uploaded artifacts.
-
-| Purpose | How it is linked |
-|---|---|
-| Lab reference PDF | `task_id` + `purpose = reference` (also pointed to by `TASK_LAB_DETAILS.reference_file_id`) |
-| Student/team upload | `submission_id` + `purpose = submission` |
-
-Linking files to **submissions** (not only tasks) is required so we know exactly what was graded.
-
-#### `EMBEDDINGS`
-Chunk metadata for RAG. Actual vectors live in an external vector DB (e.g. Pinecone / Weaviate / Qdrant); this table stores `vector_id`, chunk text, and `model_version`.
-
-### 7.5 Teams and GitHub
-
-#### `TEAMS` / `TEAM_MEMBERS`
-Team membership for project tasks.
-
-#### `REPOSITORIES`
-One (or more) GitHub repos per team for a project task.
-
-#### `COMMITS`
-Synced commit history. `student_id` is filled when `author_github_username` matches `STUDENTS.github_username`.
-
-#### `CODE_REVIEWS`
-Findings from the **final submission review only** (cost control).
-
-- Primary link: `submission_id`
-- Secondary link: `commit_id` (which commit was reviewed as “final”)
-
-With resubmissions allowed, “final” means the latest attempt
-(`SUBMISSIONS.is_latest = true`). Each attempt that gets reviewed produces its
-own `CODE_REVIEWS` rows, so review findings never mix across attempts.
-
----
-
-## 8. Important constraints (implement with the schema)
-
-Recommended uniqueness / integrity rules:
-
-| Rule | Why |
-|---|---|
-| `USERS.email` unique | Login identity |
-| `STUDENTS.student_number` unique | University ID |
-| `STUDENTS.github_username` unique when not null | Reliable commit mapping |
-| `RUBRICS (task_id, version)` unique | Clean version history |
-| At most one `RUBRICS` row per task with `status = accepted` | Avoid ambiguous grading |
-| `TEAM_MEMBERS (team_id, student_id)` unique | No duplicate membership |
-| `COMMITS (repository_id, commit_hash)` unique | No duplicate sync rows |
-| `SUBMISSIONS.student_id` NOT NULL | Grades are always individual |
-| `SUBMISSIONS (task_id, student_id, attempt_number)` unique | One row per attempt |
-| At most one `SUBMISSIONS` row per (task, student) with `is_latest = true` | Gradebook reads a single row |
-| `SUBMISSIONS.confirmed_by` must be a staff row with `staff_role = 'professor'` | Only professors finalize grades |
-| `SUBMISSIONS.team_id` set only when the task type is `project` | Team is project context only |
-
----
-
-## 9. Decisions log
-
-| Topic | Decision | Impact |
-|---|---|---|
-| Product shape | AI evaluation assistant, not a full LMS | No course/enrollment tables in MVP |
-| Roles | admin, professor, TA, student | `STAFF` shared; `staff_role` distinguishes professor vs TA |
-| Lab targeting | cohort + major + scheduled date | Fields on `TASKS` + `TASK_LAB_DETAILS` |
-| Assignment targeting | cohort + major | Same visibility fields on `TASKS` |
-| Grading authority | Staff always confirms | `confirmed_by` / `confirmed_at` on `SUBMISSIONS` |
-| Rubric structure | Structured criteria rows | `RUBRIC_CRITERIA` table |
-| File ownership | Submission files link to `SUBMISSIONS` | `FILES.submission_id` |
-| GitHub identity | Store username on student | `STUDENTS.github_username` |
-| Code review depth | Final submission only | `CODE_REVIEWS` → `SUBMISSIONS` (+ optional `commit_id`) |
-| Chat / collab analytics | Post-MVP | Not in MVP ERD |
-| **Team project grades** | **Individual, one grade per student** | `SUBMISSIONS.student_id` NOT NULL; `team_id` is context only |
-| **Who confirms grades** | **Professors only, not TAs** | `confirmed_by` must be a professor; TAs stop at `ai_graded` |
-| **Lab visibility** | **Only on `scheduled_date`** | Visibility query filters on that exact date |
-| **Rubric history** | **Keep every version, never overwrite** | `RUBRICS.version` + `status = replaced`; one `accepted` per task |
-| **Resubmissions** | **Allowed, latest attempt is graded** | `attempt_number` + `is_latest` on `SUBMISSIONS` |
-
----
-
-## 10. Post-MVP (intentionally deferred)
-
-Keep these for a later release; **do not implement in MVP schema** unless priorities change:
-
-1. **`COURSE` / `SECTION` / term** — richer academic structure than cohort + major  
-2. **`TEAM_COMMUNICATION_CHANNELS` + `COMMUNICATION_METRICS`** — Discord/Slack opt-in metrics (WhatsApp is especially hard)  
-3. **`COLLABORATION_ANALYTICS`** — engagement vs competency summaries for staff  
-4. **Additional task types** — presentations, quizzes, etc.  
-5. **Per-commit incremental reviews** — “did the student improve over time?”
-
-If we add collaboration analytics later: **staff-only visibility** (application-layer rule; never expose to the student role via a generic “my analytics” API).
-
----
-
-## 11. Answered questions
-
-These were open in the previous revision and are now decided:
-
-| # | Question | Answer | Where it lands in the schema |
-|---|---|---|---|
-| 1 | Team project grades | **Individual grades** | `SUBMISSIONS.student_id` always set, one row per team member, `team_id` for context |
-| 2 | Who confirms final grades | **Professors only** | `SUBMISSIONS.confirmed_by` restricted to `staff_role = 'professor'` |
-| 3 | Lab visibility window | **Only on `scheduled_date`** | Visibility query matches that exact date |
-| 4 | Multiple rubrics | **Allowed, with full history** | `RUBRICS.version`, statuses `rejected` / `replaced` kept |
-| 5 | Resubmissions | **Allowed** | `SUBMISSIONS.attempt_number` + `is_latest` |
-
-### Smaller follow-ups these answers created
-
-Not blocking the schema, but worth a quick yes/no before coding:
-
-1. **Lab one-day window:** what happens to a student who misses the day —
-   manual reopen by staff, or no submission at all?
-2. **Resubmission cut-off:** blocked after the due date? Blocked once a
-   professor has confirmed a grade? (Suggested default: yes to both, with a
-   professor able to reopen.)
-3. **TA workflow end state:** when a TA finishes reviewing, does the submission
-   sit in `ai_graded` waiting for a professor, or do we need an explicit
-   "ready for professor" flag?
-
----
-
-## 12. Suggested review checklist
-
-- [ ] Scope matches university focus (labs, assignments, projects)
-- [ ] MVP vs post-MVP split is acceptable
-- [ ] Role model is clear, including professor-only grade confirmation
-- [ ] Lab one-day visibility rule is workable for real timetables
-- [ ] Individual grading on team projects is what we want
-- [ ] Rubric versioning and history make sense
-- [ ] Resubmission rules (latest attempt graded) are clear
-- [ ] GitHub + final code-review model is correct
-- [ ] The three follow-ups in section 11 have an answer or an owner
+Courses/sections/terms, communication monitoring, automated contribution scoring, practice generation,
+email/push delivery, private repositories and additional task types remain deferred.
+Cohort teaching insights are aggregate teaching aids, not individual surveillance or rankings.

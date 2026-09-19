@@ -177,6 +177,8 @@ Important Rules:
 4. If code files or project deliverables are submitted, perform appropriate static analysis & code review.
 5. If a TA grading key is provided, use it only to verify correctness — do NOT copy scores blindly.
 6. Output your final grading evaluation strictly as a valid JSON object.
+7. The grading key is private staff guidance. Never quote or reproduce its solutions in summary feedback,
+   criterion reasoning, code findings or warnings: these fields may later be released to the student.
 """
 
 SUBMISSION_GRADING_USER_PROMPT = """Grade the following student submission against the task specification and rubric.

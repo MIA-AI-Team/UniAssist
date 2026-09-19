@@ -31,6 +31,8 @@ from backend.repository.rubric_repository import (
 )
 from backend.repository.task_repository import _get_task
 from backend.services.ai_service import call_ai
+from sqlalchemy import select
+from backend.models.tasks import Task
 
 
 async def suggest_rubric(
@@ -183,7 +185,7 @@ async def set_rubric_status(
             status_code=422,
             detail="Status must be either 'accepted' or 'rejected'.",
         )
-    print(f"Setting rubric status: task_id={task_id}, version={version}, rubric_id={rubric_id}, status={status}, reviewed_by={reviewed_by}")
+    await db.execute(select(Task.id).where(Task.id == task_id).with_for_update())
     rubric = await _get_rubric_with_criteria(
         db=db,
         rubric_id=rubric_id,
@@ -195,12 +197,14 @@ async def set_rubric_status(
     if status == "accepted":
         await replace_accepted_rubrics(
             task_id=rubric.task_id,
-            except_rubric_id=rubric_id,
+            except_rubric_id=rubric.id,
             db=db,
         )
 
     rubric.status = RubricStatus(status)
     rubric.reviewed_by = reviewed_by
+    from backend.services.account_service import audit
+    audit(db, reviewed_by, "rubric." + status, "rubric", rubric.id)
     rubric.reviewed_at = dt.datetime.now(
         dt.timezone.utc
     )
@@ -208,7 +212,7 @@ async def set_rubric_status(
     await db.commit()
 
     result = await _get_rubric_with_criteria(
-        rubric_id=rubric_id,
+        rubric_id=rubric.id,
         db=db ,
     )
 

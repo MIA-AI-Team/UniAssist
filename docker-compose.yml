@@ -9,7 +9,6 @@
 services:
   db:
     image: pgvector/pgvector:pg16
-    container_name: uniassist-db
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -28,38 +27,75 @@ services:
 
   ai-service:
     build:
-      context: ./ai-service
+      context: ./AI-Service
       dockerfile: Dockerfile
-    container_name: uniassist-ai
     ports:
       - "${AI_SERVICE_PORT:-8000}:8000"
     env_file:
-      - ./ai-service/.env
+      - path: ./AI-Service/.env
+        required: false
     environment:
       MOCK_MODE: ${MOCK_MODE:-true}
     volumes:
-      - ./ai-service/data:/app/data
+      - ./AI-Service/data:/app/data
     restart: unless-stopped
 
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    container_name: uniassist-backend
     ports:
       - "${BACKEND_PORT:-8001}:8000"
     env_file:
-      - ./backend/.env
+      - path: ./backend/.env
+        required: false
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-uniassist}:${POSTGRES_PASSWORD:-uniassist}@db:5432/${POSTGRES_DB:-uniassist}
       PYTHONPATH: /app:/ai-service
+      SECRET_KEY: ${SECRET_KEY:?Set a persistent backend SECRET_KEY in the root .env}
+      MIN_COHORT_SIZE_FOR_PATTERNS: ${MIN_COHORT_SIZE_FOR_PATTERNS:-3}
+      ANALYTICS_TIMEOUT_SECONDS: ${ANALYTICS_TIMEOUT_SECONDS:-90}
+      MOCK_MODE: ${MOCK_MODE:-true}
     volumes:
       - ./backend/uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
-      ai-service:
-        condition: service_started
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  migrate:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-uniassist}:${POSTGRES_PASSWORD:-uniassist}@db:5432/${POSTGRES_DB:-uniassist}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  frontend:
+    build:
+      context: ./frontend
+      target: runner
+    environment:
+      BACKEND_INTERNAL_URL: http://backend:8000
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      SESSION_SECRET: ${SESSION_SECRET:?Set a persistent frontend SESSION_SECRET of at least 32 characters}
+      BACKEND_TIMEOUT_MS: ${BACKEND_TIMEOUT_MS:-180000}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:

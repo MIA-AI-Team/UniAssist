@@ -21,7 +21,7 @@ from backend.database import get_db
 from backend.models.users import User
 from backend.schemas.submission import (
     ConfirmGradeRequest,
-    CreateSubmissionForm,
+    CreateSubmissionRequest,
     SubmissionConfirmedResponse,
     SubmissionCreatedResponse,
     SubmissionDetailResponse,
@@ -46,7 +46,7 @@ router = APIRouter(
 
 @router.post("/", status_code=201, response_model=SubmissionCreatedResponse)
 async def submit(
-    body: CreateSubmissionForm,
+    body: CreateSubmissionRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_student),
 ):
@@ -57,6 +57,7 @@ async def submit(
         submission_text=body.submission_text,
         file_id=body.file_id,
         team_id=body.team_id,
+        repository_snapshot_id=body.repository_snapshot_id,
         db=db,
     )
 

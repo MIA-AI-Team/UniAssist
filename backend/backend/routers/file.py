@@ -20,6 +20,18 @@ from backend.models.users import User
 from backend.repository import get_file_by_id
 from backend.schemas.file import FileInfoResponse, FileUploadResponse
 from backend.services.file_service import save_upload
+from backend.services.access import check_task_access, fail
+from backend.repository.task_repository import _get_task
+
+async def check_file_access(file_record, user, db):
+    if user.role == UserRole.student:
+        if file_record.purpose == "reference" and file_record.task_id:
+            task = await _get_task(file_record.task_id, db)
+            check_task_access(task, user)
+            if task.reference_file_id != file_record.id:
+                fail("file_forbidden", "Reference file is not assigned to this task.", 403)
+        elif file_record.owner_id != user.id:
+            fail("file_forbidden", "Access denied.", 403)
 
 router = APIRouter(prefix="/files", tags=["Files"])
 
@@ -50,10 +62,10 @@ async def upload(
 
     return FileUploadResponse(
         file_id=file_record.id,
-        file_name=file.filename,
+        file_name=file_record.original_filename or f"file-{file_record.id}.{file_record.file_type}",
         file_type=file_record.file_type,
         purpose=file_record.purpose,
-        storage_path=file_record.storage_path,
+        size_bytes=os.path.getsize(file_record.storage_path),
         uploaded_at=file_record.uploaded_at,
     )
 
@@ -71,16 +83,16 @@ async def get_file_info(
 
     # Students can only view files they own or files linked to their submissions
     is_student = current_user.role == UserRole.student or current_user.role == "student"
-    if is_student and file_record.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="You can only view your own files.")
+    await check_file_access(file_record, current_user, db)
 
     return FileInfoResponse(
         file_id=file_record.id,
+        file_name=file_record.original_filename or f"file-{file_record.id}.{file_record.file_type}",
         file_type=file_record.file_type,
         purpose=file_record.purpose,
         task_id=file_record.task_id,
         submission_id=file_record.submission_id,
-        storage_path=file_record.storage_path,
+        size_bytes=os.path.getsize(file_record.storage_path) if os.path.isfile(file_record.storage_path) else None,
         uploaded_at=file_record.uploaded_at,
     )
 
@@ -103,15 +115,13 @@ async def download_file(
 
     # Access restrictions for students
     is_student = current_user.role == UserRole.student or current_user.role == "student"
-    if is_student:
-        if file_record.purpose != "reference" and file_record.owner_id != current_user.id:
-            raise HTTPException(status_code=403, detail="Access denied.")
+    await check_file_access(file_record, current_user, db)
 
     # Check file exists on disk
     if not os.path.exists(file_record.storage_path):
         raise HTTPException(status_code=404, detail="File not found on disk.")
 
-    filename = os.path.basename(file_record.storage_path)
+    filename = file_record.original_filename or os.path.basename(file_record.storage_path)
     return FileResponse(
         path=file_record.storage_path,
         filename=filename,

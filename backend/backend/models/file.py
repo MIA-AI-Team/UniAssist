@@ -24,6 +24,7 @@ class File(Base):
     purpose: Mapped[str] = mapped_column(String(50), nullable=False)  # reference | submission | other
     file_type: Mapped[str] = mapped_column(String(50), nullable=False)
     storage_path: Mapped[str] = mapped_column(String(500), nullable=False)
+    original_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
     uploaded_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc), nullable=False)
 
     owner: Mapped[User] = relationship("User")

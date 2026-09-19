@@ -7,6 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.models.file import Embedding
 from ai_tutor.parsers import extract_text_from_file
+from fastapi.concurrency import run_in_threadpool
+from pypdf.errors import PdfReadError
+from backend.services.access import fail
 
 MAX_REFERENCE_CHARS = int(os.getenv("MAX_REFERENCE_CHARS", 12000))
 CHUNK_SIZE = 1000
@@ -32,7 +35,10 @@ async def create_embeddings_for_file(
     search is needed, these rows should be backfilled by filtering on
     model_version == PLACEHOLDER_MODEL_VERSION.
     """
-    raw_text = extract_text_from_file(file_path)
+    try:
+        raw_text = await run_in_threadpool(extract_text_from_file, file_path)
+    except (ValueError, PdfReadError):
+        fail("invalid_file", "The reference PDF could not be read.", 422)
     if not raw_text.strip():
         return
 
@@ -50,4 +56,4 @@ async def create_embeddings_for_file(
             )
         )
 
-    await db.commit()
+    await db.flush()

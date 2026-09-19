@@ -41,7 +41,6 @@ async def register_user(
         )
 
     allowed_roles = {
-        "admin",
         "professor",
         "teaching_assistant",
         "student",
@@ -103,7 +102,7 @@ async def register_user(
         db.add(
             Staff(
                 user_id=user.id,
-                staff_role=data.staff_role,
+                staff_role=data.role,
                 department=data.department,
             )
         )
@@ -149,9 +148,13 @@ async def login_user(
         raise HTTPException(
             status_code=401,
             detail="Invalid email or password.",
+            headers={"X-Error-Code": "invalid_credentials"},
         )
 
     #  Generate access token
+    if not user.is_active:
+        raise HTTPException(status_code=401, detail="Account is suspended.",
+                            headers={"X-Error-Code": "account_suspended"})
     token = create_access_token(
         user_id=user.id,
         role=user.role,

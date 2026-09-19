@@ -109,6 +109,7 @@ class AIService:
             chat_history=history,
             student_message=request.student_message,
             task_title=request.task_title,
+            response_language=request.response_language,
         )
         return self._attach_session(response, request.session, request.request_metadata)
 
@@ -121,6 +122,7 @@ class AIService:
             model_answers=request.model_answers,
             chat_history=history,
             student_message=request.student_message,
+            response_language=request.response_language,
         )
         return self._attach_session(response, request.session, request.request_metadata)
 
@@ -134,6 +136,7 @@ class AIService:
             grades=request.grades,
             code_reviews=request.code_reviews,
             criterion_stats=request.criterion_stats,
+            response_language=request.response_language,
         )
 
     def _resolve_chat_history(

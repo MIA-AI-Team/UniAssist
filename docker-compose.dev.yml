@@ -1,0 +1,11 @@
+services:
+  frontend:
+    build:
+      target: development
+    volumes:
+      - ./frontend:/app
+      - frontend_dependencies:/app/node_modules
+      - frontend_build:/app/.next
+volumes:
+  frontend_dependencies:
+  frontend_build:
