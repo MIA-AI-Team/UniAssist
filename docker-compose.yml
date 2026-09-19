@@ -42,7 +42,7 @@ services:
 
   backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: backend/Dockerfile
     ports:
       - "${BACKEND_PORT:-8001}:8000"
