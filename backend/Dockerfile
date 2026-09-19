@@ -20,7 +20,7 @@ COPY backend/migrations /app/migrations
 COPY backend/alembic.ini /app/alembic.ini
 
 # AI package (in-process import: from ai_tutor import AIService)
-COPY ai-service/ai_tutor /ai-service/ai_tutor
+COPY AI-Service/ai_tutor /ai-service/ai_tutor
 
 RUN mkdir -p /app/uploads
 
