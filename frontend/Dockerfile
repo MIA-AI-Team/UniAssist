@@ -1,7 +1,9 @@
+# syntax=docker/dockerfile:1
+
 FROM node:24-bookworm-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
+RUN npm ci --no-audit --no-fund
 
 FROM deps AS development
 COPY . .
