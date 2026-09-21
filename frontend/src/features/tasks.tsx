@@ -59,11 +59,8 @@ export function TaskList({ staff = false }: { staff?: boolean }) {
     .sort((a, b) => (staff ? 0 : rank(a) - rank(b)));
   return (
     <div className="stack">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="page-heading">
         <div>
-          <p className="text-xs font-bold tracking-widest text-teal-700 mb-2">
-            {t("workspace")}
-          </p>
           <h1>{t(staff ? "staffTasks" : "tasks")}</h1>
           <p className="muted mt-2">
             {t(staff ? "staffIntro" : "studentIntro")}
@@ -75,7 +72,7 @@ export function TaskList({ staff = false }: { staff?: boolean }) {
           </Button>
         )}
       </div>
-      <div className="panel grid gap-4 sm:grid-cols-[1fr_15rem]">
+      <div className="filter-toolbar">
         <Field label={t("search")}>
           <input value={term} onChange={(e) => filter("q", e.target.value)} />
         </Field>
@@ -98,54 +95,51 @@ export function TaskList({ staff = false }: { staff?: boolean }) {
       ) : query.error ? (
         <ErrorNotice error={query.error} retry={() => query.refetch()} />
       ) : tasks.length === 0 ? (
-        <p className="panel muted">{t("noTasks")}</p>
+        <p className="notice">{t("noTasks")}</p>
       ) : (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="task-list">
           {tasks.map((task) => {
             const hours = (new Date(task.due_date).getTime() - now) / 3600000;
             return (
-              <article
-                key={task.id}
-                className="panel flex flex-col gap-4 border-t-4 border-t-teal-700"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-bold uppercase tracking-wide text-teal-800">
-                    {t(task.type)}
-                  </span>
-                  {task.latest_submission && (
-                    <Status value={task.latest_submission.status} />
-                  )}
+              <article key={task.id} className="task-row">
+                <div className="min-w-0">
+                  <p className="task-kind">{t(task.type)}</p>
+                  <h2 dir="auto">
+                    <Link
+                      href={`/${staff ? "staff" : "student"}/tasks/${task.id}`}
+                    >
+                      {task.title}
+                    </Link>
+                  </h2>
                 </div>
-                <h2>
-                  <Link
-                    href={`/${staff ? "staff" : "student"}/tasks/${task.id}`}
-                  >
-                    {task.title}
-                  </Link>
-                </h2>
-                <p className="muted text-sm line-clamp-2 flex-1" dir="auto">
-                  {task.description}
-                </p>
-                <div className="text-sm">
-                  <p className="muted">
-                    {t("due")} · <Stamp value={task.due_date} />
+                <div className="task-deadline">
+                  <p className="muted text-xs">{t("due")}</p>
+                  <p>
+                    <Stamp value={task.due_date} />
                   </p>
                   {hours >= 0 && hours <= 48 && (
-                    <p className="font-semibold text-amber-800">
-                      {t("dueSoon")}
-                    </p>
+                    <p className="font-semibold text-warning">{t("dueSoon")}</p>
                   )}
-                  {hours < 0 && (
-                    <p className="text-slate-600">{t("pastDue")}</p>
-                  )}
+                  {hours < 0 && <p className="text-muted">{t("pastDue")}</p>}
                 </div>
-                {staff && (
-                  <div className="flex flex-wrap gap-2 text-xs muted">
+                {staff ? (
+                  <dl className="task-counts">
                     {Object.entries(task.review_counts || {}).map(([s, n]) => (
-                      <span key={s}>
-                        {t("staff_" + s)}: {n}
-                      </span>
+                      <div key={s}>
+                        <dt>{t("staff_" + s)}</dt>
+                        <dd>{n}</dd>
+                      </div>
                     ))}
+                  </dl>
+                ) : (
+                  <div className="task-state">
+                    {task.latest_submission ? (
+                      <Status value={task.latest_submission.status} />
+                    ) : (
+                      <span className="muted text-sm">
+                        {t("desk.noAttempt")}
+                      </span>
+                    )}
                   </div>
                 )}
                 <Button asChild variant="outline">
@@ -200,7 +194,7 @@ export function TaskPage({
   return (
     <div className="stack">
       <Link
-        className="text-sm text-teal-800 underline"
+        className="text-sm text-action underline"
         href={staff ? "/staff" : "/student"}
       >
         {t("back")}
@@ -208,7 +202,7 @@ export function TaskPage({
       <header className="panel">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-teal-700 mb-2">
+            <p className="text-sm font-semibold text-action mb-2">
               {t(data.type)}
             </p>
             <h1 dir="auto">{data.title}</h1>
@@ -220,66 +214,94 @@ export function TaskPage({
             </p>
           </div>
         </div>
-        <AcademicMarkdown className="mt-6" content={data.description} />
-        {data.project_details?.require_team && (
-          <Link
-            className="mt-4 inline-block underline text-teal-800"
-            href={`/${staff ? "staff" : "student"}/tasks/${id}/teams`}
+        {!staff && (
+          <div className="task-actions">
+            {!access.allowed ? (
+              <p role="status" className="notice notice-warning">
+                {t.has("errors." + access.reason_code)
+                  ? t("errors." + access.reason_code)
+                  : t("unavailable")}
+              </p>
+            ) : (
+              !submitting && (
+                <Button asChild>
+                  <Link href={`/student/tasks/${id}/submit`}>
+                    {t(attempts.data?.length ? "newAttempt" : "submit")}
+                  </Link>
+                </Button>
+              )
+            )}
+            <Link
+              className="button button-ghost underline"
+              href={`/student/tasks/${id}/tutor`}
+            >
+              {t("tutor.title")}
+            </Link>
+          </div>
+        )}
+        {staff && (
+          <nav
+            aria-label={t("insights.taskTools")}
+            className="section-nav mt-4"
           >
-            {t("teams.title")}
-          </Link>
+            <a href="#task-review">{t("queue")}</a>
+            <a href="#task-rubrics">{t("rubricVersions")}</a>
+            <a href="#task-guidance">{t("guidance.title")}</a>
+            <Link href={`/staff/tasks/${id}/insights`}>
+              {t("insights.title")}
+            </Link>
+          </nav>
         )}
-        <div className="mt-5 flex flex-wrap items-center gap-4 text-sm">
-          {data.reference_file_id && (
-            <FileMetadata id={data.reference_file_id} />
-          )}
-          <span className="muted">
-            {data.target_cohort_year} ·{" "}
-            <bdi>{data.target_major || t("allMajors")}</bdi>
-          </span>
+        <div className="task-context mt-6">
+          <section className="min-w-0">
+            <h2 className="mb-3">{t("description")}</h2>
+            <AcademicMarkdown content={data.description} />
+          </section>
+          <aside aria-label={t("desk.context")}>
+            {data.project_details?.require_team && (
+              <Link
+                className="mt-4 inline-block underline text-action"
+                href={`/${staff ? "staff" : "student"}/tasks/${id}/teams`}
+              >
+                {t("teams.title")}
+              </Link>
+            )}
+            <div className="mt-5 flex flex-wrap items-center gap-4 text-sm">
+              {data.reference_file_id && (
+                <FileMetadata id={data.reference_file_id} />
+              )}
+              <span className="muted">
+                {data.target_cohort_year} ·{" "}
+                <bdi>{data.target_major || t("allMajors")}</bdi>
+              </span>
+            </div>
+            {data.lab_details?.scheduled_date && (
+              <p className="text-sm muted mt-3">
+                {t("scheduled")}:{" "}
+                <Stamp value={data.lab_details.scheduled_date} />
+              </p>
+            )}
+            {data.assignment_details && (
+              <p className="text-sm muted mt-3">
+                {t("allowedTypes")}:{" "}
+                <bdi>
+                  {data.assignment_details.allowed_file_types?.join(", ")}
+                </bdi>
+                {data.assignment_details.allow_late && " · " + t("allowLate")}
+              </p>
+            )}
+            <p className="text-sm font-semibold mt-4">
+              {t(access.rubric_ready ? "rubricReady" : "rubricWaiting")}
+              {access.rubric_total != null &&
+                ` · ${access.rubric_total} ${t("points")}`}
+            </p>
+          </aside>
         </div>
-        {data.lab_details?.scheduled_date && (
-          <p className="text-sm muted mt-3">
-            {t("scheduled")}: <Stamp value={data.lab_details.scheduled_date} />
-          </p>
-        )}
-        {data.assignment_details && (
-          <p className="text-sm muted mt-3">
-            {t("allowedTypes")}:{" "}
-            <bdi>{data.assignment_details.allowed_file_types?.join(", ")}</bdi>
-            {data.assignment_details.allow_late && " · " + t("allowLate")}
-          </p>
-        )}
-        <p className="text-sm font-semibold mt-4">
-          {t(access.rubric_ready ? "rubricReady" : "rubricWaiting")}
-          {access.rubric_total != null &&
-            ` · ${access.rubric_total} ${t("points")}`}
-        </p>
       </header>
       {!staff && (
         <>
           {data.accepted_rubric && <RubricSummary {...data.accepted_rubric} />}
-          <Link
-            className="text-teal-800 underline"
-            href={`/student/tasks/${id}/tutor`}
-          >
-            {t("tutor.title")}
-          </Link>
-          {!access.allowed ? (
-            <p role="status" className="panel text-amber-900">
-              {t.has("errors." + access.reason_code)
-                ? t("errors." + access.reason_code)
-                : t("unavailable")}
-            </p>
-          ) : submitting ? (
-            <SubmitForm task={data} />
-          ) : (
-            <Button asChild className="justify-self-start">
-              <Link href={`/student/tasks/${id}/submit`}>
-                {t(attempts.data?.length ? "newAttempt" : "submit")}
-              </Link>
-            </Button>
-          )}
+          {access.allowed && submitting && <SubmitForm task={data} />}
           <section className="panel stack">
             <h2>{t("history")}</h2>
             {attempts.isPending ? (
@@ -292,7 +314,7 @@ export function TaskPage({
             ) : !attempts.data?.length ? (
               <p className="muted">{t("empty")}</p>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-divider">
                 {[...attempts.data].reverse().map((a) => (
                   <li
                     key={a.id}
@@ -300,7 +322,7 @@ export function TaskPage({
                   >
                     <div>
                       <Link
-                        className="font-semibold text-teal-800 underline"
+                        className="font-semibold text-action underline"
                         href={`/student/submissions/${a.id}`}
                       >
                         {t("attempt")} {a.attempt_number}{" "}
@@ -320,20 +342,15 @@ export function TaskPage({
       )}
       {staff && (
         <>
-          <nav
-            aria-label={t("insights.taskTools")}
-            className="flex flex-wrap gap-4"
-          >
-            <Link
-              className="text-teal-800 underline"
-              href={`/staff/tasks/${id}/insights`}
-            >
-              {t("insights.title")}
-            </Link>
-          </nav>
-          <Rubrics taskId={id} professor={user.role === "professor"} />
-          <GradingGuidance key={id} taskId={id} />
-          <Queue taskId={id} />
+          <div id="task-review">
+            <Queue taskId={id} />
+          </div>
+          <div id="task-rubrics">
+            <Rubrics taskId={id} professor={user.role === "professor"} />
+          </div>
+          <div id="task-guidance">
+            <GradingGuidance key={id} taskId={id} />
+          </div>
           {data.type === "lab" && <LabTutorSettings taskId={id} />}
           {user.role === "professor" && (
             <section className="panel">
@@ -422,7 +439,7 @@ function SubmitForm({ task }: { task: TaskDetail }) {
       <h2>{t("submit")}</h2>
       <p className="muted">{t("resubmitHelp")}</p>
       {task.project_details?.require_team && (
-        <p className="rounded-lg bg-teal-50 p-3">
+        <p className="rounded-lg bg-selection p-3">
           {t("teams.submissionHelp", {
             id: task.submission_eligibility.team_id ?? "—",
           })}
@@ -455,7 +472,7 @@ function SubmitForm({ task }: { task: TaskDetail }) {
         )}
         {!snapshotId && task.submission_eligibility.team_id && (
           <Link
-            className="underline text-teal-800"
+            className="underline text-action"
             href={`/student/teams/${task.submission_eligibility.team_id}/repositories`}
           >
             {t("repos.choose")}

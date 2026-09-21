@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { request, ApiError } from "@/lib/api/client";
 import type { Identity } from "@/lib/api/types";
 import { Button } from "./ui/button";
@@ -20,7 +20,8 @@ export function Workspace({
 }) {
   const t = useTranslations(),
     router = useRouter(),
-    client = useQueryClient();
+    client = useQueryClient(),
+    pathname = usePathname();
   const [signingOut, setSigningOut] = useState(false);
   const auth = useQuery({
     queryKey: ["session"],
@@ -56,6 +57,18 @@ export function Workspace({
       </main>
     );
   const user = auth.data!;
+  const home =
+    user.role === "admin"
+      ? "/admin"
+      : user.role === "student"
+        ? "/student"
+        : "/staff";
+  const inbox =
+    user.role === "student" ? "/student/invitations" : "/staff/shared-tutoring";
+  const navCurrent = (href: string) =>
+    pathname === href || (href !== home && pathname.startsWith(href + "/"))
+      ? ("page" as const)
+      : undefined;
   const permitted =
     area === "profile"
       ? true
@@ -74,8 +87,8 @@ export function Workspace({
       >
         {t("skip")}
       </a>
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-4">
+      <header className="workspace-header">
+        <div className="workspace-width workspace-top">
           <Link
             href={
               user.role === "admin"
@@ -84,37 +97,16 @@ export function Workspace({
                   ? "/student"
                   : "/staff"
             }
-            className="text-xl font-bold"
+            className="brand"
+            dir="ltr"
           >
-            UniAssist<span className="text-teal-700">.</span>
+            UniAssist<span className="text-action">.</span>
           </Link>
-          <nav
-            aria-label={t("workspace")}
-            className="flex flex-wrap items-center gap-3"
-          >
-            <span className="text-sm muted">
+          <div className="workspace-utilities">
+            <span className="workspace-identity">
               <bdi>{user.name}</bdi> · {t(user.role)}
             </span>
             <LanguageSwitch />
-            <Link className="text-sm underline text-teal-800" href="/profile">
-              {t("accounts.profile")}
-            </Link>
-            {user.role === "student" && (
-              <Link
-                className="text-sm underline text-teal-800"
-                href="/student/invitations"
-              >
-                {t("teams.inbox")}
-              </Link>
-            )}
-            {["professor", "teaching_assistant"].includes(user.role) && (
-              <Link
-                className="text-sm underline text-teal-800"
-                href="/staff/shared-tutoring"
-              >
-                {t("tutor.sharedInbox")}
-              </Link>
-            )}
             <Button
               variant="ghost"
               disabled={logout.isPending}
@@ -122,13 +114,36 @@ export function Workspace({
             >
               {t("logout")}
             </Button>
-          </nav>
+          </div>
         </div>
+        <nav
+          aria-label={t("workspace")}
+          className="workspace-width workspace-nav"
+        >
+          <Link
+            href={home}
+            aria-current={
+              pathname.startsWith(home) && !pathname.startsWith(inbox)
+                ? "page"
+                : undefined
+            }
+          >
+            {t(user.role === "admin" ? "accounts.adminTitle" : "desk.tasks")}
+          </Link>
+          {user.role !== "admin" && (
+            <Link href={inbox} aria-current={navCurrent(inbox)}>
+              {t(user.role === "student" ? "teams.inbox" : "tutor.sharedInbox")}
+            </Link>
+          )}
+          <Link href="/profile" aria-current={navCurrent("/profile")}>
+            {t("accounts.profile")}
+          </Link>
+        </nav>
       </header>
-      <div className="border-b border-amber-200 bg-amber-50 px-5 py-2 text-center text-xs text-amber-900">
-        {t("demo")}
+      <div className="demo-notice">
+        <div className="workspace-width">{t("demo")}</div>
       </div>
-      <main id="main" className="mx-auto max-w-7xl px-5 py-8 lg:py-12">
+      <main id="main" tabIndex={-1} className="workspace-width workspace-main">
         <ErrorNotice error={logout.error} />
         {permitted ? (
           <Providers
@@ -155,7 +170,7 @@ export function Workspace({
           </div>
         )}
       </main>
-      <footer className="mx-auto max-w-7xl px-5 py-6 text-xs muted">
+      <footer className="workspace-width py-6 text-sm muted">
         UniAssist · {t("timezone")}
       </footer>
     </>

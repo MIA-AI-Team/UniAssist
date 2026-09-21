@@ -63,10 +63,7 @@ export function RepositoryList({
   });
   return (
     <div className="stack">
-      <Link
-        className="underline text-teal-800"
-        href={`/${area}/teams/${teamId}`}
-      >
+      <Link className="underline text-action" href={`/${area}/teams/${teamId}`}>
         {t("teams.title")}
       </Link>
       <h1>{t("repos.title")}</h1>
@@ -122,7 +119,7 @@ export function RepositoryList({
         .flatMap((p) => p.items)
         .map((repo) => (
           <Link
-            className="panel stack underline text-teal-800"
+            className="panel stack underline text-action"
             key={repo.id}
             href={`/${area}/repositories/${repo.id}`}
           >
@@ -152,7 +149,7 @@ export function SnapshotSummary({ snapshot }: { snapshot: S["SnapshotInfo"] }) {
     <section className="panel stack">
       <h2>{t("repos.snapshot")}</h2>
       {p.is_fixture && (
-        <p className="rounded-lg bg-amber-50 p-3 font-semibold">
+        <p className="rounded-lg bg-warning-bg p-3 font-semibold">
           {t("repos.fixture")}
         </p>
       )}
@@ -169,7 +166,7 @@ export function SnapshotSummary({ snapshot }: { snapshot: S["SnapshotInfo"] }) {
       <p>{t("repos.omitted", { count: p.omitted_files })}</p>
       <p className="muted">{t("repos.snapshotHelp")}</p>
       <a
-        className="underline text-teal-800"
+        className="underline text-action"
         href={`/api/backend/repository-snapshots/${snapshot.id}/download`}
       >
         {t("repos.download")}
@@ -266,7 +263,7 @@ export function RepositoryPage({
   return (
     <div className="stack">
       <Link
-        className="underline text-teal-800"
+        className="underline text-action"
         href={`/${area}/teams/${repo.team_id}/repositories`}
       >
         {t("repos.title")}
@@ -278,7 +275,7 @@ export function RepositoryPage({
         {t(`repos.${repo.status}`)} · {t("version")} {repo.version}
       </p>
       {repo.is_fixture && (
-        <p className="panel bg-amber-50">{t("repos.fixture")}</p>
+        <p className="panel bg-warning-bg">{t("repos.fixture")}</p>
       )}
       <p>{t("repos.noScoring")}</p>
       {repo.unavailable_reason && (
@@ -443,7 +440,7 @@ export function RepositoryPage({
         <>
           <SnapshotSummary snapshot={capture.data} />
           <Link
-            className="underline text-teal-800"
+            className="underline text-action"
             href={`/student/tasks/${repo.task_id}/submit?snapshot=${capture.data.id}`}
           >
             {t("repos.useSnapshot")}

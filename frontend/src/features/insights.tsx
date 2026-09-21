@@ -73,7 +73,7 @@ export function TaskInsights({ taskId }: { taskId: number }) {
     n == null ? "—" : format.number(n, { maximumFractionDigits: 2 });
   return (
     <div className="stack">
-      <Link className="text-teal-800 underline" href={`/staff/tasks/${taskId}`}>
+      <Link className="text-action underline" href={`/staff/tasks/${taskId}`}>
         {t("openTask")}
       </Link>
       <h1>{t("insights.title")}</h1>
@@ -114,7 +114,7 @@ export function TaskInsights({ taskId }: { taskId: number }) {
                 {t("rubric")} · {t("version")} {group.rubric_version}
               </h2>
               <p>{t("insights.released", { count: group.student_count })}</p>
-              <p className="text-sm text-amber-950">
+              <p className="text-sm text-warning">
                 {t("insights.provenance", {
                   mock: group.mock_assessment_count,
                   unknown: group.unknown_provenance_count,
@@ -231,12 +231,12 @@ export function TaskInsights({ taskId }: { taskId: number }) {
             {(report.stale ||
               (query.data &&
                 report.input_fingerprint !== query.data.input_fingerprint)) && (
-              <p className="text-amber-950" role="status">
+              <p className="text-warning" role="status">
                 {t("insights.stale")}
               </p>
             )}
             {report.is_mock && (
-              <p className="text-amber-950">{t("insights.mock")}</p>
+              <p className="text-warning">{t("insights.mock")}</p>
             )}
             <p className="text-sm muted">
               {t("insights.snapshot", {
@@ -267,7 +267,7 @@ export function TaskInsights({ taskId }: { taskId: number }) {
               <AcademicMarkdown key={i} content={focus} />
             ))}
             {report.result.warnings?.map((warning, i) => (
-              <p className="text-sm text-amber-950" dir="auto" key={i}>
+              <p className="text-sm text-warning" dir="auto" key={i}>
                 {warning}
               </p>
             ))}

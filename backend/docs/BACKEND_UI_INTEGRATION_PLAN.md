@@ -6,6 +6,11 @@ The original root `plan.md` describes the first frontend release, not this expan
 ## Resume here
 
 - Current phase: **Phase 5 implemented and isolated mock/fixture-verified; all five expansion phases complete**.
+- Latest UI follow-up (2026-09-22): **Academic Review Desk direction implemented** from
+  `Humazine_UI.md` using humanize-ui. Semantic tokens/local bilingual fonts, task rows, staff review
+  navigation, attempt records and feedback-first student results. 54 frontend tests, TypeScript,
+  lint, production build and all 16 real-backend browser journeys pass. Only the isolated verification
+  frontend was rebuilt/restarted. See the UI follow-up checkpoint at the end of this file.
 - Latest follow-up (2026-09-21): **Academic Markdown/math and live staff previews implemented**.
   52 frontend tests, TypeScript/lint, production Docker build and nine affected browser journeys pass.
   English/Arabic mobile equation screenshots inspected; long equations scroll inside their panels.
@@ -560,3 +565,28 @@ the whole phase complete until every item is implemented and verified.
   No migrations or backend/AI behavior changed; their unit suites and the separate account/team/
   repository browser suites were not rerun for this frontend-only follow-up. Normal-stack deployment,
   live providers and broader cross-browser accessibility verification remain separate work.
+
+### UI follow-up checkpoint — 2026-09-22
+
+- Applied the agreed `Humazine_UI.md` Academic Review Desk direction using the humanize-ui skill.
+  Existing React/Radix/Next/Tailwind stack retained. Only new dependency: locally bundled
+  `@fontsource/source-sans-3@5.3.0`; existing Noto Sans Arabic remains the Arabic font.
+- Semantic CSS tokens and layers, consistent controls/notices, compact active navigation, task rows,
+  server-eligibility actions near task context, and a staff review queue before preparation editors.
+  Task-list excerpts are omitted to avoid displaying raw Markdown/math; task detail retains full prose.
+- Attempt receipt shows actual timestamps, associated rubric version/total and saved repository SHA.
+  Released student feedback precedes grade/artifact; staff evidence and explicit professor release
+  controls retain the same authorization, persistence and mutation behavior. No API or migration changes.
+- English/Arabic component release/order regressions: 54 frontend tests pass. TypeScript, ESLint and
+  production Docker build pass. All 16 Edge/Chromium Playwright journeys pass against the real isolated
+  backend, including accounts, teams, repository fixtures and the seven original academic workflows.
+- Four new design browser checks cover bilingual sign-in, actual locale font, focus/reduced motion,
+  task rows at 390/768/1440px, 200% CSS zoom reflow, route/query retention during language switching,
+  queue navigation, dialog Escape/cancel focus and focus restoration. Existing mobile math checks pass.
+- Inspected desktop task/sign-in views and Arabic mobile sign-in, task rows, staff task, released result
+  and long equations. Generated evidence lives in `frontend/test-results/`. Production stylesheet BOM
+  and Arabic font cascade problems found during verification were fixed and final checks rerun.
+- Only `uniassist-verify` frontend was rebuilt/restarted, at http://localhost:13000. Test data remains
+  in its isolated database. The pre-existing `.gitignore` edit was preserved. Normal stack, migrations,
+  live GitHub/AI and backend/AI unit suites were outside this presentation-only change. Browser coverage
+  is Edge/Chromium; full assistive-technology and other browser verification is not claimed.

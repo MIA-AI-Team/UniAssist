@@ -131,35 +131,35 @@ export function Auth({ registering = false }: { registering?: boolean }) {
     </Field>
   );
   return (
-    <main className="mx-auto min-h-screen max-w-6xl px-5 py-8">
+    <main className="workspace-width min-h-screen py-4">
       <header className="flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold">
-          UniAssist<span className="text-teal-700">.</span>
+        <Link href="/" className="brand" dir="ltr">
+          UniAssist<span className="text-action">.</span>
         </Link>
         <LanguageSwitch />
       </header>
-      <div className="grid gap-12 py-12 lg:grid-cols-2 lg:py-24">
-        <section className="self-center">
-          <p className="mb-5 text-xs font-bold uppercase tracking-widest text-teal-700">
-            UNIASSIST / {t("workspace")}
-          </p>
-          <h1 className="max-w-lg !text-4xl leading-tight lg:!text-5xl">
-            {t("tagline")}
-          </h1>
-          <p className="muted mt-6 max-w-md">{t("demo")}</p>
-          <div className="mt-10 flex gap-2" aria-hidden="true">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-2 w-16 rounded-full bg-teal-200" />
-            ))}
-          </div>
+      <div className="auth-layout">
+        <section className="auth-intro">
+          <h2>{t("tagline")}</h2>
+          <ol className="auth-process">
+            {["expectations", "attempt", "review", "release"].map(
+              (step, index) => (
+                <li key={step}>
+                  <span aria-hidden="true">0{index + 1}</span>
+                  {t(`desk.${step}`)}
+                </li>
+              ),
+            )}
+          </ol>
         </section>
-        <section className="panel shadow-sm">
-          <h2>{t(registering ? "register" : "welcome")}</h2>
+        <section className="panel auth-form">
+          <h1>{t(registering ? "register" : "welcome")}</h1>
           <p className="muted mb-6">
             {t(registering ? "registerHint" : "loginHint")}
           </p>
+          <p className="notice notice-warning mb-6 text-sm">{t("demo")}</p>
           {search.has("expired") && (
-            <p role="status" className="mb-4 text-amber-800">
+            <p role="status" className="mb-4 text-warning">
               {t("sessionExpired")}
             </p>
           )}
@@ -212,7 +212,7 @@ export function Auth({ registering = false }: { registering?: boolean }) {
               <p className="text-sm muted">
                 {t(registering ? "hasAccount" : "noAccount")}{" "}
                 <Link
-                  className="font-semibold text-teal-800 underline"
+                  className="font-semibold text-action underline"
                   href={registering ? "/login" : "/register"}
                 >
                   {t(registering ? "login" : "register")}

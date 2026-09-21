@@ -19,7 +19,7 @@ export function FileMetadata({ id }: { id: number }) {
   return (
     <div className="stack min-w-0 text-sm [overflow-wrap:anywhere]">
       <a
-        className="text-teal-800 underline"
+        className="text-action underline"
         href={`/api/backend/files/${id}/download`}
       >
         {t("download")}: <bdi>{file.file_name}</bdi>

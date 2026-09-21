@@ -54,10 +54,7 @@ export function ProjectTeams({
   });
   return (
     <div className="stack">
-      <Link
-        className="underline text-teal-800"
-        href={`/${area}/tasks/${taskId}`}
-      >
+      <Link className="underline text-action" href={`/${area}/tasks/${taskId}`}>
         {t("openTask")}
       </Link>
       <h1>{t("teams.title")}</h1>
@@ -124,7 +121,7 @@ export function ProjectTeams({
         .flatMap((p) => p.items)
         .map((team) => (
           <Link
-            className="panel stack text-teal-800"
+            className="panel stack text-action"
             key={team.id}
             href={`/${area}/teams/${team.id}`}
           >
@@ -180,7 +177,7 @@ export function InvitationInbox() {
         .flatMap((p) => p.items)
         .map((i) => (
           <Link
-            className="panel underline text-teal-800"
+            className="panel underline text-action"
             href={`/student/teams/${i.team_id}`}
             key={i.id}
           >
@@ -277,7 +274,7 @@ export function TeamPage({ teamId, user }: { teamId: number; user: Identity }) {
   return (
     <div className="stack">
       <Link
-        className="underline text-teal-800"
+        className="underline text-action"
         href={`/${area}/tasks/${team.task_id}/teams`}
       >
         {t("teams.title")}
@@ -286,7 +283,7 @@ export function TeamPage({ teamId, user }: { teamId: number; user: Identity }) {
       {(area === "staff" ||
         team.members.some((m) => m.student_id === user.id)) && (
         <Link
-          className="underline text-teal-800"
+          className="underline text-action"
           href={`/${area}/teams/${team.id}/repositories`}
         >
           {t("repos.title")}
@@ -439,7 +436,7 @@ export function TeamPage({ teamId, user }: { teamId: number; user: Identity }) {
         team.status === "approved" &&
         team.members.some((m) => m.student_id === user.id) && (
           <Link
-            className="underline text-teal-800"
+            className="underline text-action"
             href={`/student/tasks/${team.task_id}/submit`}
           >
             {t("submit")}

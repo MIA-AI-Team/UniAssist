@@ -86,7 +86,7 @@ export function Rubrics({
       </div>
       {showManual && (
         <form
-          className="stack rounded-xl bg-slate-50 p-4"
+          className="stack rounded-xl bg-surface-subtle p-4"
           onSubmit={(e) => {
             e.preventDefault();
             if (refreshBlocked) return;
@@ -101,7 +101,7 @@ export function Rubrics({
           {criteria.map((c, i) => (
             <fieldset
               key={i}
-              className="grid gap-3 rounded-xl border border-slate-200 p-4 sm:grid-cols-[1fr_7rem_auto]"
+              className="grid gap-3 rounded-xl border border-divider p-4 sm:grid-cols-[1fr_7rem_auto]"
             >
               <legend className="px-2 text-sm">
                 {t("criterion")} {i + 1}
@@ -184,7 +184,7 @@ export function Rubrics({
       <ErrorNotice error={mutation.error} />
       {mutation.isPending && <p role="status">{t("evaluating")}</p>}
       {success && !mutation.isPending && (
-        <p role="status" className="text-teal-800">
+        <p role="status" className="text-action">
           {t("success")}
         </p>
       )}
@@ -202,10 +202,7 @@ export function Rubrics({
         <p className="muted">{t("noRubrics")}</p>
       ) : (
         query.data.map((r) => (
-          <article
-            key={r.id}
-            className="rounded-xl border border-slate-200 p-4 stack"
-          >
+          <article key={r.id} className="evidence-row stack">
             <div className="flex flex-wrap justify-between gap-2">
               <h3>
                 {t("version")} {r.version} · {t("rubric_" + r.status)}
@@ -217,7 +214,7 @@ export function Rubrics({
             </div>
             <ul className="space-y-3">
               {r.criteria.map((c, i) => (
-                <li key={i}>
+                <li key={i} className="py-2">
                   <div className="flex justify-between gap-4">
                     <strong dir="auto">
                       <AcademicMarkdown content={c.name} inline />
@@ -367,7 +364,7 @@ export function Queue({ taskId }: { taskId: number }) {
                 <tr key={s.id}>
                   <td>
                     <Link
-                      className="font-semibold text-teal-800 underline"
+                      className="font-semibold text-action underline"
                       href={"/staff/submissions/" + s.id}
                     >
                       <bdi>{s.student_name}</bdi>

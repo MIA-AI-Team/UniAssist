@@ -146,10 +146,7 @@ function TutorWorkspace({ taskId }: { taskId: number }) {
     messages.some((m) => m.status === "pending");
   return (
     <div className="stack">
-      <Link
-        href={`/student/tasks/${taskId}`}
-        className="text-teal-800 underline"
-      >
+      <Link href={`/student/tasks/${taskId}`} className="text-action underline">
         {t("openTask")}
       </Link>
       <header className="stack">
@@ -185,7 +182,7 @@ function TutorWorkspace({ taskId }: { taskId: number }) {
                 key={s.id}
                 href={`/student/tasks/${taskId}/tutor?chat=${s.id}`}
                 aria-current={s.id === chatId ? "page" : undefined}
-                className="rounded-lg border border-slate-200 p-3 text-sm aria-[current=page]:bg-teal-50"
+                className="rounded-lg border border-divider p-3 text-sm aria-[current=page]:bg-selection"
               >
                 {t("tutor.conversation")} {s.id} · <bdi>{s.language}</bdi>
                 <br />
@@ -276,9 +273,9 @@ function TutorWorkspace({ taskId }: { taskId: number }) {
                 {messages.map((m) => (
                   <article
                     key={m.id}
-                    className="stack border-b border-slate-100 pb-5"
+                    className="stack border-b border-divider pb-5"
                   >
-                    <div className="rounded-lg bg-slate-50 p-4">
+                    <div className="rounded-lg bg-surface-subtle p-4">
                       <h3>{t("tutor.you")}</h3>
                       <AcademicMarkdown content={m.content} />
                     </div>
@@ -289,7 +286,7 @@ function TutorWorkspace({ taskId }: { taskId: number }) {
                       <div className="stack">
                         <h3>{t("tutor.title")}</h3>
                         {m.is_mock && (
-                          <p className="text-sm text-amber-900">
+                          <p className="text-sm text-warning">
                             {t("tutor.mock")}
                           </p>
                         )}

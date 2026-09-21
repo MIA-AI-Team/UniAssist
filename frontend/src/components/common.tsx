@@ -13,7 +13,7 @@ export function LanguageSwitch() {
     t = useTranslations();
   return (
     <Link
-      className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+      className="language-switch"
       href={pathname + (search.size ? "?" + search.toString() : "")}
       locale={locale === "en" ? "ar" : "en"}
       lang={locale === "en" ? "ar" : "en"}
@@ -36,10 +36,7 @@ export function ErrorNotice({
   const api = error instanceof ApiError ? error : undefined;
   const key = "errors." + (api?.code || "request_failed");
   return (
-    <div
-      role="alert"
-      className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-900"
-    >
+    <div role="alert" className="notice notice-danger">
       <p>{t.has(key) ? t(key) : t("error")}</p>
       {api?.ambiguous && (
         <>
@@ -68,7 +65,7 @@ export function ErrorNotice({
 export function Loading() {
   const t = useTranslations();
   return (
-    <p role="status" className="panel">
+    <p role="status" className="notice">
       {t("loading")}
     </p>
   );
@@ -94,9 +91,7 @@ export function Status({
   const t = useTranslations();
   const key = (staff ? "staff_" : "") + value;
   return (
-    <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${value === "staff_confirmed" ? "bg-teal-100 text-teal-900" : value === "ai_graded" ? "bg-amber-100 text-amber-900" : "bg-slate-100 text-slate-700"}`}
-    >
+    <span className="status-label" data-status={value}>
       {t.has(key) ? t(key) : value}
     </span>
   );
@@ -127,7 +122,7 @@ export function Field({
       <label htmlFor={id}>{label}</label>
       {control}
       {error && (
-        <span id={id + "-error"} className="text-red-700 text-xs" role="alert">
+        <span id={id + "-error"} className="text-danger text-xs" role="alert">
           {error}
         </span>
       )}

@@ -53,133 +53,158 @@ export function Review({ id, user }: { id: number; user: Identity }) {
     Number.isFinite(Number(grade)) &&
     Number(grade) >= 0 &&
     Number(grade) <= data.total_possible_grade;
+  const artifact = (
+    <section className="panel stack self-start">
+      <h2>{t("artifact")}</h2>
+      <pre
+        dir="auto"
+        className="prose-content max-h-[36rem] overflow-auto rounded-lg bg-surface-subtle p-4 text-sm"
+      >
+        {data.submission_text ||
+          t(data.artifacts.length ? "fileOnly" : "noArtifact")}
+      </pre>
+      {data.artifacts.map((a) => (
+        <FileMetadata key={a.file_id} id={a.file_id} />
+      ))}
+    </section>
+  );
   return (
     <div className="stack min-w-0 [overflow-wrap:anywhere]">
       <Link
-        className="text-teal-800 underline"
+        className="text-action underline"
         href={`/${staff ? "staff" : "student"}/tasks/${data.task_id}`}
       >
         {t("openTask")}
       </Link>
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <div>
+      <header className="receipt" aria-label={t("desk.receipt")}>
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <h1>
             {t("attempt")} {data.attempt_number}
           </h1>
-          <p className="muted mt-2">
-            {t("submittedAt")}: <Stamp value={data.submitted_at} />
-          </p>
+          <Status value={data.status} staff={staff} />
         </div>
-        <Status value={data.status} staff={staff} />
+        <dl>
+          <div>
+            <dt>{t("submittedAt")}</dt>
+            <dd>
+              <Stamp value={data.submitted_at} />
+            </dd>
+          </div>
+          <div>
+            <dt>{t("rubric")}</dt>
+            <dd>
+              {t("version")} {data.rubric_version}
+            </dd>
+          </div>
+          <div>
+            <dt>{t("rubricTotal")}</dt>
+            <dd>
+              {data.total_possible_grade} {t("points")}
+            </dd>
+          </div>
+          {data.repository_snapshot && (
+            <div className="min-w-0">
+              <dt>{t("repos.sha")}</dt>
+              <dd>
+                <code className="break-all">
+                  {data.repository_snapshot.commit_sha}
+                </code>
+              </dd>
+            </div>
+          )}
+          {released && data.confirmed_at && (
+            <div>
+              <dt>{t("released")}</dt>
+              <dd>
+                <Stamp value={data.confirmed_at} />
+              </dd>
+            </div>
+          )}
+        </dl>
+        {staff && (
+          <a
+            className="button button-ghost underline mt-4 me-3"
+            href="#attempt-rubric"
+          >
+            {t("desk.expectationsTitle")}
+          </a>
+        )}
+        {staff && data.is_latest && !released && (
+          <a className="button button-outline mt-4" href="#review-decision">
+            {t("desk.decision")}
+          </a>
+        )}
       </header>
       {!data.is_latest && <p className="panel">{t("previousAttempt")}</p>}
-      {data.repository_snapshot && (
-        <SnapshotSummary snapshot={data.repository_snapshot} />
-      )}
-      {data.team_snapshot && (
-        <section className="panel stack">
-          <h2>{t("teams.snapshot")}</h2>
-          <p>
-            <bdi>{data.team_snapshot.name}</bdi> · {t("version")}{" "}
-            {data.team_snapshot.version}
-          </p>
-          <p className="muted">{t("teams.individual")}</p>
-          <ul>
-            {data.team_snapshot.members.map((m) => (
-              <li key={m.student_id}>
-                <bdi>{m.name}</bdi> · <bdi>{m.student_number}</bdi>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
       {!staff && (
         <Link
-          className="text-teal-800 underline"
+          className="text-action underline"
           href={`/student/tasks/${data.task_id}/tutor?submission=${id}`}
         >
           {t("tutor.title")}
         </Link>
       )}
-      <RubricSummary
-        associated
-        version={data.rubric_version}
-        total={data.total_possible_grade}
-        criteria={data.rubric_criteria}
-      />
-      {staff && (
-        <UsedGuidance
-          taskId={data.task_id}
-          guidanceId={data.grading_guidance_id}
-          pending={data.status === "pending"}
-        />
-      )}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="panel stack self-start">
-          <h2>{t("artifact")}</h2>
-          <pre
-            dir="auto"
-            className="prose-content max-h-[36rem] overflow-auto rounded-lg bg-slate-50 p-4 text-sm"
-          >
-            {data.submission_text ||
-              t(data.artifacts.length ? "fileOnly" : "noArtifact")}
-          </pre>
-          {data.artifacts.map((a) => (
-            <FileMetadata key={a.file_id} id={a.file_id} />
-          ))}
-        </section>
+      <div className={staff ? "review-columns" : "stack"}>
+        {staff && artifact}
         <section className="panel stack">
           <h2>{t("result")}</h2>
           {!visible ? (
             <p className="muted">{t("awaiting")}</p>
           ) : (
             <>
+              {data.status === "pending" && (
+                <p className="notice">{t("staff_pending")}</p>
+              )}
               {data.is_mock && (
-                <div className="rounded-xl border border-amber-300 bg-amber-50 p-4">
+                <div className="notice notice-warning">
                   <h3>{t("mock")}</h3>
                   <p className="text-sm">{t("mockNotice")}</p>
                 </div>
               )}
-              <div className="flex flex-wrap gap-8">
-                {released && (
-                  <div>
-                    <p className="muted">{t("finalGrade")}</p>
-                    <p className="text-3xl font-bold text-teal-800">
-                      <bdi dir="ltr">
-                        {data.final_grade}{" "}
-                        <span className="text-base muted">
-                          / {data.total_possible_grade}
-                        </span>
-                      </bdi>
-                    </p>
-                  </div>
-                )}
-                {data.ai_suggested_grade != null && (
-                  <div>
-                    <p className="muted">{t("aiGrade")}</p>
-                    <p className="text-xl font-semibold">
-                      <bdi dir="ltr">
-                        {data.ai_suggested_grade} / {data.total_possible_grade}
-                      </bdi>
-                    </p>
-                  </div>
-                )}
-              </div>
               {data.feedback && <AcademicMarkdown content={data.feedback} />}
+              {(released || data.ai_suggested_grade != null) && (
+                <div className="grade-summary">
+                  {released && (
+                    <div>
+                      <p className="muted">{t("finalGrade")}</p>
+                      <p className="grade-value text-action">
+                        <bdi dir="ltr">
+                          {data.final_grade}{" "}
+                          <span className="text-base muted">
+                            / {data.total_possible_grade}
+                          </span>
+                        </bdi>
+                      </p>
+                    </div>
+                  )}
+                  {data.ai_suggested_grade != null && (
+                    <div>
+                      <p className="muted">{t("aiGrade")}</p>
+                      <p className="grade-value">
+                        <bdi dir="ltr">
+                          {data.ai_suggested_grade} /{" "}
+                          {data.total_possible_grade}
+                        </bdi>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
               {!!data.criterion_evaluations?.length && (
                 <div className="stack">
                   <h3>
                     {t("aiGrade")} · {t("reasoning")}
                   </h3>
                   {data.criterion_evaluations.map((c, i) => (
-                    <div key={i} className="rounded-lg bg-slate-50 p-4">
-                      <strong dir="auto">
-                        <AcademicMarkdown content={c.criterion_name} inline />
-                      </strong>{" "}
-                      ·{" "}
-                      <bdi dir="ltr">
-                        {c.score_given} / {c.max_points}
-                      </bdi>
+                    <div key={i} className="evidence-row">
+                      <div className="evidence-heading">
+                        <strong dir="auto">
+                          <AcademicMarkdown content={c.criterion_name} inline />
+                        </strong>
+                        <bdi className="evidence-points" dir="ltr">
+                          {c.score_given} / {c.max_points}
+                        </bdi>
+                      </div>
                       <AcademicMarkdown
                         className="mt-2 text-sm"
                         content={c.reasoning}
@@ -192,7 +217,7 @@ export function Review({ id, user }: { id: number; user: Identity }) {
                 <div className="stack">
                   <h3>{t("findings")}</h3>
                   {data.code_reviews.map((c, i) => (
-                    <div key={i} className="border-s-2 border-amber-400 ps-4">
+                    <div key={i} className="border-s-2 border-warning ps-4">
                       <code className="text-sm">
                         {c.file_path}
                         {c.line_number ? ":" + c.line_number : ""}
@@ -228,8 +253,45 @@ export function Review({ id, user }: { id: number; user: Identity }) {
           )}
         </section>
       </div>
-      {staff && data.is_latest && !released && (
+      <div id="attempt-rubric">
+        <RubricSummary
+          associated
+          version={data.rubric_version}
+          total={data.total_possible_grade}
+          criteria={data.rubric_criteria}
+        />
+      </div>
+      {staff && (
+        <UsedGuidance
+          taskId={data.task_id}
+          guidanceId={data.grading_guidance_id}
+          pending={data.status === "pending"}
+        />
+      )}
+      {!staff && artifact}
+      {data.repository_snapshot && (
+        <SnapshotSummary snapshot={data.repository_snapshot} />
+      )}
+      {data.team_snapshot && (
         <section className="panel stack">
+          <h2>{t("teams.snapshot")}</h2>
+          <p>
+            <bdi>{data.team_snapshot.name}</bdi> · {t("version")}{" "}
+            {data.team_snapshot.version}
+          </p>
+          <p className="muted">{t("teams.individual")}</p>
+          <ul>
+            {data.team_snapshot.members.map((m) => (
+              <li key={m.student_id}>
+                <bdi>{m.name}</bdi> · <bdi>{m.student_number}</bdi>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {staff && data.is_latest && !released && (
+        <section id="review-decision" className="decision-panel stack">
+          <h2>{t("desk.decision")}</h2>
           <ErrorNotice error={mutate.error} />
           {mutate.isPending && <p role="status">{t("evaluating")}</p>}
           {data.status === "pending" && (

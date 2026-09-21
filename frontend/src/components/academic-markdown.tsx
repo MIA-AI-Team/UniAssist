@@ -48,7 +48,7 @@ export function AcademicMarkdown({
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline text-teal-800"
+                className="underline text-action"
               >
                 {children}
               </a>
@@ -58,7 +58,7 @@ export function AcademicMarkdown({
           pre: ({ children }) => (
             <pre
               dir="ltr"
-              className="overflow-x-auto rounded-lg bg-slate-100 p-3 text-sm"
+              className="overflow-x-auto rounded-lg bg-surface-subtle p-3 text-sm"
             >
               {children}
             </pre>

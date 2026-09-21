@@ -1,4 +1,16 @@
 {
+  "desk": {
+    "expectations": "A professor accepts the grading criteria.",
+    "attempt": "Students submit an individual attempt.",
+    "review": "Staff review the AI assessment and evidence.",
+    "release": "A professor confirms the grade and releases feedback.",
+    "tasks": "Tasks",
+    "noAttempt": "No attempt submitted",
+    "receipt": "Attempt record",
+    "decision": "Review decision",
+    "expectationsTitle": "Grading expectations",
+    "context": "Task details"
+  },
   "accounts": {
     "profile": "My profile",
     "profileHelp": "You can change your name and student GitHub username. Contact an administrator for academic identity corrections.",

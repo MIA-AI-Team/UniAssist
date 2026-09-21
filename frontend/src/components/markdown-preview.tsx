@@ -19,7 +19,7 @@ export function MarkdownPreview({
   return (
     <section
       aria-labelledby={id}
-      className={`min-w-0 rounded-lg border border-slate-200 bg-white p-3 ${className}`}
+      className={`min-w-0 border-s-2 border-divider bg-surface-subtle p-3 ${className}`}
     >
       <h3 id={id} className="text-sm">
         {t("preview", { field: label })}

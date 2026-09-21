@@ -22,13 +22,17 @@ export function RubricSummary({
         {t("version")} {version} · {t("rubricTotal")}: {total} {t("points")}
       </p>
       {criteria.map((criterion, index) => (
-        <div key={index} className="border-s-2 border-teal-300 ps-4">
-          <strong dir="auto">
-            <AcademicMarkdown content={criterion.name} inline />
-          </strong>{" "}
-          · {criterion.max_points} {t("points")}
+        <div key={index} className="evidence-row">
+          <div className="evidence-heading">
+            <strong dir="auto">
+              <AcademicMarkdown content={criterion.name} inline />
+            </strong>
+            <span className="evidence-points">
+              {criterion.max_points} {t("points")}
+            </span>
+          </div>
           <AcademicMarkdown
-            className="text-sm muted"
+            className="mt-2 text-sm muted"
             content={criterion.description || ""}
           />
         </div>

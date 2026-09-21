@@ -128,17 +128,23 @@ export function AdminWorkspace({
     <div className="stack min-w-0 [overflow-wrap:anywhere]">
       <h1>{t("accounts.adminTitle")}</h1>
       <p>{t("accounts.boundary")}</p>
-      <nav
-        className="flex flex-wrap gap-4"
-        aria-label={t("accounts.adminTitle")}
-      >
-        <Link className="underline" href="/admin">
+      <nav className="section-nav" aria-label={t("accounts.adminTitle")}>
+        <Link
+          aria-current={!section || section === "users" ? "page" : undefined}
+          href="/admin"
+        >
           {t("accounts.users")}
         </Link>
-        <Link className="underline" href="/admin/audit">
+        <Link
+          aria-current={section === "audit" ? "page" : undefined}
+          href="/admin/audit"
+        >
           {t("accounts.audit")}
         </Link>
-        <Link className="underline" href="/admin/metrics">
+        <Link
+          aria-current={section === "metrics" ? "page" : undefined}
+          href="/admin/metrics"
+        >
           {t("accounts.metrics")}
         </Link>
       </nav>
@@ -206,7 +212,7 @@ function Accounts() {
             {query.data!.items.map((u) => (
               <li key={u.id} className="rounded-lg border p-4">
                 <Link
-                  className="text-teal-800 underline"
+                  className="text-action underline"
                   href={`/admin/users/${u.id}`}
                 >
                   <bdi>{u.name}</bdi>
@@ -270,7 +276,7 @@ function AccountDetail({ id, currentId }: { id: number; currentId: number }) {
       <h2>{t("accounts.correct")}</h2>
       <p>{t("accounts.correctionHelp")}</p>
       {id === currentId && (
-        <p className="text-amber-900">{t("accounts.selfWarning")}</p>
+        <p className="text-warning">{t("accounts.selfWarning")}</p>
       )}
       {done && <p role="status">{t("accounts.saved")}</p>}
       <Button variant="outline" onClick={() => query.refetch()}>

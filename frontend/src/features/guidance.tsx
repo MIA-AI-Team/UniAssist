@@ -50,7 +50,7 @@ export function GradingGuidance({ taskId }: { taskId: number }) {
     <section className="panel stack">
       <h2>{t("guidance.title")}</h2>
       <p className="muted">{t("guidance.help")}</p>
-      <p className="rounded-lg bg-amber-50 p-3 text-amber-950">
+      <p className="rounded-lg bg-warning-bg p-3 text-warning">
         {t("guidance.warning")}
       </p>
       <Field label={t("guidance.content")}>
@@ -131,7 +131,7 @@ export function UsedGuidance({
   return (
     <section className="panel stack">
       <h2>{t("guidance.used")}</h2>
-      <p className="text-sm text-amber-950">{t("guidance.warning")}</p>
+      <p className="text-sm text-warning">{t("guidance.warning")}</p>
       {!guidanceId ? (
         <p>{t(pending ? "guidance.next" : "guidance.unknown")}</p>
       ) : query.isPending ? (

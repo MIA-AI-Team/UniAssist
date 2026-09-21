@@ -136,7 +136,7 @@ export function CreateTask() {
   );
   return (
     <div className="mx-auto max-w-3xl stack">
-      <Link href="/staff" className="text-teal-800 underline">
+      <Link href="/staff" className="text-action underline">
         {t("back")}
       </Link>
       <h1>{t("createTask")}</h1>
@@ -225,7 +225,7 @@ export function CreateTask() {
         {reconciledTasks.map((task) => (
           <Link
             key={task.id}
-            className="text-teal-800 underline"
+            className="text-action underline"
             href={"/staff/tasks/" + task.id}
           >
             {t("openTask")}: {task.title}

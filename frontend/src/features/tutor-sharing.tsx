@@ -80,7 +80,7 @@ export function TutorSharing({
       client.invalidateQueries({ queryKey: ["chat-shares", sessionId] }),
   });
   return (
-    <details className="rounded-xl border border-slate-200 p-4">
+    <details className="rounded-xl border border-divider p-4">
       <summary className="cursor-pointer font-semibold">
         {t("tutor.sharing")}
       </summary>
@@ -117,7 +117,7 @@ export function TutorSharing({
         {through && preview.isPending && <Loading />}
         <ErrorNotice error={preview.error} retry={() => preview.refetch()} />
         {preview.data && (
-          <section className="stack max-h-96 overflow-auto rounded-lg bg-slate-50 p-3">
+          <section className="stack max-h-96 overflow-auto rounded-lg bg-surface-subtle p-3">
             <h3>{t("tutor.preview")}</h3>
             {preview.data.map((m) => (
               <div key={m.id} className="stack border-b pb-3">
@@ -199,7 +199,7 @@ export function SharedTutoring({ shareId }: { shareId?: number }) {
   if (shareId)
     return (
       <div className="stack">
-        <Link href="/staff/shared-tutoring" className="underline text-teal-800">
+        <Link href="/staff/shared-tutoring" className="underline text-action">
           {t("back")}
         </Link>
         {detail.isPending ? (
@@ -217,9 +217,7 @@ export function SharedTutoring({ shareId }: { shareId?: number }) {
               <article className="panel stack" key={m.id}>
                 <h2>{t("tutor.youShared")}</h2>
                 <AcademicMarkdown content={m.content} />
-                {m.is_mock && (
-                  <p className="text-amber-900">{t("tutor.mock")}</p>
-                )}
+                {m.is_mock && <p className="text-warning">{t("tutor.mock")}</p>}
                 <AcademicMarkdown content={m.reply} />
               </article>
             ))}
@@ -240,7 +238,7 @@ export function SharedTutoring({ shareId }: { shareId?: number }) {
         .flatMap((p) => p.items)
         .map((s) => (
           <Link
-            className="panel underline text-teal-800"
+            className="panel underline text-action"
             key={s.id}
             href={`/staff/shared-tutoring/${s.id}`}
           >

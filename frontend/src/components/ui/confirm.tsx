@@ -27,10 +27,10 @@ export function Confirm({
         </Button>
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-slate-900/40" />
-        <Dialog.Content className="fixed start-1/2 top-1/2 z-50 w-[min(90vw,28rem)] -translate-x-1/2 rtl:translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl">
+        <Dialog.Overlay className="dialog-overlay" />
+        <Dialog.Content className="dialog-content">
           <Dialog.Title className="text-xl font-bold">{title}</Dialog.Title>
-          <Dialog.Description className="my-4 text-slate-600">
+          <Dialog.Description className="my-4 text-muted">
             {description}
           </Dialog.Description>
           <div className="flex justify-end gap-3">

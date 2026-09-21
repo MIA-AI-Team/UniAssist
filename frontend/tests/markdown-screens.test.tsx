@@ -189,11 +189,16 @@ it("renders private guidance history and used guidance, with a local editable pr
   expect(request).not.toHaveBeenCalled();
 });
 
-it.each([false, true])(
-  "preserves the student feedback release gate (released=%s)",
-  (released) => {
+it.each(
+  [false, true].flatMap((released) =>
+    ["en", "ar"].map((locale) => ({ released, locale })),
+  ),
+)(
+  "preserves release gating and feedback order in $locale (released=$released)",
+  ({ released, locale }) => {
+    const messages = locale === "ar" ? ar : en;
     const user = { id: 3, name: "Student", role: "student" } as Identity;
-    const { container } = setup(<Review id={1} user={user} />, "en", [
+    const { container } = setup(<Review id={1} user={user} />, locale, [
       [
         ["submission", 1],
         {
@@ -234,8 +239,24 @@ it.each([false, true])(
     );
     expect(container.querySelector("pre .katex")).toBeNull();
     expect(container.querySelectorAll(".katex")).toHaveLength(released ? 5 : 0);
-    expect(screen.queryByText(en.guidance.used)).toBeNull();
-    if (!released) expect(screen.getByText(en.awaiting)).toBeVisible();
+    expect(screen.queryByText(messages.guidance.used)).toBeNull();
+    if (!released) expect(screen.getByText(messages.awaiting)).toBeVisible();
+    else {
+      const feedback = container.querySelector(".academic-markdown")!;
+      const grade = screen.getByText(messages.finalGrade);
+      const artifact = screen.getByRole("heading", { name: messages.artifact });
+      expect(
+        feedback.compareDocumentPosition(grade) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(
+        grade.compareDocumentPosition(artifact) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(
+        screen.queryByRole("heading", { name: messages.desk.decision }),
+      ).toBeNull();
+    }
   },
 );
 
