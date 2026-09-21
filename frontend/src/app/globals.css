@@ -276,12 +276,6 @@ html[lang="ar"] {
   .workspace-nav a:hover {
     color: var(--action);
   }
-  .demo-notice {
-    padding-block: 0.5rem;
-    color: var(--warning);
-    background: var(--warning-bg);
-    font-size: 0.8125rem;
-  }
   .language-switch {
     display: inline-flex;
     align-items: center;

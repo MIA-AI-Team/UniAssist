@@ -157,7 +157,6 @@ export function Auth({ registering = false }: { registering?: boolean }) {
           <p className="muted mb-6">
             {t(registering ? "registerHint" : "loginHint")}
           </p>
-          <p className="notice notice-warning mb-6 text-sm">{t("demo")}</p>
           {search.has("expired") && (
             <p role="status" className="mb-4 text-warning">
               {t("sessionExpired")}

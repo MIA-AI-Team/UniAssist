@@ -28,7 +28,6 @@ for (const locale of ["en", "ar"] as const) {
     );
     const submit = page.getByRole("button", { name: m.login, exact: true });
     await expect(submit).toBeInViewport();
-    await expect(page.getByText(m.demo, { exact: true })).toBeInViewport();
     const email = page.getByLabel(m.email, { exact: true });
     await email.focus();
     await page.keyboard.press("Tab");

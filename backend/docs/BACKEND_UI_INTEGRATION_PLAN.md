@@ -6,6 +6,8 @@ The original root `plan.md` describes the first frontend release, not this expan
 ## Resume here
 
 - Current phase: **Phase 5 implemented and isolated mock/fixture-verified; all five expansion phases complete**.
+- UI copy follow-up (2026-09-22): removed the local/demo staff self-selection notice from auth and
+  workspace screens in both languages at the user's request. Mock-assessment provenance remains.
 - Latest UI follow-up (2026-09-22): **Academic Review Desk direction implemented** from
   `Humazine_UI.md` using humanize-ui. Semantic tokens/local bilingual fonts, task rows, staff review
   navigation, attempt records and feedback-first student results. 54 frontend tests, TypeScript,

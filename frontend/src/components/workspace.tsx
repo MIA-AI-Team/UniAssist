@@ -140,9 +140,6 @@ export function Workspace({
           </Link>
         </nav>
       </header>
-      <div className="demo-notice">
-        <div className="workspace-width">{t("demo")}</div>
-      </div>
       <main id="main" tabIndex={-1} className="workspace-width workspace-main">
         <ErrorNotice error={logout.error} />
         {permitted ? (
