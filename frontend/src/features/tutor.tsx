@@ -13,7 +13,7 @@ import { request, ApiError } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { Button } from "@/components/ui/button";
 import { ErrorNotice, Field, Loading, Stamp } from "@/components/common";
-import { TutorMarkdown } from "@/components/tutor-markdown";
+import { AcademicMarkdown } from "@/components/academic-markdown";
 import { TutorSharing } from "./tutor-sharing";
 type S = components["schemas"];
 type Turn = S["ChatTurnInfo"];
@@ -263,7 +263,7 @@ function TutorWorkspace({ taskId }: { taskId: number }) {
                               : "tutor.title",
                           )}
                         </h3>
-                        <TutorMarkdown content={m.content} />
+                        <AcademicMarkdown content={m.content} />
                       </div>
                     ))}
                 </details>
@@ -280,9 +280,7 @@ function TutorWorkspace({ taskId }: { taskId: number }) {
                   >
                     <div className="rounded-lg bg-slate-50 p-4">
                       <h3>{t("tutor.you")}</h3>
-                      <p className="prose-content" dir="auto">
-                        {m.content}
-                      </p>
+                      <AcademicMarkdown content={m.content} />
                     </div>
                     {m.status === "pending" && (
                       <p role="status">{t("tutor.thinking")}</p>
@@ -295,7 +293,7 @@ function TutorWorkspace({ taskId }: { taskId: number }) {
                             {t("tutor.mock")}
                           </p>
                         )}
-                        <TutorMarkdown content={m.reply} />
+                        <AcademicMarkdown content={m.reply} />
                         {m.context_info && (
                           <div className="text-sm muted">
                             <p>

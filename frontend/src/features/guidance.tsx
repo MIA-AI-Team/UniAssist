@@ -1,4 +1,6 @@
 "use client";
+import { AcademicMarkdown } from "@/components/academic-markdown";
+import { MarkdownPreview } from "@/components/markdown-preview";
 import { useRef, useState } from "react";
 import {
   useInfiniteQuery,
@@ -64,6 +66,7 @@ export function GradingGuidance({ taskId }: { taskId: number }) {
           }}
         />
       </Field>
+      <MarkdownPreview content={content} label={t("guidance.content")} />
       <p className="text-sm muted">{t("guidance.clearHelp")}</p>
       <ErrorNotice error={save.error} />
       {save.isSuccess && <p role="status">{t("guidance.saved")}</p>}
@@ -86,9 +89,12 @@ export function GradingGuidance({ taskId }: { taskId: number }) {
             <summary className="cursor-pointer">
               {t("version")} {row.version} · <Stamp value={row.created_at} />
             </summary>
-            <p className="prose-content mt-3" dir="auto">
-              {row.content.trim() || t("guidance.disabled")}
-            </p>
+            <AcademicMarkdown
+              className="mt-3"
+              content={
+                row.content.trim() ? row.content : t("guidance.disabled")
+              }
+            />
           </details>
         ))}
       {history.hasNextPage && (
@@ -137,9 +143,14 @@ export function UsedGuidance({
           <summary>
             {t("version")} {query.data!.version}
           </summary>
-          <p dir="auto" className="prose-content mt-3">
-            {query.data!.content.trim() || t("guidance.disabled")}
-          </p>
+          <AcademicMarkdown
+            className="mt-3"
+            content={
+              query.data!.content.trim()
+                ? query.data!.content
+                : t("guidance.disabled")
+            }
+          />
         </details>
       )}
     </section>

@@ -282,6 +282,10 @@ a resubmission or competing evaluation receives a retryable conflict rather than
 - Isolate filenames, identifiers, email, code and mixed-direction content.
 - Translate UI labels, stable error codes, validation, confirmations, states and navigation.
 - Do not translate staff-authored task content or persisted AI feedback automatically.
+- Academic prose uses the shared Markdown/math viewer, including task instructions, rubrics,
+  released feedback, private guidance, tutoring/shares and insights. It supports `$…$`, `$$…$$`,
+  `\(…\)` and `\[…\]`, with local staff authoring previews. Preserve original saved strings,
+  literal artifact/code display, staff-only guidance and grade-release gates. See README syntax.
 - Preserve enum values and cohort/major values independently of displayed labels.
 - Show exact timestamps in the user's timezone; send dates with explicit timezone offsets.
 - Use a bundled Arabic-capable font; no build-time external font fetch.

@@ -14,7 +14,7 @@ import type { components } from "@/lib/api/schema";
 import { Button } from "@/components/ui/button";
 import { Confirm } from "@/components/ui/confirm";
 import { ErrorNotice, Field, Loading, Stamp } from "@/components/common";
-import { TutorMarkdown } from "@/components/tutor-markdown";
+import { AcademicMarkdown } from "@/components/academic-markdown";
 type S = components["schemas"];
 
 export function TutorSharing({
@@ -121,8 +121,8 @@ export function TutorSharing({
             <h3>{t("tutor.preview")}</h3>
             {preview.data.map((m) => (
               <div key={m.id} className="stack border-b pb-3">
-                <p dir="auto">{m.content}</p>
-                <TutorMarkdown content={m.reply} />
+                <AcademicMarkdown content={m.content} />
+                <AcademicMarkdown content={m.reply} />
               </div>
             ))}
           </section>
@@ -216,13 +216,11 @@ export function SharedTutoring({ shareId }: { shareId?: number }) {
             {detail.data!.snapshot.map((m) => (
               <article className="panel stack" key={m.id}>
                 <h2>{t("tutor.youShared")}</h2>
-                <p className="prose-content" dir="auto">
-                  {m.content}
-                </p>
+                <AcademicMarkdown content={m.content} />
                 {m.is_mock && (
                   <p className="text-amber-900">{t("tutor.mock")}</p>
                 )}
-                <TutorMarkdown content={m.reply} />
+                <AcademicMarkdown content={m.reply} />
               </article>
             ))}
           </>

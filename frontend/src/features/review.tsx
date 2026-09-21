@@ -1,4 +1,5 @@
 "use client";
+import { AcademicMarkdown } from "@/components/academic-markdown";
 import { FileMetadata } from "@/components/file-metadata";
 import { RubricSummary } from "@/components/rubric-summary";
 import { UsedGuidance } from "./guidance";
@@ -164,11 +165,7 @@ export function Review({ id, user }: { id: number; user: Identity }) {
                   </div>
                 )}
               </div>
-              {data.feedback && (
-                <p dir="auto" className="prose-content">
-                  {data.feedback}
-                </p>
-              )}
+              {data.feedback && <AcademicMarkdown content={data.feedback} />}
               {!!data.criterion_evaluations?.length && (
                 <div className="stack">
                   <h3>
@@ -176,13 +173,17 @@ export function Review({ id, user }: { id: number; user: Identity }) {
                   </h3>
                   {data.criterion_evaluations.map((c, i) => (
                     <div key={i} className="rounded-lg bg-slate-50 p-4">
-                      <strong dir="auto">{c.criterion_name}</strong> ·{" "}
+                      <strong dir="auto">
+                        <AcademicMarkdown content={c.criterion_name} inline />
+                      </strong>{" "}
+                      ·{" "}
                       <bdi dir="ltr">
                         {c.score_given} / {c.max_points}
                       </bdi>
-                      <p dir="auto" className="mt-2 text-sm">
-                        {c.reasoning}
-                      </p>
+                      <AcademicMarkdown
+                        className="mt-2 text-sm"
+                        content={c.reasoning}
+                      />
                     </div>
                   ))}
                 </div>
@@ -201,7 +202,7 @@ export function Review({ id, user }: { id: number; user: Identity }) {
                           ? t("severity_" + c.severity)
                           : c.severity}
                       </span>
-                      <p dir="auto">{c.finding}</p>
+                      <AcademicMarkdown content={c.finding} />
                     </div>
                   ))}
                 </div>
@@ -212,7 +213,7 @@ export function Review({ id, user }: { id: number; user: Identity }) {
                   <ul className="list-disc ps-5">
                     {data.ai_warnings.map((w, i) => (
                       <li key={i} dir="auto">
-                        {w}
+                        <AcademicMarkdown content={w} />
                       </li>
                     ))}
                   </ul>

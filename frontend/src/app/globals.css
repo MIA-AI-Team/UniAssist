@@ -1,9 +1,17 @@
 @import "tailwindcss";
 
-.tutor-markdown > * + * { margin-block-start: 0.75rem; }
-.tutor-markdown ul { list-style: disc; padding-inline-start: 1.5rem; }
-.tutor-markdown ol { list-style: decimal; padding-inline-start: 1.5rem; }
-.tutor-markdown .katex-display { overflow-x: auto; overflow-y: hidden; direction: ltr; }
+.academic-markdown > * + * { margin-block-start: 0.75rem; }
+.academic-markdown ul { list-style: disc; padding-inline-start: 1.5rem; }
+.academic-markdown ol { list-style: decimal; padding-inline-start: 1.5rem; }
+/* Equations must not set the intrinsic width of surrounding grid panels. */
+div.academic-markdown { contain: inline-size; }
+/* Keep mixed Arabic/Latin equations isolated without widening their panels. */
+.academic-markdown .katex { direction: ltr; unicode-bidi: isolate; }
+.academic-markdown .katex-display { max-width: 100%; overflow-x: auto; overflow-y: hidden; direction: ltr; padding-block: 0.25rem; }
+.academic-markdown .katex-error { white-space: pre-wrap; overflow-wrap: anywhere; }
+.academic-markdown p { white-space: pre-line; }
+.academic-markdown code { white-space: pre-wrap; }
+.academic-markdown pre code { white-space: pre; }
 @import "@fontsource/noto-sans-arabic/400.css";
 @import "@fontsource/noto-sans-arabic/600.css";
 @import "@fontsource/noto-sans-arabic/700.css";

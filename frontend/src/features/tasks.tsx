@@ -1,4 +1,5 @@
 "use client";
+import { AcademicMarkdown } from "@/components/academic-markdown";
 import { FileMetadata } from "@/components/file-metadata";
 import { RubricSummary } from "@/components/rubric-summary";
 import { LabTutorSettings } from "./tutor-sharing";
@@ -219,9 +220,7 @@ export function TaskPage({
             </p>
           </div>
         </div>
-        <p className="prose-content mt-6" dir="auto">
-          {data.description}
-        </p>
+        <AcademicMarkdown className="mt-6" content={data.description} />
         {data.project_details?.require_team && (
           <Link
             className="mt-4 inline-block underline text-teal-800"

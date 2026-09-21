@@ -3,18 +3,44 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import remarkLatex from "@/lib/markdown/remark-latex";
+import remarkInline from "@/lib/markdown/remark-inline";
 import "katex/dist/katex.min.css";
 
-export function TutorMarkdown({ content }: { content: string }) {
+export function AcademicMarkdown({
+  content,
+  className = "",
+  inline = false,
+}: {
+  content: string;
+  className?: string;
+  inline?: boolean;
+}) {
+  const Wrapper = inline ? "span" : "div";
   return (
-    <div dir="auto" className="tutor-markdown min-w-0 break-words">
+    <Wrapper
+      dir="auto"
+      className={`academic-markdown min-w-0 break-words ${className}`}
+    >
       <Markdown
         skipHtml
-        remarkPlugins={[remarkGfm, remarkMath]}
+        remarkPlugins={[
+          remarkGfm,
+          remarkMath,
+          remarkLatex,
+          ...(inline ? [remarkInline] : []),
+        ]}
         rehypePlugins={[
           [rehypeKatex, { trust: false, strict: "warn", maxExpand: 1000 }],
         ]}
         components={{
+          ...(inline
+            ? {
+                p: ({ children }: { children?: React.ReactNode }) => (
+                  <span>{children}</span>
+                ),
+              }
+            : {}),
           img: () => null,
           a: ({ href, children }) =>
             /^https?:\/\//i.test(href || "") ? (
@@ -46,6 +72,6 @@ export function TutorMarkdown({ content }: { content: string }) {
       >
         {content}
       </Markdown>
-    </div>
+    </Wrapper>
   );
 }

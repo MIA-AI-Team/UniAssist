@@ -1,6 +1,7 @@
 "use client";
 import { useTranslations } from "next-intl";
 import type { Criterion } from "@/lib/api/types";
+import { AcademicMarkdown } from "./academic-markdown";
 
 export function RubricSummary({
   version,
@@ -22,11 +23,14 @@ export function RubricSummary({
       </p>
       {criteria.map((criterion, index) => (
         <div key={index} className="border-s-2 border-teal-300 ps-4">
-          <strong dir="auto">{criterion.name}</strong> · {criterion.max_points}{" "}
-          {t("points")}
-          <p className="text-sm muted" dir="auto">
-            {criterion.description}
-          </p>
+          <strong dir="auto">
+            <AcademicMarkdown content={criterion.name} inline />
+          </strong>{" "}
+          · {criterion.max_points} {t("points")}
+          <AcademicMarkdown
+            className="text-sm muted"
+            content={criterion.description || ""}
+          />
         </div>
       ))}
     </section>

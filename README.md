@@ -162,6 +162,34 @@ cd backend
 
 Use URL-safe/encoded database credentials in DATABASE_URL.
 
+## Markdown and math
+
+Academic text supports Markdown and KaTeX math in task-detail instructions, rubric names and
+descriptions, grading feedback/reasoning/findings/warnings, private grading guidance, teaching
+insights, tutor messages and shared transcript views. Staff get live previews when writing
+instructions, manual rubrics, rubric refinement feedback and private guidance. Previewing does
+not save or rewrite the original text. Student feedback remains hidden until grade release;
+private guidance remains staff-only.
+
+Use `$x^2$` or `\(x^2\)` for inline math. Use `\[\frac{1}{2}\]` for display math (including
+multiline equations), or put dollar display delimiters on separate lines:
+
+```text
+$$
+\sum_{i=1}^{n} i = \frac{n(n+1)}{2}
+$$
+```
+
+Fenced blocks labeled `math` also render equations. Ordinary code blocks and inline code
+remain literal. Escape a dollar as `\$`; write `\\(` or `\\[` to show literal LaTeX opening
+delimiters. Incomplete delimiters and invalid math remain readable during editing. Supported
+commands follow KaTeX, with trusted commands disabled. HTML and external images are disabled.
+Arabic prose keeps its direction while equations render left-to-right; wide display equations
+scroll within their panel. Fonts are bundled locally.
+
+Submitted artifacts, task titles/list excerpts, identifiers and filenames retain their plain-text
+display. Criterion names render inline even when their source contains display syntax.
+
 ## Verification
 
 Frontend checks:

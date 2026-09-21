@@ -1,4 +1,6 @@
 "use client";
+import { AcademicMarkdown } from "@/components/academic-markdown";
+import { MarkdownPreview } from "@/components/markdown-preview";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -132,12 +134,23 @@ export function Rubrics({
                 {t("remove")}
               </Button>
               <div className="sm:col-span-3">
+                <MarkdownPreview
+                  content={c.name}
+                  label={t("criterionName")}
+                  inline
+                  className="mb-3"
+                />
                 <Field label={t("criterionDescription")}>
                   <textarea
                     value={c.description || ""}
                     onChange={(e) => update(i, { description: e.target.value })}
                   />
                 </Field>
+                <MarkdownPreview
+                  content={c.description || ""}
+                  label={t("criterionDescription")}
+                  className="mt-3"
+                />
               </div>
             </fieldset>
           ))}
@@ -206,14 +219,17 @@ export function Rubrics({
               {r.criteria.map((c, i) => (
                 <li key={i}>
                   <div className="flex justify-between gap-4">
-                    <strong dir="auto">{c.name}</strong>
+                    <strong dir="auto">
+                      <AcademicMarkdown content={c.name} inline />
+                    </strong>
                     <span>
                       {c.max_points} {t("points")}
                     </span>
                   </div>
-                  <p className="text-sm muted prose-content" dir="auto">
-                    {c.description}
-                  </p>
+                  <AcademicMarkdown
+                    className="text-sm muted"
+                    content={c.description || ""}
+                  />
                 </li>
               ))}
             </ul>
@@ -243,6 +259,11 @@ export function Rubrics({
               >
                 {t("refine")}
               </Button>
+              <MarkdownPreview
+                content={feedback[r.id] || ""}
+                label={t("refineFeedback")}
+                className="sm:col-span-2"
+              />
             </form>
             {professor && r.status === "pending" && (
               <div className="flex flex-wrap gap-3">

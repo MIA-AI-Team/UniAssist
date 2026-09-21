@@ -12,7 +12,7 @@ import { request } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { Button } from "@/components/ui/button";
 import { ErrorNotice, Loading, Stamp } from "@/components/common";
-import { TutorMarkdown } from "@/components/tutor-markdown";
+import { AcademicMarkdown } from "@/components/academic-markdown";
 type S = components["schemas"];
 
 export function TaskInsights({ taskId }: { taskId: number }) {
@@ -244,13 +244,13 @@ export function TaskInsights({ taskId }: { taskId: number }) {
                 average: number(report.input_snapshot.average_percentage),
               })}
             </p>
-            <TutorMarkdown content={report.result.summary} />
+            <AcademicMarkdown content={report.result.summary} />
             {report.result.common_issues?.map((issue, i) => (
               <section className="stack" key={i}>
                 <h4 className="font-semibold" dir="auto">
                   {issue.title}
                 </h4>
-                <TutorMarkdown content={issue.description} />
+                <AcademicMarkdown content={issue.description} />
                 <p dir="auto">{issue.evidence}</p>
               </section>
             ))}
@@ -259,12 +259,12 @@ export function TaskInsights({ taskId }: { taskId: number }) {
                 <h4 className="font-semibold" dir="auto">
                   {m.concept}
                 </h4>
-                <TutorMarkdown content={m.description} />
-                <TutorMarkdown content={m.suggested_remediation} />
+                <AcademicMarkdown content={m.description} />
+                <AcademicMarkdown content={m.suggested_remediation} />
               </section>
             ))}
             {report.result.teaching_focus?.map((focus, i) => (
-              <TutorMarkdown key={i} content={focus} />
+              <AcademicMarkdown key={i} content={focus} />
             ))}
             {report.result.warnings?.map((warning, i) => (
               <p className="text-sm text-amber-950" dir="auto" key={i}>

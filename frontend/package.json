@@ -45,17 +45,21 @@
     "@tailwindcss/postcss": "4.3.3",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
+    "@types/mdast": "4.0.4",
     "@types/node": "24.13.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.5",
     "jsdom": "29.1.1",
+    "mdast-util-from-markdown": "2.0.3",
+    "micromark-util-types": "2.0.2",
     "openapi-typescript": "7.13.0",
     "postcss": "8.5.28",
     "prettier": "3.9.8",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
+    "unified": "11.0.5",
     "vitest": "5.0.1"
   }
 }

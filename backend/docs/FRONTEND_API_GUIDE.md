@@ -45,6 +45,15 @@ Downloads are proxied with authorization. Never display storage_path as a public
 - Grading is synchronous. Competing submission/review operations return 409 while the transaction holds its lock.
 - Unconfirmed student assessment fields are null; only professor confirmation releases content.
 
+### Academic text presentation
+
+The frontend renders existing academic prose strings as safe Markdown with KaTeX math:
+task-detail instructions, rubric names/descriptions, visible feedback/reasoning/findings/warnings,
+staff-only guidance, tutor/share messages and teaching insights. Supported delimiters are
+`$…$`, `$$…$$`, `\(…\)` and `\[…\]`; staff authoring forms provide local live previews.
+This is presentation only: requests and stored strings are unchanged, as are release/role gates.
+Artifacts and identifiers remain literal. See the README's Markdown and math section for syntax.
+
 ## 1. Authentication
 
 ### POST /auth/register → 201

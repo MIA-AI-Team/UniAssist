@@ -14,7 +14,7 @@ import ar from "../messages/ar.json";
 import { Button } from "../src/components/ui/button";
 import { Status, Field } from "../src/components/common";
 import { RubricSummary } from "../src/components/rubric-summary";
-import { TutorMarkdown } from "../src/components/tutor-markdown";
+import { AcademicMarkdown } from "../src/components/academic-markdown";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { UsedGuidance } from "../src/features/guidance";
 import { TeamPage } from "../src/features/teams";
@@ -152,7 +152,7 @@ describe("localized contracts", () => {
   );
   it("renders tutor math/code without executable HTML or tracking images", () => {
     const { container } = render(
-      <TutorMarkdown
+      <AcademicMarkdown
         content={
           "**Hint** $x^2$\n\n```js\nconst x = 2;\n```\n\n<script>alert(1)</script>\n\n![track](https://example.com/pixel)\n\n[bad](javascript:alert%281%29)"
         }

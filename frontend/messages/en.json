@@ -474,5 +474,11 @@
     "ai_invalid_response": "AI returned an unusable result. Your work is safe; please retry.",
     "ai_unavailable": "AI evaluation is temporarily unavailable.",
     "conflict": "The record changed. Refresh before trying again."
+  },
+  "markdown": {
+    "preview": "Preview: {field}",
+    "syntax": "Math syntax (use separate lines for $$ display blocks):",
+    "literalDollar": "Literal dollar:",
+    "empty": "Your preview will appear here."
   }
 }

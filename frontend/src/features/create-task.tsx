@@ -1,4 +1,5 @@
 "use client";
+import { MarkdownPreview } from "@/components/markdown-preview";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
@@ -62,6 +63,7 @@ export function CreateTask() {
     },
   });
   const type = useWatch({ control: form.control, name: "type" });
+  const description = useWatch({ control: form.control, name: "description" });
   const submit = form.handleSubmit(async (values) => {
     setError(undefined);
     try {
@@ -156,6 +158,7 @@ export function CreateTask() {
         >
           <textarea rows={6} dir="auto" {...form.register("description")} />
         </Field>
+        <MarkdownPreview content={description} label={t("description")} />
         <div className="grid gap-5 sm:grid-cols-2">
           {field("due_date", "datetime-local")}
           {field("target_cohort_year", "number")}

@@ -6,7 +6,11 @@ The original root `plan.md` describes the first frontend release, not this expan
 ## Resume here
 
 - Current phase: **Phase 5 implemented and isolated mock/fixture-verified; all five expansion phases complete**.
-- Current checks: 48 backend/PostgreSQL tests, 21 frontend tests, 47 AI-package tests passed (two opt-in
+- Latest follow-up (2026-09-21): **Academic Markdown/math and live staff previews implemented**.
+  52 frontend tests, TypeScript/lint, production Docker build and nine affected browser journeys pass.
+  English/Arabic mobile equation screenshots inspected; long equations scroll inside their panels.
+  Only the isolated verification frontend was rebuilt/restarted. See the follow-up checkpoint below.
+- Phase 5 baseline checks: 48 backend/PostgreSQL tests, 21 frontend tests, 47 AI-package tests passed (two opt-in
   live tests skipped); TypeScript/lint and production Docker build passed. Ten browser journeys pass,
   including profile failure recovery, account correction/suspension/reactivation and Arabic operations.
   Final regression passes after identity refresh/attribution audit refinements. Additional AI tests
@@ -526,3 +530,33 @@ the whole phase complete until every item is implemented and verified.
   remain separate work. Communication monitoring, generated practice, notifications/email, private
   repositories, contribution grading, legacy-team remediation and account-class conversions remain
   deferred, not unfinished features to start without a new request.
+
+
+### Follow-up checkpoint - academic Markdown and math (2026-09-21)
+
+- Shared `AcademicMarkdown` replaces the tutor-specific viewer. Existing dollar math and math
+  fences remain supported; a local micromark/mdast extension adds LaTeX parentheses/brackets,
+  including multiline matrices. Code, links and escaped delimiters keep Markdown semantics;
+  unmatched delimiters and invalid equations remain readable. Criterion names use inline rendering.
+- Coverage: task-detail instructions, rubric names/descriptions, assessment feedback/reasoning/
+  findings/warnings, private guidance history/used versions, both sides of tutoring and shared
+  transcripts, and teaching insights. Existing academic authorization and release gates remain.
+- Staff fields have local live previews for instructions, manual rubrics, refinement feedback and
+  private guidance, with English/Arabic syntax hints and empty states. Original request strings
+  and saved content are unchanged. Submitted artifacts and identifiers retain literal display.
+- Raw HTML, images and trusted KaTeX commands stay disabled. Local fonts, MathML, equation LTR
+  isolation and horizontal scrolling are retained. Inline-size containment prevents long equations
+  from widening the surrounding grid panels; English/Arabic mobile screenshots were inspected.
+- Verification: 52 frontend tests pass, including parser boundaries, hostile input, localized
+  previews, unchanged save payloads/failure recovery, guidance and student grade-release filtering.
+  TypeScript and ESLint pass. The production Docker build passes, including a clean npm ci with
+  the updated lockfile (only explicit type dependencies were added).
+- Nine Playwright journeys pass in Edge/Chromium against the real isolated backend: two new
+  English/Arabic math authoring/save/approval/student/mobile checks plus all seven existing
+  workflow journeys (lab/rubrics, assessment/release, tutoring/retry, sharing/revocation, private
+  guidance/insights, upload recovery, and session/origin/locale behavior).
+  Screenshots: `frontend/test-results/markdown-*/math-*-mobile.png` (generated, untracked).
+- Only `uniassist-verify` frontend was rebuilt/restarted. Test accounts/tasks remain in its database.
+  No migrations or backend/AI behavior changed; their unit suites and the separate account/team/
+  repository browser suites were not rerun for this frontend-only follow-up. Normal-stack deployment,
+  live providers and broader cross-browser accessibility verification remain separate work.
