@@ -270,10 +270,19 @@ it("renders private guidance history and used guidance, with a local editable pr
       [["guidance-version", 1, 5], guidance],
     ],
   );
-  fireEvent.change(screen.getByLabelText(en.guidance.content), {
+  const disclosure = screen
+    .getByText(en.guidance.newVersion, { exact: true })
+    .closest("details")!;
+  fireEvent.click(disclosure.querySelector("summary")!);
+  const editor = screen.getByLabelText(en.guidance.content);
+  fireEvent.change(editor, {
     target: { value: String.raw`New \[b^2\]` },
   });
   expect(container.querySelectorAll(".katex")).toHaveLength(3);
+  fireEvent.click(disclosure.querySelector("summary")!);
+  expect(disclosure).not.toHaveAttribute("open");
+  fireEvent.click(disclosure.querySelector("summary")!);
+  expect(editor).toHaveValue(String.raw`New \[b^2\]`);
   expect(request).not.toHaveBeenCalled();
 });
 

@@ -260,6 +260,7 @@
   "guidance": {
     "title": "Private grading guidance",
     "help": "Staff-only marking notes. Each save creates an immutable version. Only grading uses this content; tutors and rubric generation never receive it.",
+    "newVersion": "Add a guidance version",
     "warning": "Assessment feedback may be released to students. Check that AI feedback, criterion reasoning and findings do not reveal private solutions before confirming a grade. Prompt safeguards are not a guarantee.",
     "content": "Private marking notes",
     "clearHelp": "Maximum 12,000 characters. Save an empty version to stop using guidance for future evaluations; previous versions remain preserved.",

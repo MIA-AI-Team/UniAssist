@@ -526,6 +526,7 @@ test("private guidance and released teaching insights work in both languages", a
       });
     } else await route.continue();
   });
+  await page.getByText("Add a guidance version", { exact: true }).click();
   await page
     .getByLabel("Private marking notes", { exact: true })
     .fill("PRIVATE_UI_GUIDANCE");

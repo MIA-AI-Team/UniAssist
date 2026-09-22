@@ -347,7 +347,7 @@ The palette, fonts, radii, spacing, semantic colors and motion values in section
 |---|---|---|---|
 | 1. Shared desk patterns | **Complete** | Reusable record, summary, history, disclosure, document-section and action-area CSS patterns | Logical properties, 44px disclosure targets, mobile stacking and existing tokens verified |
 | 2. Responsive review data | **Complete** | Submission queue and insight tables are full-width datasets with labeled mobile records | Native table headers remain; translated labels replace routine horizontal scrolling below 640px |
-| 3. Private grading guidance | Planned | Intentional new-version disclosure and compact version history | Draft survives disclosure changes; disabling guidance remains explicit |
+| 3. Private grading guidance | **Complete** | Intentional new-version disclosure and compact version history | Draft survives disclosure changes; disabling guidance remains explicit |
 | 4. Rubric preparation | Planned | Rubric evidence ledger with disclosed creation/refinement tools | Version, source, status, total and professor authority remain clear |
 | 5. Teams and invitations | Planned | Whole-row team records, roster decisions and chronological lifecycle history | Consent, approval, locking and conflict behavior remain unchanged |
 | 6. Repository evidence | Planned | Repository, commit, snapshot and attribution evidence ledger | Full SHA, fixture, omitted-file and authorization context stay prominent |
@@ -361,3 +361,7 @@ Each completed phase records its behavior and verification here before its commi
 ### Phase 2 evidence
 
 The submission review queue and criterion analytics now use the Carbon-informed full-width data treatment. Column headers carry explicit `scope="col"`; at narrow widths the same table rows become vertically ruled records with visible translated field labels. The queue retains its URL-backed latest/status filters, status wording, exact timestamp and review link. Focused English/Arabic component coverage verifies both datasets and all mobile labels.
+
+### Phase 3 evidence
+
+Private guidance now keeps its purpose and release-safety warning visible while the empty editor and preview remain closed until staff choose “Add a guidance version.” The native disclosure retains its mounted editor, so typed content survives closing and reopening. Saving empty content still uses the existing explicit confirmation to disable guidance for future evaluations. Immutable versions use transparent ruled disclosures, with the newest version identified in the history.

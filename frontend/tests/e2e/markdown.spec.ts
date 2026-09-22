@@ -101,6 +101,7 @@ for (const locale of ["en", "ar"] as const) {
     ).toContainText(m.rubric_accepted);
 
     const guidance = String.raw`Private expectation \(q_{private}\)`;
+    await page.getByText(m.guidance.newVersion, { exact: true }).click();
     await page.getByLabel(m.guidance.content, { exact: true }).fill(guidance);
     await expect(
       page
