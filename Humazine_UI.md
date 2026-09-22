@@ -349,7 +349,7 @@ The palette, fonts, radii, spacing, semantic colors and motion values in section
 | 2. Responsive review data | **Complete** | Submission queue and insight tables are full-width datasets with labeled mobile records | Native table headers remain; translated labels replace routine horizontal scrolling below 640px |
 | 3. Private grading guidance | **Complete** | Intentional new-version disclosure and compact version history | Draft survives disclosure changes; disabling guidance remains explicit |
 | 4. Rubric preparation | **Complete** | Rubric evidence ledger with disclosed creation/refinement tools | Version, source, status, total and professor authority remain clear |
-| 5. Teams and invitations | Planned | Whole-row team records, roster decisions and chronological lifecycle history | Consent, approval, locking and conflict behavior remain unchanged |
+| 5. Teams and invitations | **Complete** | Whole-row team records, roster decisions and chronological lifecycle history | Consent, approval, locking and conflict behavior remain unchanged |
 | 6. Repository evidence | Planned | Repository, commit, snapshot and attribution evidence ledger | Full SHA, fixture, omitted-file and authorization context stay prominent |
 | 7. Tutoring and sharing | Planned | Academic transcript, session records and frozen-share preview | Privacy, retries, language, revocation and draft behavior remain intact |
 | 8. Profile and operations | Planned | Summary-list identity, account records, audit history and aligned metrics | Operations reveal no academic content and retain version checks |
@@ -369,3 +369,7 @@ Private guidance now keeps its purpose and release-safety warning visible while 
 ### Phase 4 evidence
 
 Rubric preparation now reads as a version ledger before it reads as an editor. AI suggestion remains a direct task action; manual version creation and per-version refinement use native ruled disclosures whose mounted inputs retain local drafts. Version, source, status, criteria, point totals and professor approval controls stay visible outside those disclosures. The approval area uses the same explicit action rule as final academic decisions.
+
+### Phase 5 evidence
+
+Team and invitation collections now use Primer/GOV.UK-inspired whole-row destinations: the name and concise roster context lead, while sentence-case lifecycle state or invitation time trails. Team detail uses a summary list for status, version and lock time; roster members and pending invitations share one ruled record list. Consent, invitation, approval and archive actions remain explicit action areas, and preserved roster events read as a chronological history inside an optional native disclosure.

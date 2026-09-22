@@ -114,7 +114,7 @@ describe("localized contracts", () => {
         name: "Student",
         student_number: "CS123",
       } as Identity;
-      render(
+      const { container } = render(
         <QueryClientProvider client={queryClient}>
           <NextIntlClientProvider locale={locale} messages={messages}>
             <TeamPage teamId={1} user={user} />
@@ -129,6 +129,9 @@ describe("localized contracts", () => {
       expect(
         screen.queryByRole("button", { name: messages.teams.sendInvitation }),
       ).toBeNull();
+      expect(container.querySelector(".summary-list")).not.toBeNull();
+      expect(container.querySelectorAll(".record-row")).toHaveLength(1);
+      expect(container.querySelector(".disclosure-section")).not.toBeNull();
     },
   );
   it.each(["en", "ar"])(

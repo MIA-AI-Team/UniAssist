@@ -52,6 +52,7 @@ export function ProjectTeams({
     onSuccess: (team) => router.push(`/student/teams/${team.id}`),
     onSettled: () => client.invalidateQueries({ queryKey: ["teams", taskId] }),
   });
+  const teams = list.data?.pages.flatMap((page) => page.items) ?? [];
   return (
     <div className="stack">
       <Link className="underline text-action" href={`/${area}/tasks/${taskId}`}>
@@ -61,7 +62,7 @@ export function ProjectTeams({
       <p className="muted">{t("teams.individual")}</p>
       {!staff && (
         <form
-          className="panel stack"
+          className="action-well stack"
           onSubmit={(e) => {
             e.preventDefault();
             create.mutate();
@@ -114,26 +115,32 @@ export function ProjectTeams({
       </Button>
       {list.isPending && <Loading />}
       <ErrorNotice error={list.error} retry={() => list.refetch()} />
-      {list.data?.pages[0].items.length === 0 && (
-        <p className="panel">{t("teams.empty")}</p>
+      {!list.isPending && teams.length === 0 && (
+        <p className="notice">{t("teams.empty")}</p>
       )}
-      {list.data?.pages
-        .flatMap((p) => p.items)
-        .map((team) => (
-          <Link
-            className="panel stack text-action"
-            key={team.id}
-            href={`/${area}/teams/${team.id}`}
-          >
-            <h2 className="underline" dir="auto">
-              {team.name}
-            </h2>
-            <p>
-              {t(`teams.${team.status}`)} · {team.members.length}{" "}
-              {t("teams.members")}
-            </p>
-          </Link>
-        ))}
+      {!!teams.length && (
+        <div className="record-list">
+          {teams.map((team) => (
+            <Link
+              className="record-row record-row-link"
+              key={team.id}
+              href={`/${area}/teams/${team.id}`}
+            >
+              <div className="record-copy">
+                <h2 className="record-title" dir="auto">
+                  {team.name}
+                </h2>
+                <p className="record-description">
+                  {team.members.length} {t("teams.members")}
+                </p>
+              </div>
+              <span className="record-trailing">
+                {t(`teams.${team.status}`)}
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
       {list.hasNextPage && (
         <Button
           onClick={() => list.fetchNextPage()}
@@ -157,6 +164,7 @@ export function InvitationInbox() {
       ),
     getNextPageParam: (page) => page.next_cursor,
   });
+  const invitations = inbox.data?.pages.flatMap((page) => page.items) ?? [];
   return (
     <div className="stack">
       <h1>{t("teams.inbox")}</h1>
@@ -170,20 +178,30 @@ export function InvitationInbox() {
       </Button>
       {inbox.isPending && <Loading />}
       <ErrorNotice error={inbox.error} retry={() => inbox.refetch()} />
-      {inbox.data?.pages[0].items.length === 0 && (
-        <p className="panel">{t("teams.noInvitations")}</p>
+      {!inbox.isPending && invitations.length === 0 && (
+        <p className="notice">{t("teams.noInvitations")}</p>
       )}
-      {inbox.data?.pages
-        .flatMap((p) => p.items)
-        .map((i) => (
-          <Link
-            className="panel underline text-action"
-            href={`/student/teams/${i.team_id}`}
-            key={i.id}
-          >
-            <bdi>{i.team_name}</bdi> · <Stamp value={i.created_at} />
-          </Link>
-        ))}
+      {!!invitations.length && (
+        <div className="record-list">
+          {invitations.map((invitation) => (
+            <Link
+              className="record-row record-row-link"
+              href={`/student/teams/${invitation.team_id}`}
+              key={invitation.id}
+            >
+              <div className="record-copy">
+                <span className="record-title" dir="auto">
+                  {invitation.team_name}
+                </span>
+                <p className="record-description">{t("teams.consent")}</p>
+              </div>
+              <span className="record-trailing">
+                <Stamp value={invitation.created_at} />
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
       {inbox.hasNextPage && (
         <Button
           onClick={() => inbox.fetchNextPage()}
@@ -271,6 +289,13 @@ export function TeamPage({ teamId, user }: { teamId: number; user: Identity }) {
     actions = team.actions;
   const mine = team.invitations.find((i) => i.student_id === user.id);
   const busy = mutation.isPending || query.isFetching;
+  const lifecycleActions = [
+    "request_approval",
+    "approve",
+    "reject",
+    "leave",
+    "archive",
+  ].filter((action) => actions.includes(action));
   return (
     <div className="stack">
       <Link
@@ -289,9 +314,24 @@ export function TeamPage({ teamId, user }: { teamId: number; user: Identity }) {
           {t("repos.title")}
         </Link>
       )}
-      <p>
-        {t(`teams.${team.status}`)} · {t("version")} {team.version}
-      </p>
+      <dl className="summary-list">
+        <div className="summary-row">
+          <dt className="summary-key">{t("status")}</dt>
+          <dd className="summary-value">{t(`teams.${team.status}`)}</dd>
+        </div>
+        <div className="summary-row">
+          <dt className="summary-key">{t("version")}</dt>
+          <dd className="summary-value">{team.version}</dd>
+        </div>
+        {team.locked_at && (
+          <div className="summary-row">
+            <dt className="summary-key">{t("teams.lockedAt")}</dt>
+            <dd className="summary-value">
+              <Stamp value={team.locked_at} />
+            </dd>
+          </div>
+        )}
+      </dl>
       <p className="muted">{t("teams.individual")}</p>
       <Button
         variant="outline"
@@ -304,27 +344,24 @@ export function TeamPage({ teamId, user }: { teamId: number; user: Identity }) {
         {t("refresh")}
       </Button>
       {team.unavailable_reason && (
-        <p className="panel">{t(`errors.${team.unavailable_reason}`)}</p>
-      )}
-      {team.locked_at && (
-        <p>
-          {t("teams.lockedAt")}: <Stamp value={team.locked_at} />
-        </p>
+        <p className="notice">{t(`errors.${team.unavailable_reason}`)}</p>
       )}
       <ErrorNotice error={mutation.error} />
       {mutation.isSuccess && <p role="status">{t("teams.saved")}</p>}
-      <section className="panel stack">
+      <section className="document-section stack">
         <h2>{t("teams.roster")}</h2>
-        <ul className="divide-y">
+        <ul className="record-list">
           {team.members.map((m) => (
-            <li
-              key={m.student_id}
-              className="flex flex-wrap justify-between items-center gap-3 py-3"
-            >
-              <p>
-                <bdi>{m.name}</bdi> · <bdi>{m.student_number}</bdi> ·{" "}
-                {t(m.accepted_at ? "teams.accepted" : "teams.unconfirmed")}
-              </p>
+            <li key={m.student_id} className="record-row">
+              <div className="record-copy">
+                <p className="record-title">
+                  <bdi>{m.name}</bdi>
+                </p>
+                <p className="record-description">
+                  <bdi>{m.student_number}</bdi> ·{" "}
+                  {t(m.accepted_at ? "teams.accepted" : "teams.unconfirmed")}
+                </p>
+              </div>
               {actions.includes("remove") &&
                 m.student_id !== team.created_by && (
                   <Confirm
@@ -341,33 +378,33 @@ export function TeamPage({ teamId, user }: { teamId: number; user: Identity }) {
                 )}
             </li>
           ))}
+          {team.invitations.map((invitation) => (
+            <li key={invitation.id} className="record-row">
+              <div className="record-copy">
+                <p className="record-title">
+                  <bdi>{invitation.name}</bdi>
+                </p>
+                <p className="record-description">{t("teams.pending")}</p>
+              </div>
+              {actions.includes("cancel_invitation") && (
+                <Confirm
+                  title={t("teams.cancel_invitation")}
+                  description={t("teams.rosterWarning")}
+                  disabled={busy}
+                  onConfirm={() =>
+                    mutation.mutate({
+                      action: "cancel_invitation",
+                      invitation_id: invitation.id,
+                    })
+                  }
+                />
+              )}
+            </li>
+          ))}
         </ul>
-        {team.invitations.map((i) => (
-          <div
-            key={i.id}
-            className="flex flex-wrap justify-between items-center gap-3 border-t pt-3"
-          >
-            <p>
-              <bdi>{i.name}</bdi> · {t("teams.pending")}
-            </p>
-            {actions.includes("cancel_invitation") && (
-              <Confirm
-                title={t("teams.cancel_invitation")}
-                description={t("teams.rosterWarning")}
-                disabled={busy}
-                onConfirm={() =>
-                  mutation.mutate({
-                    action: "cancel_invitation",
-                    invitation_id: i.id,
-                  })
-                }
-              />
-            )}
-          </div>
-        ))}
       </section>
       {mine && !team.unavailable_reason && (
-        <section className="panel stack">
+        <section className="action-well stack">
           <h2>{t("teams.respond")}</h2>
           <p>{t("teams.consent")}</p>
           <div className="flex flex-wrap gap-3">
@@ -391,7 +428,7 @@ export function TeamPage({ teamId, user }: { teamId: number; user: Identity }) {
       )}
       {actions.includes("invite") && (
         <form
-          className="panel stack"
+          className="action-well stack"
           onSubmit={(e) => {
             e.preventDefault();
             mutation.mutate({ action: "invite" });
@@ -413,10 +450,9 @@ export function TeamPage({ teamId, user }: { teamId: number; user: Identity }) {
           </Button>
         </form>
       )}
-      <div className="flex flex-wrap gap-3">
-        {["request_approval", "approve", "reject", "leave", "archive"]
-          .filter((a) => actions.includes(a))
-          .map((action) => (
+      {!!lifecycleActions.length && (
+        <div className="action-well flex flex-wrap gap-3">
+          {lifecycleActions.map((action) => (
             <Confirm
               key={action}
               title={t(`teams.${action}`)}
@@ -431,7 +467,8 @@ export function TeamPage({ teamId, user }: { teamId: number; user: Identity }) {
               onConfirm={() => mutation.mutate({ action })}
             />
           ))}
-      </div>
+        </div>
+      )}
       {area === "student" &&
         team.status === "approved" &&
         team.members.some((m) => m.student_id === user.id) && (
@@ -443,37 +480,42 @@ export function TeamPage({ teamId, user }: { teamId: number; user: Identity }) {
           </Link>
         )}
       {mayReadHistory && (
-        <details className="panel">
-          <summary className="cursor-pointer font-semibold">
-            {t("teams.history")}
-          </summary>
-          {history.isPending && <Loading />}
-          <ErrorNotice error={history.error} retry={() => history.refetch()} />
-          {history.data?.pages[0].items.length === 0 && (
-            <p>{t("teams.noHistory")}</p>
-          )}
-          {history.data?.pages
-            .flatMap((p) => p.items)
-            .map((event) => (
-              <div className="mt-3 border-t py-3" key={event.id}>
-                <p>
-                  {t(`teams.${event.action}`)} · {t("version")} {event.version}{" "}
-                  · <Stamp value={event.created_at} />
-                </p>
-                <p dir="auto">
-                  {event.roster.members.map((m) => m.name).join(" · ")}
-                </p>
-              </div>
-            ))}
-          {history.hasNextPage && (
-            <Button
-              variant="outline"
-              disabled={history.isFetchingNextPage}
-              onClick={() => history.fetchNextPage()}
-            >
-              {t("teams.more")}
-            </Button>
-          )}
+        <details className="disclosure-section">
+          <summary>{t("teams.history")}</summary>
+          <div className="disclosure-content stack">
+            {history.isPending && <Loading />}
+            <ErrorNotice
+              error={history.error}
+              retry={() => history.refetch()}
+            />
+            {history.data?.pages[0].items.length === 0 && (
+              <p>{t("teams.noHistory")}</p>
+            )}
+            <ol className="history-list">
+              {history.data?.pages
+                .flatMap((p) => p.items)
+                .map((event) => (
+                  <li className="history-row" key={event.id}>
+                    <p>
+                      {t(`teams.${event.action}`)} · {t("version")}{" "}
+                      {event.version} · <Stamp value={event.created_at} />
+                    </p>
+                    <p className="record-description" dir="auto">
+                      {event.roster.members.map((m) => m.name).join(" · ")}
+                    </p>
+                  </li>
+                ))}
+            </ol>
+            {history.hasNextPage && (
+              <Button
+                variant="outline"
+                disabled={history.isFetchingNextPage}
+                onClick={() => history.fetchNextPage()}
+              >
+                {t("teams.more")}
+              </Button>
+            )}
+          </div>
         </details>
       )}
     </div>
