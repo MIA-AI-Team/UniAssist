@@ -348,7 +348,7 @@ The palette, fonts, radii, spacing, semantic colors and motion values in section
 | 1. Shared desk patterns | **Complete** | Reusable record, summary, history, disclosure, document-section and action-area CSS patterns | Logical properties, 44px disclosure targets, mobile stacking and existing tokens verified |
 | 2. Responsive review data | **Complete** | Submission queue and insight tables are full-width datasets with labeled mobile records | Native table headers remain; translated labels replace routine horizontal scrolling below 640px |
 | 3. Private grading guidance | **Complete** | Intentional new-version disclosure and compact version history | Draft survives disclosure changes; disabling guidance remains explicit |
-| 4. Rubric preparation | Planned | Rubric evidence ledger with disclosed creation/refinement tools | Version, source, status, total and professor authority remain clear |
+| 4. Rubric preparation | **Complete** | Rubric evidence ledger with disclosed creation/refinement tools | Version, source, status, total and professor authority remain clear |
 | 5. Teams and invitations | Planned | Whole-row team records, roster decisions and chronological lifecycle history | Consent, approval, locking and conflict behavior remain unchanged |
 | 6. Repository evidence | Planned | Repository, commit, snapshot and attribution evidence ledger | Full SHA, fixture, omitted-file and authorization context stay prominent |
 | 7. Tutoring and sharing | Planned | Academic transcript, session records and frozen-share preview | Privacy, retries, language, revocation and draft behavior remain intact |
@@ -365,3 +365,7 @@ The submission review queue and criterion analytics now use the Carbon-informed 
 ### Phase 3 evidence
 
 Private guidance now keeps its purpose and release-safety warning visible while the empty editor and preview remain closed until staff choose “Add a guidance version.” The native disclosure retains its mounted editor, so typed content survives closing and reopening. Saving empty content still uses the existing explicit confirmation to disable guidance for future evaluations. Immutable versions use transparent ruled disclosures, with the newest version identified in the history.
+
+### Phase 4 evidence
+
+Rubric preparation now reads as a version ledger before it reads as an editor. AI suggestion remains a direct task action; manual version creation and per-version refinement use native ruled disclosures whose mounted inputs retain local drafts. Version, source, status, criteria, point totals and professor approval controls stay visible outside those disclosures. The approval area uses the same explicit action rule as final academic decisions.

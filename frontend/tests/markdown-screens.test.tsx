@@ -120,7 +120,7 @@ it.each(["en", "ar"])(
 );
 
 it("updates manual rubric and refinement previews without requests", () => {
-  setup(<Rubrics taskId={1} professor />, "en", [
+  const { container } = setup(<Rubrics taskId={1} professor />, "en", [
     [
       ["rubrics", 1],
       [
@@ -136,13 +136,24 @@ it("updates manual rubric and refinement previews without requests", () => {
       ],
     ],
   ]);
-  fireEvent.click(screen.getByRole("button", { name: en.manual }));
+  const summaries = Array.from(
+    container.querySelectorAll("details.disclosure-section > summary"),
+  );
+  const manual = summaries.find((node) => node.textContent === en.manual)!;
+  const refinement = summaries.find((node) => node.textContent === en.refine)!;
+  fireEvent.click(manual);
   fireEvent.change(screen.getByLabelText(en.criterionName), {
     target: { value: String.raw`\(x^2\)` },
   });
   fireEvent.change(screen.getByLabelText(en.criterionDescription), {
     target: { value: String.raw`\[y^2\]` },
   });
+  fireEvent.click(manual);
+  fireEvent.click(manual);
+  expect(screen.getByLabelText(en.criterionName)).toHaveValue(
+    String.raw`\(x^2\)`,
+  );
+  fireEvent.click(refinement);
   fireEvent.change(screen.getByLabelText(en.refineFeedback), {
     target: { value: String.raw`Explain \(z^2\)` },
   });

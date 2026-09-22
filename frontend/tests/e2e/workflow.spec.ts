@@ -221,7 +221,7 @@ test("three roles complete a real assessment and switch to Arabic", async ({
     .click();
   await expect(professor).toHaveURL(/\/staff\/tasks\/\d+$/);
   const id = professor.url().split("/").at(-1)!;
-  await professor.getByRole("button", { name: "Create manual rubric" }).click();
+  await professor.getByText("Create manual rubric", { exact: true }).click();
   await professor
     .getByLabel("Criterion name", { exact: true })
     .fill("Reasoning");

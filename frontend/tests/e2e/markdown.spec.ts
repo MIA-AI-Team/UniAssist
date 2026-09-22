@@ -72,7 +72,7 @@ for (const locale of ["en", "ar"] as const) {
       page.locator(".academic-markdown").first().locator("annotation"),
     ).toHaveText(previewMath);
 
-    await page.getByRole("button", { name: m.manual, exact: true }).click();
+    await page.getByText(m.manual, { exact: true }).click();
     const criterionName = String.raw`Reasoning \(x^2\)`;
     const criterionDescription = String.raw`Explain \[\sqrt{x}\]`;
     await page.getByLabel(m.criterionName, { exact: true }).fill(criterionName);

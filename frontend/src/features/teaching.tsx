@@ -31,7 +31,6 @@ export function Rubrics({
   ]);
   const [feedback, setFeedback] = useState<Record<number, string>>({});
   const [success, setSuccess] = useState(false),
-    [showManual, setShowManual] = useState(false),
     [refreshBlocked, setRefreshBlocked] = useState(false);
   const query = useQuery({
     queryKey: ["rubrics", taskId],
@@ -69,24 +68,20 @@ export function Rubrics({
     );
   }
   return (
-    <section className="panel stack">
+    <section className="document-section stack">
       <div className="flex flex-wrap justify-between gap-3">
         <h2>{t("rubricVersions")}</h2>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setShowManual(!showManual)}>
-            {t("manual")}
-          </Button>
-          <Button
-            disabled={mutation.isPending || refreshBlocked}
-            onClick={() => mutation.mutate({ path: "suggest" })}
-          >
-            {t("suggest")}
-          </Button>
-        </div>
+        <Button
+          disabled={mutation.isPending || refreshBlocked}
+          onClick={() => mutation.mutate({ path: "suggest" })}
+        >
+          {t("suggest")}
+        </Button>
       </div>
-      {showManual && (
+      <details className="disclosure-section">
+        <summary>{t("manual")}</summary>
         <form
-          className="stack rounded-xl bg-surface-subtle p-4"
+          className="disclosure-content stack"
           onSubmit={(e) => {
             e.preventDefault();
             if (refreshBlocked) return;
@@ -101,7 +96,7 @@ export function Rubrics({
           {criteria.map((c, i) => (
             <fieldset
               key={i}
-              className="grid gap-3 rounded-xl border border-divider p-4 sm:grid-cols-[1fr_7rem_auto]"
+              className="grid gap-3 border-t border-divider p-4 sm:grid-cols-[1fr_7rem_auto]"
             >
               <legend className="px-2 text-sm">
                 {t("criterion")} {i + 1}
@@ -180,7 +175,7 @@ export function Rubrics({
             </Button>
           </div>
         </form>
-      )}
+      </details>
       <ErrorNotice error={mutation.error} />
       {mutation.isPending && <p role="status">{t("evaluating")}</p>}
       {success && !mutation.isPending && (
@@ -230,40 +225,43 @@ export function Rubrics({
                 </li>
               ))}
             </ul>
-            <form
-              className="grid gap-3 sm:grid-cols-[1fr_auto]"
-              onSubmit={(e) => {
-                e.preventDefault();
-                mutation.mutate({
-                  path: "refine?rubric_id=" + r.id,
-                  body: { staff_feedback: feedback[r.id] },
-                });
-              }}
-            >
-              <Field label={t("refineFeedback")}>
-                <input
-                  required
-                  value={feedback[r.id] || ""}
-                  onChange={(e) =>
-                    setFeedback({ ...feedback, [r.id]: e.target.value })
-                  }
-                />
-              </Field>
-              <Button
-                className="self-end"
-                variant="outline"
-                disabled={mutation.isPending || refreshBlocked}
+            <details className="disclosure-section">
+              <summary>{t("refine")}</summary>
+              <form
+                className="disclosure-content grid gap-3 sm:grid-cols-[1fr_auto]"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  mutation.mutate({
+                    path: "refine?rubric_id=" + r.id,
+                    body: { staff_feedback: feedback[r.id] },
+                  });
+                }}
               >
-                {t("refine")}
-              </Button>
-              <MarkdownPreview
-                content={feedback[r.id] || ""}
-                label={t("refineFeedback")}
-                className="sm:col-span-2"
-              />
-            </form>
+                <Field label={t("refineFeedback")}>
+                  <input
+                    required
+                    value={feedback[r.id] || ""}
+                    onChange={(e) =>
+                      setFeedback({ ...feedback, [r.id]: e.target.value })
+                    }
+                  />
+                </Field>
+                <Button
+                  className="self-end"
+                  variant="outline"
+                  disabled={mutation.isPending || refreshBlocked}
+                >
+                  {t("refine")}
+                </Button>
+                <MarkdownPreview
+                  content={feedback[r.id] || ""}
+                  label={t("refineFeedback")}
+                  className="sm:col-span-2"
+                />
+              </form>
+            </details>
             {professor && r.status === "pending" && (
-              <div className="flex flex-wrap gap-3">
+              <div className="action-well flex flex-wrap gap-3">
                 <Confirm
                   title={t("approve")}
                   description={t("approveWarning")}
