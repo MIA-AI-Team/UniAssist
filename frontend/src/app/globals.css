@@ -281,6 +281,10 @@ html[lang="ar"] {
     min-width: 0;
     overflow-wrap: anywhere;
   }
+  .metric-value {
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+  }
   .summary-action {
     align-self: start;
     min-height: 44px;

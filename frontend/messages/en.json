@@ -28,6 +28,7 @@
     "active": "Active",
     "suspended": "Suspended",
     "status": "Account status",
+    "created": "Account created",
     "firstPage": "First page",
     "nextPage": "Next page",
     "correct": "Correct account",

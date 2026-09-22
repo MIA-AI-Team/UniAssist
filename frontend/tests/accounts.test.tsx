@@ -39,7 +39,7 @@ describe("account and artifact boundaries", () => {
         vi.fn().mockResolvedValue({ ok: true, json: async () => user }),
       );
       const messages = locale === "ar" ? ar : en;
-      render(
+      const { container } = render(
         <NextIntlClientProvider locale={locale} messages={messages}>
           <QueryClientProvider
             client={
@@ -59,6 +59,8 @@ describe("account and artifact boundaries", () => {
       ).not.toBeInTheDocument();
       expect(screen.queryByLabelText(messages.role)).not.toBeInTheDocument();
       expect(screen.getByText(/SAFE-ID/)).toBeInTheDocument();
+      expect(container.querySelector(".summary-list")).not.toBeNull();
+      expect(container.querySelector(".action-well")).not.toBeNull();
     },
   );
   it.each(["en", "ar"])(
@@ -67,20 +69,18 @@ describe("account and artifact boundaries", () => {
       const messages = locale === "ar" ? ar : en;
       vi.stubGlobal(
         "fetch",
-        vi
-          .fn()
-          .mockResolvedValue({
-            ok: true,
-            json: async () => ({
-              file_id: 3,
-              file_name: "answer.txt",
-              file_type: "txt",
-              purpose: "submission",
-              size_bytes: 12,
-              uploaded_at: "2026-09-19T00:00:00Z",
-              storage_path: "PRIVATE_PATH_SENTINEL",
-            }),
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            file_id: 3,
+            file_name: "answer.txt",
+            file_type: "txt",
+            purpose: "submission",
+            size_bytes: 12,
+            uploaded_at: "2026-09-19T00:00:00Z",
+            storage_path: "PRIVATE_PATH_SENTINEL",
           }),
+        }),
       );
       render(
         <NextIntlClientProvider locale={locale} messages={messages}>

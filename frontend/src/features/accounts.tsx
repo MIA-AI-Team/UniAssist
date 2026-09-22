@@ -29,7 +29,7 @@ export function Profile({
     refetchOnWindowFocus: false,
   });
   return (
-    <section className="panel stack max-w-2xl">
+    <section className="document-section stack max-w-3xl">
       <h1>{t("accounts.profile")}</h1>
       <p>{t("accounts.profileHelp")}</p>
       <ErrorNotice error={query.error} retry={() => query.refetch()} />
@@ -81,36 +81,62 @@ function ProfileForm({
       className="stack"
       onSubmit={form.handleSubmit((values) => save.mutate(values))}
     >
-      <p>
-        <bdi>{user.email}</bdi> · {t(user.role)}
-      </p>
-      {user.role === "student" && (
-        <p>
-          <bdi>
-            {user.student_number} · {user.cohort_year} · {user.major}
-          </bdi>
-        </p>
-      )}
-      <Field label={t("name")}>
-        <input
-          required
-          minLength={2}
-          maxLength={150}
-          {...form.register("name")}
-        />
-      </Field>
-      {user.role === "student" && (
-        <Field label={t("accounts.github")}>
+      <dl className="summary-list">
+        <div className="summary-row">
+          <dt className="summary-key">{t("email")}</dt>
+          <dd className="summary-value">
+            <bdi>{user.email}</bdi>
+          </dd>
+        </div>
+        <div className="summary-row">
+          <dt className="summary-key">{t("role")}</dt>
+          <dd className="summary-value">{t(user.role)}</dd>
+        </div>
+        {user.role === "student" && (
+          <>
+            <div className="summary-row">
+              <dt className="summary-key">{t("student_number")}</dt>
+              <dd className="summary-value">
+                <bdi>{user.student_number}</bdi>
+              </dd>
+            </div>
+            <div className="summary-row">
+              <dt className="summary-key">{t("cohort_year")}</dt>
+              <dd className="summary-value">
+                <bdi>{user.cohort_year}</bdi>
+              </dd>
+            </div>
+            <div className="summary-row">
+              <dt className="summary-key">{t("major")}</dt>
+              <dd className="summary-value">
+                <bdi>{user.major}</bdi>
+              </dd>
+            </div>
+          </>
+        )}
+      </dl>
+      <div className="action-well stack">
+        <Field label={t("name")}>
           <input
-            dir="ltr"
-            maxLength={39}
-            pattern="[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?"
-            {...form.register("github_username")}
+            required
+            minLength={2}
+            maxLength={150}
+            {...form.register("name")}
           />
         </Field>
-      )}
-      <ErrorNotice error={save.error} />
-      <Button disabled={save.isPending}>{t("accounts.save")}</Button>
+        {user.role === "student" && (
+          <Field label={t("accounts.github")}>
+            <input
+              dir="ltr"
+              maxLength={39}
+              pattern="[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?"
+              {...form.register("github_username")}
+            />
+          </Field>
+        )}
+        <ErrorNotice error={save.error} />
+        <Button disabled={save.isPending}>{t("accounts.save")}</Button>
+      </div>
     </form>
   );
 }
@@ -182,10 +208,10 @@ function Accounts() {
       ),
   });
   return (
-    <section className="panel stack">
+    <section className="document-section stack">
       <h2>{t("accounts.users")}</h2>
       <form
-        className="flex flex-wrap items-end gap-3"
+        className="action-well flex flex-wrap items-end gap-3"
         onSubmit={(e) => {
           e.preventDefault();
           setCursor(undefined);
@@ -208,19 +234,25 @@ function Accounts() {
       ) : (
         <>
           {!query.data!.items.length && <p>{t("accounts.empty")}</p>}
-          <ul className="stack">
+          <ul className="record-list">
             {query.data!.items.map((u) => (
-              <li key={u.id} className="rounded-lg border p-4">
+              <li key={u.id}>
                 <Link
-                  className="text-action underline"
+                  className="record-row record-row-link"
                   href={`/admin/users/${u.id}`}
                 >
-                  <bdi>{u.name}</bdi>
+                  <span className="record-body">
+                    <span className="record-title">
+                      <bdi>{u.name}</bdi>
+                    </span>
+                    <span className="record-description">
+                      <bdi>{u.email}</bdi> · {t(u.role)}
+                    </span>
+                  </span>
+                  <span className="record-trailing">
+                    {t(u.is_active ? "accounts.active" : "accounts.suspended")}
+                  </span>
                 </Link>
-                <p>
-                  <bdi>{u.email}</bdi> · {t(u.role)} ·{" "}
-                  {t(u.is_active ? "accounts.active" : "accounts.suspended")}
-                </p>
               </li>
             ))}
           </ul>
@@ -272,7 +304,7 @@ function AccountDetail({ id, currentId }: { id: number; currentId: number }) {
   if (query.error)
     return <ErrorNotice error={query.error} retry={() => query.refetch()} />;
   return (
-    <section className="panel stack max-w-3xl">
+    <section className="document-section stack max-w-3xl">
       <h2>{t("accounts.correct")}</h2>
       <p>{t("accounts.correctionHelp")}</p>
       {id === currentId && (
@@ -282,6 +314,38 @@ function AccountDetail({ id, currentId }: { id: number; currentId: number }) {
       <Button variant="outline" onClick={() => query.refetch()}>
         {t("refresh")}
       </Button>
+      <dl className="summary-list">
+        <div className="summary-row">
+          <dt className="summary-key">{t("name")}</dt>
+          <dd className="summary-value" dir="auto">
+            {query.data!.name}
+          </dd>
+        </div>
+        <div className="summary-row">
+          <dt className="summary-key">{t("email")}</dt>
+          <dd className="summary-value">
+            <bdi>{query.data!.email}</bdi>
+          </dd>
+        </div>
+        <div className="summary-row">
+          <dt className="summary-key">{t("role")}</dt>
+          <dd className="summary-value">{t(query.data!.role)}</dd>
+        </div>
+        <div className="summary-row">
+          <dt className="summary-key">{t("accounts.status")}</dt>
+          <dd className="summary-value">
+            {t(
+              query.data!.is_active ? "accounts.active" : "accounts.suspended",
+            )}
+          </dd>
+        </div>
+        <div className="summary-row">
+          <dt className="summary-key">{t("accounts.created")}</dt>
+          <dd className="summary-value">
+            <Stamp value={query.data!.created_at} />
+          </dd>
+        </div>
+      </dl>
       <AccountForm
         key={`${id}:${query.data!.profile_version}`}
         account={query.data!}
@@ -354,13 +418,10 @@ function AccountForm({
   return (
     <form
       ref={formRef}
-      className="stack"
+      className="action-well stack"
       onSubmit={(e) => e.preventDefault()}
       onInvalid={() => setInvalid(true)}
     >
-      <p>
-        {t(account.role)} · <Stamp value={account.created_at} />
-      </p>
       {fields.map((field) => (
         <Field
           key={field}
@@ -434,7 +495,7 @@ function Audit() {
       ),
   });
   return (
-    <section className="panel stack">
+    <section className="document-section stack">
       <h2>{t("accounts.audit")}</h2>
       <p>{t("accounts.auditHelp")}</p>
       {query.isPending ? (
@@ -444,13 +505,16 @@ function Audit() {
       ) : (
         <>
           {!query.data!.items.length && <p>{t("accounts.empty")}</p>}
-          <ul className="stack">
+          <ol className="history-list">
             {query.data!.items.map((event) => (
-              <li key={event.id} className="rounded-lg border p-3">
-                <p>
-                  <bdi>{event.action}</bdi> · <Stamp value={event.created_at} />
+              <li key={event.id} className="history-row stack gap-2">
+                <h3 className="record-title">
+                  <bdi>{event.action}</bdi>
+                </h3>
+                <p className="record-description">
+                  <Stamp value={event.created_at} />
                 </p>
-                <p>
+                <p className="text-sm">
                   {t("accounts.actor")}:{" "}
                   <bdi>{event.actor_id ?? t("accounts.operator")}</bdi> ·{" "}
                   {t("accounts.target")}:{" "}
@@ -459,14 +523,14 @@ function Audit() {
                   </bdi>
                 </p>
                 {!!event.fields.length && (
-                  <p>
+                  <p className="text-sm">
                     {t("accounts.changedFields")}:{" "}
                     <bdi>{event.fields.join(", ")}</bdi>
                   </p>
                 )}
               </li>
             ))}
-          </ul>
+          </ol>
           <Paging
             cursor={cursor}
             next={query.data!.next_cursor}
@@ -497,21 +561,26 @@ function Metrics() {
     "unknown_truncation_calls",
   ] as const;
   return (
-    <section className="panel stack">
+    <section className="document-section stack">
       <h2>{t("accounts.metrics")}</h2>
       <p>{t("accounts.metricsHelp")}</p>
-      <Field label={t("accounts.window")}>
-        <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
-          {[1, 7, 30, 365].map((n) => (
-            <option key={n} value={n}>
-              {t("accounts.days", { count: n })}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Button variant="outline" onClick={() => query.refetch()}>
-        {t("refresh")}
-      </Button>
+      <div className="action-well flex flex-wrap items-end gap-3">
+        <Field label={t("accounts.window")}>
+          <select
+            value={days}
+            onChange={(e) => setDays(Number(e.target.value))}
+          >
+            {[1, 7, 30, 365].map((n) => (
+              <option key={n} value={n}>
+                {t("accounts.days", { count: n })}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Button variant="outline" onClick={() => query.refetch()}>
+          {t("refresh")}
+        </Button>
+      </div>
       {query.isPending ? (
         <Loading />
       ) : query.error ? (
@@ -519,30 +588,34 @@ function Metrics() {
       ) : (
         <>
           {!query.data!.groups.length && <p>{t("accounts.empty")}</p>}
-          {query.data!.groups.map((group) => (
-            <article
-              key={`${group.operation}:${group.provider}`}
-              className="rounded-lg border p-4"
-            >
-              <h3>
-                <bdi>
-                  {group.operation} · {group.provider}
-                </bdi>
-              </h3>
-              <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {labels.map((key) => (
-                  <div key={key}>
-                    <dt>{t(`accounts.${key}`)}</dt>
-                    <dd>
-                      {key === "average_latency_ms"
-                        ? group[key].toFixed(1)
-                        : group[key]}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </article>
-          ))}
+          {!!query.data!.groups.length && (
+            <div className="record-list">
+              {query.data!.groups.map((group) => (
+                <article
+                  key={`${group.operation}:${group.provider}`}
+                  className="record-row record-row-wide"
+                >
+                  <h3 className="record-title">
+                    <bdi>
+                      {group.operation} · {group.provider}
+                    </bdi>
+                  </h3>
+                  <dl className="summary-list">
+                    {labels.map((key) => (
+                      <div className="summary-row" key={key}>
+                        <dt className="summary-key">{t(`accounts.${key}`)}</dt>
+                        <dd className="summary-value metric-value">
+                          {key === "average_latency_ms"
+                            ? group[key].toFixed(1)
+                            : group[key]}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </article>
+              ))}
+            </div>
+          )}
         </>
       )}
     </section>

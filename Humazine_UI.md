@@ -352,7 +352,7 @@ The palette, fonts, radii, spacing, semantic colors and motion values in section
 | 5. Teams and invitations | **Complete** | Whole-row team records, roster decisions and chronological lifecycle history | Consent, approval, locking and conflict behavior remain unchanged |
 | 6. Repository evidence | **Complete** | Repository, commit, snapshot and attribution evidence ledger | Full SHA, fixture, omitted-file and authorization context stay prominent |
 | 7. Tutoring and sharing | **Complete** | Academic transcript, session records and frozen-share preview | Privacy, retries, language, revocation and draft behavior remain intact |
-| 8. Profile and operations | Planned | Summary-list identity, account records, audit history and aligned metrics | Operations reveal no academic content and retain version checks |
+| 8. Profile and operations | **Complete** | Summary-list identity, account records, audit history and aligned metrics | Operations reveal no academic content and retain version checks |
 | 9. Task and submission forms | Planned | Ruled form sections, deliberate preview hierarchy and evidence receipts | Eligibility, input/upload recovery and ambiguous-mutation handling remain intact |
 | 10. Bilingual visual QA | Planned | Full English/Arabic responsive audit, final score and evidence | Typecheck, lint, unit, build, E2E and anti-slop gates pass |
 
@@ -381,3 +381,7 @@ Repository proposals now scan as whole-row records with repository identity, fix
 ### Phase 7 evidence
 
 Tutoring now reads as an academic transcript: each persisted question and tutor response has a stable speaker column, exact question timestamp and ruled reading area, with pending, failed and mock states attached to the response they qualify. Conversation sessions and received shares use whole-row records with trailing language, time or state. Earlier unverified messages and frozen-share preparation use native progressive disclosure; shared previews and recipient snapshots reuse the transcript treatment. Request deduplication, draft retention, polling, explicit retries, fixed conversation language, recipient-only sharing and revocation behavior are unchanged.
+
+### Phase 8 evidence
+
+Profile and account detail screens now separate immutable identity facts from the fields that can be changed, using aligned summary rows and an explicit correction action area. Account search results are whole-row destinations with trailing account state. Content-free audit events use a chronological history, while AI operation groups present technical provider/operation identity above aligned, tabular numeric rows. Existing optimistic version checks, supported role boundaries, suspension safeguards and the prohibition on academic content in operations remain unchanged.
