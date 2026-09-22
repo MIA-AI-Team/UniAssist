@@ -346,7 +346,7 @@ The palette, fonts, radii, spacing, semantic colors and motion values in section
 | Phase | State | Deliverable | Acceptance |
 |---|---|---|---|
 | 1. Shared desk patterns | **Complete** | Reusable record, summary, history, disclosure, document-section and action-area CSS patterns | Logical properties, 44px disclosure targets, mobile stacking and existing tokens verified |
-| 2. Responsive review data | Planned | Submission queue and insight tables become full-width datasets with labeled mobile records | No routine table scroll at 390px; translated labels and table relationships remain |
+| 2. Responsive review data | **Complete** | Submission queue and insight tables are full-width datasets with labeled mobile records | Native table headers remain; translated labels replace routine horizontal scrolling below 640px |
 | 3. Private grading guidance | Planned | Intentional new-version disclosure and compact version history | Draft survives disclosure changes; disabling guidance remains explicit |
 | 4. Rubric preparation | Planned | Rubric evidence ledger with disclosed creation/refinement tools | Version, source, status, total and professor authority remain clear |
 | 5. Teams and invitations | Planned | Whole-row team records, roster decisions and chronological lifecycle history | Consent, approval, locking and conflict behavior remain unchanged |
@@ -357,3 +357,7 @@ The palette, fonts, radii, spacing, semantic colors and motion values in section
 | 10. Bilingual visual QA | Planned | Full English/Arabic responsive audit, final score and evidence | Typecheck, lint, unit, build, E2E and anti-slop gates pass |
 
 Each completed phase records its behavior and verification here before its commit is published. The current task list and assessment review hierarchy are regression references throughout all ten phases.
+
+### Phase 2 evidence
+
+The submission review queue and criterion analytics now use the Carbon-informed full-width data treatment. Column headers carry explicit `scope="col"`; at narrow widths the same table rows become vertically ruled records with visible translated field labels. The queue retains its URL-backed latest/status filters, status wording, exact timestamp and review link. Focused English/Arabic component coverage verifies both datasets and all mobile labels.

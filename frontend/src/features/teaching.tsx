@@ -317,7 +317,7 @@ export function Queue({ taskId }: { taskId: number }) {
       ),
   });
   return (
-    <section className="panel stack">
+    <section className="document-section stack">
       <h2>{t("queue")}</h2>
       <div className="flex flex-wrap items-end gap-6">
         <label className="!flex items-center gap-3">
@@ -349,39 +349,57 @@ export function Queue({ taskId }: { taskId: number }) {
       ) : !query.data?.length ? (
         <p className="muted">{t("noSubmissions")}</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table>
+        <div>
+          <table className="responsive-table">
             <thead>
               <tr>
-                <th>{t("studentName")}</th>
-                <th>{t("attempt")}</th>
-                <th>{t("status")}</th>
-                <th>{t("submittedAt")}</th>
+                <th scope="col">{t("studentName")}</th>
+                <th scope="col">{t("attempt")}</th>
+                <th scope="col">{t("status")}</th>
+                <th scope="col">{t("submittedAt")}</th>
               </tr>
             </thead>
             <tbody>
               {query.data.map((s) => (
                 <tr key={s.id}>
                   <td>
-                    <Link
-                      className="font-semibold text-action underline"
-                      href={"/staff/submissions/" + s.id}
-                    >
-                      <bdi>{s.student_name}</bdi>
-                    </Link>
-                    <p className="text-xs muted">
-                      <bdi>{s.student_number}</bdi>
-                    </p>
+                    <span className="responsive-cell-label">
+                      {t("studentName")}
+                    </span>
+                    <div>
+                      <Link
+                        className="font-semibold text-action underline"
+                        href={"/staff/submissions/" + s.id}
+                      >
+                        <bdi>{s.student_name}</bdi>
+                      </Link>
+                      <p className="text-xs muted">
+                        <bdi>{s.student_number}</bdi>
+                      </p>
+                    </div>
                   </td>
                   <td>
-                    {s.attempt_number}
-                    {s.is_latest ? " · " + t("latest") : ""}
+                    <span className="responsive-cell-label">
+                      {t("attempt")}
+                    </span>
+                    <span>
+                      {s.attempt_number}
+                      {s.is_latest ? " · " + t("latest") : ""}
+                    </span>
                   </td>
                   <td>
-                    <Status value={s.status} staff />
+                    <span className="responsive-cell-label">{t("status")}</span>
+                    <span>
+                      <Status value={s.status} staff />
+                    </span>
                   </td>
                   <td className="text-sm">
-                    <Stamp value={s.submitted_at} />
+                    <span className="responsive-cell-label">
+                      {t("submittedAt")}
+                    </span>
+                    <span>
+                      <Stamp value={s.submitted_at} />
+                    </span>
                   </td>
                 </tr>
               ))}

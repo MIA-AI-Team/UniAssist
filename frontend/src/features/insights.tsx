@@ -109,7 +109,7 @@ export function TaskInsights({ taskId }: { taskId: number }) {
             <p className="panel">{t("insights.empty")}</p>
           )}
           {query.data.groups.map((group) => (
-            <section className="panel stack" key={group.rubric_id}>
+            <section className="document-section stack" key={group.rubric_id}>
               <h2>
                 {t("rubric")} · {t("version")} {group.rubric_version}
               </h2>
@@ -150,16 +150,14 @@ export function TaskInsights({ taskId }: { taskId: number }) {
                     </div>
                   </dl>
                   <p className="text-sm muted">{t("insights.criteriaHelp")}</p>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-start text-sm">
-                      <caption className="text-start font-semibold mb-2">
-                        {t("insights.criteria")}
-                      </caption>
+                  <div>
+                    <table className="responsive-table text-sm">
+                      <caption>{t("insights.criteria")}</caption>
                       <thead>
                         <tr>
                           {["criterion", "samples", "meanScore", "low"].map(
                             (key) => (
-                              <th key={key} className="p-2 text-start">
+                              <th key={key} scope="col">
                                 {t(`insights.${key}`)}
                               </th>
                             ),
@@ -169,22 +167,40 @@ export function TaskInsights({ taskId }: { taskId: number }) {
                       <tbody>
                         {group.criteria.map((c, index) => (
                           <tr key={c.criterion_id} className="border-t">
-                            <td className="p-2">
-                              <bdi>{c.name}</bdi>
-                              <p className="muted">
-                                {t("insights.criterionNumber", {
-                                  number: index + 1,
-                                })}
-                              </p>
+                            <td>
+                              <span className="responsive-cell-label">
+                                {t("insights.criterion")}
+                              </span>
+                              <div>
+                                <bdi>{c.name}</bdi>
+                                <p className="muted">
+                                  {t("insights.criterionNumber", {
+                                    number: index + 1,
+                                  })}
+                                </p>
+                              </div>
                             </td>
-                            <td className="p-2">{number(c.sample_count)}</td>
-                            <td className="p-2">
+                            <td>
+                              <span className="responsive-cell-label">
+                                {t("insights.samples")}
+                              </span>
+                              <span>{number(c.sample_count)}</span>
+                            </td>
+                            <td>
+                              <span className="responsive-cell-label">
+                                {t("insights.meanScore")}
+                              </span>
                               <bdi dir="ltr">
                                 {number(c.average_score)} /{" "}
                                 {number(c.max_points)}
                               </bdi>
                             </td>
-                            <td className="p-2">{number(c.low_score_count)}</td>
+                            <td>
+                              <span className="responsive-cell-label">
+                                {t("insights.low")}
+                              </span>
+                              <span>{number(c.low_score_count)}</span>
+                            </td>
                           </tr>
                         ))}
                       </tbody>

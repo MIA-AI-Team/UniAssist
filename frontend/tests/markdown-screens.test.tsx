@@ -17,7 +17,8 @@ import { RubricSummary } from "../src/components/rubric-summary";
 import { CreateTask } from "../src/features/create-task";
 import { GradingGuidance, UsedGuidance } from "../src/features/guidance";
 import { Review } from "../src/features/review";
-import { Rubrics } from "../src/features/teaching";
+import { Rubrics, Queue } from "../src/features/teaching";
+import { TaskInsights } from "../src/features/insights";
 import { ApiError, request } from "../src/lib/api/client";
 import type { Identity } from "../src/lib/api/types";
 
@@ -157,6 +158,93 @@ it("updates manual rubric and refinement previews without requests", () => {
   }
   expect(request).not.toHaveBeenCalled();
 });
+
+it.each(["en", "ar"])(
+  "renders review and insight data with localized responsive labels in %s",
+  (locale) => {
+    const messages = locale === "ar" ? ar : en;
+    const { container } = setup(
+      <>
+        <Queue taskId={1} />
+        <TaskInsights taskId={1} />
+      </>,
+      locale,
+      [
+        [
+          ["queue", 1, true, ""],
+          [
+            {
+              id: 9,
+              student_name: "Student Name",
+              student_number: "CS100",
+              attempt_number: 2,
+              is_latest: true,
+              status: "pending",
+              submitted_at: "2026-09-21T00:00:00Z",
+            },
+          ],
+        ],
+        [["task", 1], { id: 1, title: "Algorithms" }],
+        [
+          ["analytics", 1],
+          {
+            released_count: 3,
+            excluded_count: 0,
+            minimum_group_size: 3,
+            input_fingerprint: "fingerprint",
+            groups: [
+              {
+                rubric_id: 4,
+                rubric_version: 2,
+                student_count: 3,
+                eligible: true,
+                mock_assessment_count: 0,
+                unknown_provenance_count: 0,
+                average_percentage: 80,
+                minimum_percentage: 70,
+                maximum_percentage: 90,
+                below_half_count: 0,
+                severity_counts: {},
+                criteria: [
+                  {
+                    criterion_id: 7,
+                    name: "Reasoning",
+                    sample_count: 3,
+                    average_score: 8,
+                    max_points: 10,
+                    low_score_count: 0,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        [
+          ["teaching-reports", 1],
+          { pages: [{ items: [], next_cursor: null }], pageParams: [null] },
+        ],
+      ],
+    );
+    const tables = container.querySelectorAll("table.responsive-table");
+    expect(tables).toHaveLength(2);
+    expect(
+      Array.from(container.querySelectorAll(".responsive-cell-label")).map(
+        (node) => node.textContent,
+      ),
+    ).toEqual(
+      expect.arrayContaining([
+        messages.studentName,
+        messages.attempt,
+        messages.status,
+        messages.submittedAt,
+        messages.insights.criterion,
+        messages.insights.samples,
+        messages.insights.meanScore,
+        messages.insights.low,
+      ]),
+    );
+  },
+);
 
 it("renders private guidance history and used guidance, with a local editable preview", () => {
   const guidance = {
