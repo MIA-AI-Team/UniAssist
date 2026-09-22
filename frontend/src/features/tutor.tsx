@@ -155,8 +155,8 @@ function TutorWorkspace({ taskId }: { taskId: number }) {
         <p className="muted">{t("tutor.guidance")}</p>
         <p className="text-sm muted">{t("tutor.privacy")}</p>
       </header>
-      <div className="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
-        <aside className="panel stack self-start">
+      <div className="grid gap-8 lg:grid-cols-[17rem_minmax(0,1fr)]">
+        <aside className="document-section stack self-start">
           <h2>{t("tutor.conversations")}</h2>
           {submissionId > 0 && (
             <p>
@@ -175,20 +175,32 @@ function TutorWorkspace({ taskId }: { taskId: number }) {
             error={sessions.error}
             retry={() => sessions.refetch()}
           />
-          {sessions.data?.pages
-            .flatMap((p) => p.items)
-            .map((s) => (
-              <Link
-                key={s.id}
-                href={`/student/tasks/${taskId}/tutor?chat=${s.id}`}
-                aria-current={s.id === chatId ? "page" : undefined}
-                className="rounded-lg border border-divider p-3 text-sm aria-[current=page]:bg-selection"
-              >
-                {t("tutor.conversation")} {s.id} · <bdi>{s.language}</bdi>
-                <br />
-                <Stamp value={s.created_at} />
-              </Link>
-            ))}
+          {!!sessions.data?.pages.flatMap((p) => p.items).length && (
+            <nav className="record-list" aria-label={t("tutor.conversations")}>
+              {sessions.data.pages
+                .flatMap((p) => p.items)
+                .map((s) => (
+                  <Link
+                    key={s.id}
+                    href={`/student/tasks/${taskId}/tutor?chat=${s.id}`}
+                    aria-current={s.id === chatId ? "page" : undefined}
+                    className="record-row aria-[current=page]:bg-selection"
+                  >
+                    <span className="record-body">
+                      <span className="record-title">
+                        {t("tutor.conversation")} <bdi>{s.id}</bdi>
+                      </span>
+                      <span className="record-description">
+                        <Stamp value={s.created_at} />
+                      </span>
+                    </span>
+                    <span className="record-trailing">
+                      <bdi>{s.language}</bdi>
+                    </span>
+                  </Link>
+                ))}
+            </nav>
+          )}
           {sessions.hasNextPage && (
             <Button
               variant="outline"
@@ -199,7 +211,7 @@ function TutorWorkspace({ taskId }: { taskId: number }) {
             </Button>
           )}
         </aside>
-        <section className="panel stack min-w-0">
+        <section className="document-section stack min-w-0">
           {!chatId ? (
             <p>{t("tutor.choose")}</p>
           ) : session.isPending ? (
@@ -236,97 +248,121 @@ function TutorWorkspace({ taskId }: { taskId: number }) {
                 retry={() => legacy.refetch()}
               />
               {!!legacy.data?.pages[0].items.length && (
-                <details className="rounded-lg border p-3">
+                <details className="disclosure-section">
                   <summary>{t("tutor.legacy")}</summary>
-                  <p className="text-sm muted">{t("tutor.legacyNotice")}</p>
-                  {legacy.hasNextPage && (
-                    <Button
-                      onClick={() => legacy.fetchNextPage()}
-                      disabled={legacy.isFetchingNextPage}
-                    >
-                      {t("tutor.older")}
-                    </Button>
-                  )}
-                  {legacy.data.pages
-                    .slice()
-                    .reverse()
-                    .flatMap((p) => p.items)
-                    .map((m) => (
-                      <div className="border-b py-3" key={m.id}>
-                        <h3>
-                          {t(
-                            m.sender_type === "user"
-                              ? "tutor.you"
-                              : "tutor.title",
-                          )}
-                        </h3>
-                        <AcademicMarkdown content={m.content} />
-                      </div>
-                    ))}
+                  <div className="disclosure-content stack">
+                    <p className="text-sm muted">{t("tutor.legacyNotice")}</p>
+                    {legacy.hasNextPage && (
+                      <Button
+                        onClick={() => legacy.fetchNextPage()}
+                        disabled={legacy.isFetchingNextPage}
+                      >
+                        {t("tutor.older")}
+                      </Button>
+                    )}
+                    <div className="transcript">
+                      {legacy.data.pages
+                        .slice()
+                        .reverse()
+                        .flatMap((p) => p.items)
+                        .map((m) => (
+                          <div className="transcript-entry" key={m.id}>
+                            <h3 className="transcript-speaker">
+                              {t(
+                                m.sender_type === "user"
+                                  ? "tutor.you"
+                                  : "tutor.title",
+                              )}
+                            </h3>
+                            <div className="transcript-body">
+                              <AcademicMarkdown content={m.content} />
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
                 </details>
               )}
               <div
-                className="stack"
+                className="transcript"
                 aria-live="polite"
                 aria-relevant="additions text"
               >
                 {messages.map((m) => (
-                  <article
-                    key={m.id}
-                    className="stack border-b border-divider pb-5"
-                  >
-                    <div className="rounded-lg bg-surface-subtle p-4">
-                      <h3>{t("tutor.you")}</h3>
-                      <AcademicMarkdown content={m.content} />
+                  <article key={m.id} className="transcript-turn">
+                    <div className="transcript-entry">
+                      <div className="transcript-speaker">
+                        <h3>{t("tutor.you")}</h3>
+                        <Stamp value={m.created_at} />
+                      </div>
+                      <div className="transcript-body">
+                        <AcademicMarkdown content={m.content} />
+                      </div>
                     </div>
                     {m.status === "pending" && (
-                      <p role="status">{t("tutor.thinking")}</p>
+                      <div className="transcript-entry">
+                        <h3 className="transcript-speaker">
+                          {t("tutor.title")}
+                        </h3>
+                        <p className="transcript-body" role="status">
+                          {t("tutor.thinking")}
+                        </p>
+                      </div>
                     )}
                     {m.reply && (
-                      <div className="stack">
-                        <h3>{t("tutor.title")}</h3>
-                        {m.is_mock && (
-                          <p className="text-sm text-warning">
-                            {t("tutor.mock")}
-                          </p>
-                        )}
-                        <AcademicMarkdown content={m.reply} />
-                        {m.context_info && (
-                          <div className="text-sm muted">
-                            <p>
-                              {t("tutor.materials")}: {t("instructions")}
-                              {m.context_info.rubric_version &&
-                                ` · ${t("rubric")} ${m.context_info.rubric_version}`}
-                              {m.context_info.submission_id &&
-                                ` · ${t("attempt")} ${m.context_info.submission_id}`}
+                      <div className="transcript-entry">
+                        <h3 className="transcript-speaker">
+                          {t("tutor.title")}
+                        </h3>
+                        <div className="transcript-body stack">
+                          {m.is_mock && (
+                            <p className="text-sm text-warning">
+                              {t("tutor.mock")}
                             </p>
-                            {m.context_info.reference_file_id && (
-                              <a
-                                className="underline"
-                                href={`/api/backend/files/${m.context_info.reference_file_id}/download`}
-                              >
-                                {t("reference")}
-                              </a>
-                            )}
-                            {m.context_info.truncated && (
-                              <p>{t("tutor.truncated")}</p>
-                            )}
-                          </div>
-                        )}
+                          )}
+                          <AcademicMarkdown content={m.reply} />
+                          {m.context_info && (
+                            <div className="text-sm muted">
+                              <p>
+                                {t("tutor.materials")}: {t("instructions")}
+                                {m.context_info.rubric_version &&
+                                  ` · ${t("rubric")} ${m.context_info.rubric_version}`}
+                                {m.context_info.submission_id &&
+                                  ` · ${t("attempt")} ${m.context_info.submission_id}`}
+                              </p>
+                              {m.context_info.reference_file_id && (
+                                <a
+                                  className="underline"
+                                  href={`/api/backend/files/${m.context_info.reference_file_id}/download`}
+                                >
+                                  {t("reference")}
+                                </a>
+                              )}
+                              {m.context_info.truncated && (
+                                <p>{t("tutor.truncated")}</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                     {m.status === "failed" && (
-                      <div role="status">
-                        <p>{t("tutor.failed")}</p>
-                        {m.retryable && (
-                          <Button
-                            variant="outline"
-                            disabled={busy}
-                            onClick={() => send.mutate(m)}
-                          >
-                            {t("retry")}
-                          </Button>
-                        )}
+                      <div className="transcript-entry" role="status">
+                        <h3 className="transcript-speaker">
+                          {t("tutor.title")}
+                        </h3>
+                        <div className="transcript-body stack">
+                          <p>{t("tutor.failed")}</p>
+                          {m.retryable && (
+                            <Button
+                              variant="outline"
+                              disabled={busy}
+                              onClick={() => send.mutate(m)}
+                            >
+                              {t("retry")}
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     )}
                   </article>
@@ -334,7 +370,7 @@ function TutorWorkspace({ taskId }: { taskId: number }) {
               </div>
               <TutorSharing sessionId={chatId} turns={messages} />
               <form
-                className="stack"
+                className="action-well stack"
                 onSubmit={(e) => {
                   e.preventDefault();
                   send.mutate(undefined);

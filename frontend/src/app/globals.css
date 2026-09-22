@@ -354,6 +354,35 @@ html[lang="ar"] {
     background: var(--surface);
     padding: 1.25rem;
   }
+  .transcript {
+    border-block: 1px solid var(--divider);
+  }
+  .transcript-turn + .transcript-turn {
+    border-block-start: 1px solid var(--divider);
+  }
+  .transcript-entry {
+    display: grid;
+    grid-template-columns: minmax(7rem, 0.24fr) minmax(0, 1fr);
+    gap: 1rem;
+    padding-block: 1rem;
+  }
+  .transcript-entry + .transcript-entry {
+    border-block-start: 1px dashed var(--divider);
+  }
+  .transcript-speaker {
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+  .transcript-speaker h2,
+  .transcript-speaker h3,
+  .transcript-speaker h4 {
+    font: inherit;
+  }
+  .transcript-body {
+    min-width: 0;
+  }
   .responsive-cell-label {
     display: none;
   }
@@ -873,6 +902,10 @@ html[lang="ar"] {
     .record-trailing {
       justify-self: start;
       text-align: start;
+    }
+    .transcript-entry {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.5rem;
     }
     .summary-row {
       grid-template-columns: minmax(0, 1fr);

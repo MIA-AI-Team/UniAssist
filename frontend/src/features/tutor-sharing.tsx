@@ -80,11 +80,9 @@ export function TutorSharing({
       client.invalidateQueries({ queryKey: ["chat-shares", sessionId] }),
   });
   return (
-    <details className="rounded-xl border border-divider p-4">
-      <summary className="cursor-pointer font-semibold">
-        {t("tutor.sharing")}
-      </summary>
-      <div className="stack mt-4">
+    <details className="disclosure-section">
+      <summary>{t("tutor.sharing")}</summary>
+      <div className="disclosure-content stack">
         <p className="text-sm muted">{t("tutor.shareHelp")}</p>
         <Field label={t("tutor.recipient")}>
           <input
@@ -117,14 +115,26 @@ export function TutorSharing({
         {through && preview.isPending && <Loading />}
         <ErrorNotice error={preview.error} retry={() => preview.refetch()} />
         {preview.data && (
-          <section className="stack max-h-96 overflow-auto rounded-lg bg-surface-subtle p-3">
+          <section className="stack max-h-96 overflow-auto">
             <h3>{t("tutor.preview")}</h3>
-            {preview.data.map((m) => (
-              <div key={m.id} className="stack border-b pb-3">
-                <AcademicMarkdown content={m.content} />
-                <AcademicMarkdown content={m.reply} />
-              </div>
-            ))}
+            <div className="transcript">
+              {preview.data.map((m) => (
+                <article key={m.id} className="transcript-turn">
+                  <div className="transcript-entry">
+                    <h4 className="transcript-speaker">{t("tutor.you")}</h4>
+                    <div className="transcript-body">
+                      <AcademicMarkdown content={m.content} />
+                    </div>
+                  </div>
+                  <div className="transcript-entry">
+                    <h4 className="transcript-speaker">{t("tutor.title")}</h4>
+                    <div className="transcript-body">
+                      <AcademicMarkdown content={m.reply} />
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
           </section>
         )}
         <ErrorNotice error={share.error || revoke.error} />
@@ -142,28 +152,36 @@ export function TutorSharing({
         />
         {shares.isPending && <Loading />}
         <ErrorNotice error={shares.error} retry={() => shares.refetch()} />
-        {shares.data?.pages
-          .flatMap((p) => p.items)
-          .map((s) => (
-            <div
-              key={s.id}
-              className="flex flex-wrap gap-3 items-center justify-between border-t pt-3"
-            >
-              <p>
-                <bdi>{s.recipient_name}</bdi> · <Stamp value={s.created_at} />
-              </p>
-              {s.revoked_at ? (
-                <span>{t("tutor.revoked")}</span>
-              ) : (
-                <Confirm
-                  title={t("tutor.revoke")}
-                  description={t("tutor.revokeWarning")}
-                  disabled={revoke.isPending}
-                  onConfirm={() => revoke.mutate(s.id)}
-                />
-              )}
-            </div>
-          ))}
+        {!!shares.data?.pages.flatMap((p) => p.items).length && (
+          <div className="record-list">
+            {shares.data.pages
+              .flatMap((p) => p.items)
+              .map((s) => (
+                <div key={s.id} className="record-row">
+                  <div className="record-body">
+                    <p className="record-title">
+                      <bdi>{s.recipient_name}</bdi>
+                    </p>
+                    <p className="record-description">
+                      <Stamp value={s.created_at} />
+                    </p>
+                  </div>
+                  <div className="record-trailing">
+                    {s.revoked_at ? (
+                      <span>{t("tutor.revoked")}</span>
+                    ) : (
+                      <Confirm
+                        title={t("tutor.revoke")}
+                        description={t("tutor.revokeWarning")}
+                        disabled={revoke.isPending}
+                        onConfirm={() => revoke.mutate(s.id)}
+                      />
+                    )}
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
         {shares.hasNextPage && (
           <Button
             variant="outline"
@@ -213,14 +231,30 @@ export function SharedTutoring({ shareId }: { shareId?: number }) {
               <bdi>{detail.data!.student_name}</bdi> · {detail.data!.title}
             </p>
             <p className="muted">{t("tutor.snapshotNotice")}</p>
-            {detail.data!.snapshot.map((m) => (
-              <article className="panel stack" key={m.id}>
-                <h2>{t("tutor.youShared")}</h2>
-                <AcademicMarkdown content={m.content} />
-                {m.is_mock && <p className="text-warning">{t("tutor.mock")}</p>}
-                <AcademicMarkdown content={m.reply} />
-              </article>
-            ))}
+            <div className="transcript">
+              {detail.data!.snapshot.map((m) => (
+                <article className="transcript-turn" key={m.id}>
+                  <div className="transcript-entry">
+                    <div className="transcript-speaker">
+                      <h2>{t("tutor.youShared")}</h2>
+                      <Stamp value={m.created_at} />
+                    </div>
+                    <div className="transcript-body">
+                      <AcademicMarkdown content={m.content} />
+                    </div>
+                  </div>
+                  <div className="transcript-entry">
+                    <h2 className="transcript-speaker">{t("tutor.title")}</h2>
+                    <div className="transcript-body stack">
+                      {m.is_mock && (
+                        <p className="text-warning">{t("tutor.mock")}</p>
+                      )}
+                      <AcademicMarkdown content={m.reply} />
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
           </>
         )}
       </div>
@@ -231,21 +265,32 @@ export function SharedTutoring({ shareId }: { shareId?: number }) {
       <p className="muted">{t("tutor.snapshotNotice")}</p>
       {list.isPending && <Loading />}
       <ErrorNotice error={list.error} retry={() => list.refetch()} />
-      {list.data?.pages[0].items.length === 0 && (
-        <p className="panel">{t("empty")}</p>
+      {list.data?.pages[0].items.length === 0 && <p>{t("empty")}</p>}
+      {!!list.data?.pages.flatMap((p) => p.items).length && (
+        <div className="record-list">
+          {list.data.pages
+            .flatMap((p) => p.items)
+            .map((s) => (
+              <Link
+                className="record-row"
+                key={s.id}
+                href={`/staff/shared-tutoring/${s.id}`}
+              >
+                <span className="record-body">
+                  <span className="record-title" dir="auto">
+                    {s.title}
+                  </span>
+                  <span className="record-description">
+                    <bdi>{s.student_name}</bdi>
+                  </span>
+                </span>
+                <span className="record-trailing">
+                  <Stamp value={s.created_at} />
+                </span>
+              </Link>
+            ))}
+        </div>
       )}
-      {list.data?.pages
-        .flatMap((p) => p.items)
-        .map((s) => (
-          <Link
-            className="panel underline text-action"
-            key={s.id}
-            href={`/staff/shared-tutoring/${s.id}`}
-          >
-            <bdi>{s.student_name}</bdi> · {s.title} ·{" "}
-            <Stamp value={s.created_at} />
-          </Link>
-        ))}
       {list.hasNextPage && (
         <Button
           disabled={list.isFetchingNextPage}
@@ -276,7 +321,7 @@ export function LabTutorSettings({ taskId }: { taskId: number }) {
       client.invalidateQueries({ queryKey: ["tutor-settings", taskId] }),
   });
   return (
-    <section className="panel stack">
+    <section className="document-section stack">
       <h2>{t("tutor.labSettings")}</h2>
       {query.isPending ? (
         <Loading />

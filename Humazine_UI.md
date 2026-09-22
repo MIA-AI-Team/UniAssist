@@ -351,7 +351,7 @@ The palette, fonts, radii, spacing, semantic colors and motion values in section
 | 4. Rubric preparation | **Complete** | Rubric evidence ledger with disclosed creation/refinement tools | Version, source, status, total and professor authority remain clear |
 | 5. Teams and invitations | **Complete** | Whole-row team records, roster decisions and chronological lifecycle history | Consent, approval, locking and conflict behavior remain unchanged |
 | 6. Repository evidence | **Complete** | Repository, commit, snapshot and attribution evidence ledger | Full SHA, fixture, omitted-file and authorization context stay prominent |
-| 7. Tutoring and sharing | Planned | Academic transcript, session records and frozen-share preview | Privacy, retries, language, revocation and draft behavior remain intact |
+| 7. Tutoring and sharing | **Complete** | Academic transcript, session records and frozen-share preview | Privacy, retries, language, revocation and draft behavior remain intact |
 | 8. Profile and operations | Planned | Summary-list identity, account records, audit history and aligned metrics | Operations reveal no academic content and retain version checks |
 | 9. Task and submission forms | Planned | Ruled form sections, deliberate preview hierarchy and evidence receipts | Eligibility, input/upload recovery and ambiguous-mutation handling remain intact |
 | 10. Bilingual visual QA | Planned | Full English/Arabic responsive audit, final score and evidence | Typecheck, lint, unit, build, E2E and anti-slop gates pass |
@@ -377,3 +377,7 @@ Team and invitation collections now use Primer/GOV.UK-inspired whole-row destina
 ### Phase 6 evidence
 
 Repository proposals now scan as whole-row records with repository identity, fixture provenance and lifecycle state. Repository detail uses key/value rows for approval version, last sync and bounded-history status; commits form a ruled evidence ledger with attribution and snapshot actions kept beside the exact commit. Captured evidence uses a summary list for URL, full SHA, capture time and omitted-file count, while the archive hash and file manifest remain available through a native disclosure. Immutable repository events use the shared chronological history treatment.
+
+### Phase 7 evidence
+
+Tutoring now reads as an academic transcript: each persisted question and tutor response has a stable speaker column, exact question timestamp and ruled reading area, with pending, failed and mock states attached to the response they qualify. Conversation sessions and received shares use whole-row records with trailing language, time or state. Earlier unverified messages and frozen-share preparation use native progressive disclosure; shared previews and recipient snapshots reuse the transcript treatment. Request deduplication, draft retention, polling, explicit retries, fixed conversation language, recipient-only sharing and revocation behavior are unchanged.
