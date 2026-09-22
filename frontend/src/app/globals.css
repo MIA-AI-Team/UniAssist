@@ -201,6 +201,155 @@ html[lang="ar"] {
     background: var(--surface);
     padding: 1.5rem;
   }
+  .document-section {
+    min-width: 0;
+    border-block-start: 1px solid var(--divider);
+    padding-block: 1.5rem;
+  }
+  .document-section:last-child {
+    border-block-end: 1px solid var(--divider);
+  }
+  .record-list {
+    min-width: 0;
+    list-style: none;
+    border-block: 1px solid var(--divider);
+    background: var(--surface);
+  }
+  .record-row {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem 1.5rem;
+    padding: 1rem;
+  }
+  .record-row + .record-row {
+    border-block-start: 1px solid var(--divider);
+  }
+  .record-row-link {
+    color: inherit;
+  }
+  .record-row-link:hover .record-title {
+    color: var(--action);
+    text-decoration: underline;
+  }
+  .record-copy {
+    min-width: 0;
+  }
+  .record-title {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .record-description {
+    margin-block-start: 0.25rem;
+    color: var(--muted);
+    font-size: 0.875rem;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+  }
+  .record-trailing {
+    justify-self: end;
+    color: var(--muted);
+    font-size: 0.875rem;
+    text-align: end;
+  }
+  .summary-list {
+    min-width: 0;
+    border-block: 1px solid var(--divider);
+  }
+  .summary-row {
+    display: grid;
+    grid-template-columns: minmax(8rem, 0.35fr) minmax(0, 1fr) auto;
+    gap: 0.75rem 1.5rem;
+    padding-block: 0.875rem;
+  }
+  .summary-row + .summary-row {
+    border-block-start: 1px solid var(--divider);
+  }
+  .summary-key {
+    color: var(--muted);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .summary-value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .summary-action {
+    align-self: start;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    color: var(--action);
+  }
+  .history-list {
+    min-width: 0;
+    list-style: none;
+    border-block-start: 1px solid var(--divider);
+  }
+  .history-row {
+    position: relative;
+    min-width: 0;
+    padding: 1rem 0 1rem 1.5rem;
+  }
+  [dir="rtl"] .history-row {
+    padding-inline: 1.5rem 0;
+  }
+  .history-row + .history-row {
+    border-block-start: 1px solid var(--divider);
+  }
+  .history-row::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0.25rem;
+    top: 1.45rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border: 2px solid var(--action);
+    border-radius: 50%;
+    background: var(--surface);
+  }
+  .disclosure-section {
+    min-width: 0;
+    border-block: 1px solid var(--divider);
+    background: transparent;
+  }
+  .disclosure-section + .disclosure-section {
+    border-block-start: 0;
+  }
+  .disclosure-section > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-inline: 0.25rem;
+    list-style: none;
+  }
+  .disclosure-section > summary::-webkit-details-marker {
+    display: none;
+  }
+  .disclosure-section > summary::after {
+    content: "+";
+    flex: 0 0 auto;
+    color: var(--action);
+    font-size: 1.125rem;
+    line-height: 1;
+  }
+  .disclosure-section[open] > summary::after {
+    content: "\2212";
+  }
+  .disclosure-content {
+    min-width: 0;
+    padding: 0.5rem 0.25rem 1.25rem;
+  }
+  .action-well {
+    min-width: 0;
+    border-block-start: 2px solid var(--action);
+    background: var(--surface);
+    padding: 1.25rem;
+  }
   .stack {
     display: grid;
     gap: 1.5rem;
@@ -699,6 +848,28 @@ html[lang="ar"] {
     .panel,
     .receipt,
     .decision-panel {
+      padding: 1rem;
+    }
+    .document-section {
+      padding-block: 1.25rem;
+    }
+    .record-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.5rem;
+      padding-inline: 0;
+    }
+    .record-trailing {
+      justify-self: start;
+      text-align: start;
+    }
+    .summary-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.25rem;
+    }
+    .summary-action {
+      justify-self: start;
+    }
+    .action-well {
       padding: 1rem;
     }
     .filter-toolbar {
