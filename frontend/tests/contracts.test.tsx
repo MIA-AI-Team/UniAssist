@@ -33,7 +33,7 @@ describe("localized contracts", () => {
     "renders pinned evidence and honest fixture provenance in %s",
     (locale) => {
       const messages = locale === "ar" ? ar : en;
-      render(
+      const { container } = render(
         <NextIntlClientProvider locale={locale} messages={messages}>
           <SnapshotSummary
             snapshot={{
@@ -75,6 +75,8 @@ describe("localized contracts", () => {
         screen.getByRole("link", { name: messages.repos.download }),
       ).toHaveAttribute("href", "/api/backend/repository-snapshots/8/download");
       expect(screen.queryByText(messages.aiGrade)).toBeNull();
+      expect(container.querySelector(".summary-list")).not.toBeNull();
+      expect(container.querySelector(".disclosure-section")).not.toBeNull();
     },
   );
   it.each(["en", "ar"])(

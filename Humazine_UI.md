@@ -350,7 +350,7 @@ The palette, fonts, radii, spacing, semantic colors and motion values in section
 | 3. Private grading guidance | **Complete** | Intentional new-version disclosure and compact version history | Draft survives disclosure changes; disabling guidance remains explicit |
 | 4. Rubric preparation | **Complete** | Rubric evidence ledger with disclosed creation/refinement tools | Version, source, status, total and professor authority remain clear |
 | 5. Teams and invitations | **Complete** | Whole-row team records, roster decisions and chronological lifecycle history | Consent, approval, locking and conflict behavior remain unchanged |
-| 6. Repository evidence | Planned | Repository, commit, snapshot and attribution evidence ledger | Full SHA, fixture, omitted-file and authorization context stay prominent |
+| 6. Repository evidence | **Complete** | Repository, commit, snapshot and attribution evidence ledger | Full SHA, fixture, omitted-file and authorization context stay prominent |
 | 7. Tutoring and sharing | Planned | Academic transcript, session records and frozen-share preview | Privacy, retries, language, revocation and draft behavior remain intact |
 | 8. Profile and operations | Planned | Summary-list identity, account records, audit history and aligned metrics | Operations reveal no academic content and retain version checks |
 | 9. Task and submission forms | Planned | Ruled form sections, deliberate preview hierarchy and evidence receipts | Eligibility, input/upload recovery and ambiguous-mutation handling remain intact |
@@ -373,3 +373,7 @@ Rubric preparation now reads as a version ledger before it reads as an editor. A
 ### Phase 5 evidence
 
 Team and invitation collections now use Primer/GOV.UK-inspired whole-row destinations: the name and concise roster context lead, while sentence-case lifecycle state or invitation time trails. Team detail uses a summary list for status, version and lock time; roster members and pending invitations share one ruled record list. Consent, invitation, approval and archive actions remain explicit action areas, and preserved roster events read as a chronological history inside an optional native disclosure.
+
+### Phase 6 evidence
+
+Repository proposals now scan as whole-row records with repository identity, fixture provenance and lifecycle state. Repository detail uses key/value rows for approval version, last sync and bounded-history status; commits form a ruled evidence ledger with attribution and snapshot actions kept beside the exact commit. Captured evidence uses a summary list for URL, full SHA, capture time and omitted-file count, while the archive hash and file manifest remain available through a native disclosure. Immutable repository events use the shared chronological history treatment.

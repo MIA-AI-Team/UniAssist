@@ -61,6 +61,7 @@ export function RepositoryList({
     onSettled: () =>
       client.invalidateQueries({ queryKey: ["repositories", teamId] }),
   });
+  const repositories = list.data?.pages.flatMap((page) => page.items) ?? [];
   return (
     <div className="stack">
       <Link className="underline text-action" href={`/${area}/teams/${teamId}`}>
@@ -68,13 +69,13 @@ export function RepositoryList({
       </Link>
       <h1>{t("repos.title")}</h1>
       <p>{t("repos.help")}</p>
-      <p className="panel">{t("repos.noScoring")}</p>
+      <p className="notice">{t("repos.noScoring")}</p>
       {team.data?.status !== "approved" && (
         <p>{t("errors.team_not_approved")}</p>
       )}
       {area === "student" && team.data?.status === "approved" && (
         <form
-          className="panel stack"
+          className="action-well stack"
           onSubmit={(e) => {
             e.preventDefault();
             proposal.mutate();
@@ -112,24 +113,32 @@ export function RepositoryList({
           void team.refetch();
         }}
       />
-      {list.data?.pages[0].items.length === 0 && (
-        <p className="panel">{t("repos.empty")}</p>
+      {!list.isPending && repositories.length === 0 && (
+        <p className="notice">{t("repos.empty")}</p>
       )}
-      {list.data?.pages
-        .flatMap((p) => p.items)
-        .map((repo) => (
-          <Link
-            className="panel stack underline text-action"
-            key={repo.id}
-            href={`/${area}/repositories/${repo.id}`}
-          >
-            <bdi className="break-all">
-              {repo.full_name || t("repos.legacy")}
-            </bdi>
-            <span>{t(`repos.${repo.status}`)}</span>
-            {repo.is_fixture && <span>{t("repos.fixture")}</span>}
-          </Link>
-        ))}
+      {!!repositories.length && (
+        <div className="record-list">
+          {repositories.map((repository) => (
+            <Link
+              className="record-row record-row-link"
+              key={repository.id}
+              href={`/${area}/repositories/${repository.id}`}
+            >
+              <div className="record-copy">
+                <bdi className="record-title break-all">
+                  {repository.full_name || t("repos.legacy")}
+                </bdi>
+                {repository.is_fixture && (
+                  <p className="record-description">{t("repos.fixture")}</p>
+                )}
+              </div>
+              <span className="record-trailing">
+                {t(`repos.${repository.status}`)}
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
       {list.hasNextPage && (
         <Button
           disabled={list.isFetchingNextPage}
@@ -146,24 +155,37 @@ export function SnapshotSummary({ snapshot }: { snapshot: S["SnapshotInfo"] }) {
   const t = useTranslations(),
     p = snapshot.provenance;
   return (
-    <section className="panel stack">
+    <section className="document-section stack">
       <h2>{t("repos.snapshot")}</h2>
       {p.is_fixture && (
-        <p className="rounded-lg bg-warning-bg p-3 font-semibold">
-          {t("repos.fixture")}
-        </p>
+        <p className="notice notice-warning">{t("repos.fixture")}</p>
       )}
-      <p className="break-all" dir="ltr">
-        {p.repo_url}
-      </p>
-      <p>
-        {t("repos.sha")}:{" "}
-        <bdi className="break-all font-mono">{p.commit_sha}</bdi>
-      </p>
-      <p>
-        {t("repos.captured")}: <Stamp value={p.captured_at} />
-      </p>
-      <p>{t("repos.omitted", { count: p.omitted_files })}</p>
+      <dl className="summary-list">
+        <div className="summary-row">
+          <dt className="summary-key">{t("repos.url")}</dt>
+          <dd className="summary-value break-all" dir="ltr">
+            {p.repo_url}
+          </dd>
+        </div>
+        <div className="summary-row">
+          <dt className="summary-key">{t("repos.sha")}</dt>
+          <dd className="summary-value">
+            <bdi className="break-all font-mono">{p.commit_sha}</bdi>
+          </dd>
+        </div>
+        <div className="summary-row">
+          <dt className="summary-key">{t("repos.captured")}</dt>
+          <dd className="summary-value">
+            <Stamp value={p.captured_at} />
+          </dd>
+        </div>
+        <div className="summary-row">
+          <dt className="summary-key">{t("repos.manifest")}</dt>
+          <dd className="summary-value">
+            {t("repos.omitted", { count: p.omitted_files })}
+          </dd>
+        </div>
+      </dl>
       <p className="muted">{t("repos.snapshotHelp")}</p>
       <a
         className="underline text-action"
@@ -171,20 +193,28 @@ export function SnapshotSummary({ snapshot }: { snapshot: S["SnapshotInfo"] }) {
       >
         {t("repos.download")}
       </a>
-      <details>
+      <details className="disclosure-section">
         <summary>{t("repos.manifest")}</summary>
-        <p className="break-all font-mono" dir="ltr">
-          SHA-256: {p.archive_sha256}
-        </p>
-        <ul className="divide-y">
-          {p.files.map((file) => (
-            <li className="py-2" key={file.path}>
-              <bdi className="break-all">{file.path}</bdi> · {file.size}{" "}
-              {t("repos.bytes")} ·{" "}
-              {t(file.included ? "repos.included" : "repos.excluded")}
-            </li>
-          ))}
-        </ul>
+        <div className="disclosure-content stack">
+          <p className="break-all font-mono" dir="ltr">
+            SHA-256: {p.archive_sha256}
+          </p>
+          <ul className="record-list">
+            {p.files.map((file) => (
+              <li className="record-row" key={file.path}>
+                <div className="record-copy">
+                  <bdi className="record-title break-all">{file.path}</bdi>
+                  <p className="record-description">
+                    {file.size} {t("repos.bytes")}
+                  </p>
+                </div>
+                <span className="record-trailing">
+                  {t(file.included ? "repos.included" : "repos.excluded")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </details>
     </section>
   );
@@ -271,22 +301,36 @@ export function RepositoryPage({
       <h1 className="break-all" dir="auto">
         {repo.full_name || t("repos.legacy")}
       </h1>
-      <p>
-        {t(`repos.${repo.status}`)} · {t("version")} {repo.version}
-      </p>
+      <dl className="summary-list">
+        <div className="summary-row">
+          <dt className="summary-key">{t("status")}</dt>
+          <dd className="summary-value">{t(`repos.${repo.status}`)}</dd>
+        </div>
+        <div className="summary-row">
+          <dt className="summary-key">{t("version")}</dt>
+          <dd className="summary-value">{repo.version}</dd>
+        </div>
+        <div className="summary-row">
+          <dt className="summary-key">{t("repos.lastSync")}</dt>
+          <dd className="summary-value">
+            {repo.last_synced_at ? <Stamp value={repo.last_synced_at} /> : "—"}
+          </dd>
+        </div>
+        <div className="summary-row">
+          <dt className="summary-key">{t("repos.commits")}</dt>
+          <dd className="summary-value">
+            {t(repo.partial_history ? "repos.partial" : "repos.bounded")}
+          </dd>
+        </div>
+      </dl>
       {repo.is_fixture && (
-        <p className="panel bg-warning-bg">{t("repos.fixture")}</p>
+        <p className="notice notice-warning">{t("repos.fixture")}</p>
       )}
       <p>{t("repos.noScoring")}</p>
       {repo.unavailable_reason && (
-        <p className="panel">{t(`errors.${repo.unavailable_reason}`)}</p>
+        <p className="notice">{t(`errors.${repo.unavailable_reason}`)}</p>
       )}
       {repo.sync_error && <p role="status">{t(`errors.${repo.sync_error}`)}</p>}
-      <p>
-        {t("repos.lastSync")}:{" "}
-        {repo.last_synced_at ? <Stamp value={repo.last_synced_at} /> : "—"}
-      </p>
-      <p>{t(repo.partial_history ? "repos.partial" : "repos.bounded")}</p>
       <Button
         variant="outline"
         disabled={busy}
@@ -296,28 +340,32 @@ export function RepositoryPage({
       </Button>
       <ErrorNotice error={action.error} />
       {action.isSuccess && <p role="status">{t("repos.saved")}</p>}
-      <div className="flex flex-wrap gap-3">
-        {["approve", "reject"]
-          .filter((a) => repo.actions.includes(a))
-          .map((a) => (
-            <Confirm
-              key={a}
-              title={t(`repos.${a}`)}
-              description={t("repos.approvalWarning")}
+      {repo.actions.some((actionName) =>
+        ["approve", "reject", "sync"].includes(actionName),
+      ) && (
+        <div className="action-well flex flex-wrap gap-3">
+          {["approve", "reject"]
+            .filter((a) => repo.actions.includes(a))
+            .map((a) => (
+              <Confirm
+                key={a}
+                title={t(`repos.${a}`)}
+                description={t("repos.approvalWarning")}
+                disabled={busy}
+                onConfirm={() => action.mutate({ action: a })}
+              />
+            ))}
+          {repo.actions.includes("sync") && (
+            <Button
               disabled={busy}
-              onConfirm={() => action.mutate({ action: a })}
-            />
-          ))}
-        {repo.actions.includes("sync") && (
-          <Button
-            disabled={busy}
-            onClick={() => action.mutate({ action: "sync" })}
-          >
-            {t(action.isPending ? "working" : "repos.sync")}
-          </Button>
-        )}
-      </div>
-      <section className="panel stack">
+              onClick={() => action.mutate({ action: "sync" })}
+            >
+              {t(action.isPending ? "working" : "repos.sync")}
+            </Button>
+          )}
+        </div>
+      )}
+      <section className="document-section stack">
         <h2>{t("repos.commits")}</h2>
         {commits.isPending && <Loading />}
         <ErrorNotice error={commits.error} retry={() => commits.refetch()} />
@@ -327,78 +375,85 @@ export function RepositoryPage({
         {commits.data?.pages
           .flatMap((p) => p.items)
           .map((commit) => (
-            <article className="stack border-t pt-4" key={commit.id}>
-              <p className="break-all font-mono" dir="ltr">
-                {commit.commit_hash}
-              </p>
-              <p dir="auto" className="whitespace-pre-wrap break-words">
-                {commit.message}
-              </p>
-              <p>
-                <bdi>{commit.author_name}</bdi> ·{" "}
-                <bdi>{commit.author_github_username || "—"}</bdi> ·{" "}
-                <Stamp value={commit.committed_at} />
-              </p>
-              <p>
-                {commit.attributed_at
-                  ? t("repos.attributed", {
-                      student:
-                        team.data?.members.find(
-                          (m) => m.student_id === commit.student_id,
-                        )?.name || String(commit.student_id ?? "—"),
-                    })
-                  : t("repos.unverified")}
-              </p>
-              {repo.actions.includes("attribute") && (
-                <div className="stack">
-                  <Field label={t("repos.attribution")}>
-                    <select
-                      disabled={busy}
-                      value={
-                        attributions[commit.id] ??
-                        String(commit.student_id ?? "")
-                      }
-                      onChange={(e) =>
-                        setAttributions({
-                          ...attributions,
-                          [commit.id]: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="">{t("repos.unassigned")}</option>
-                      {team.data?.members.map((m) => (
-                        <option key={m.student_id} value={m.student_id}>
-                          {m.name} — {m.student_number}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Confirm
-                    title={t("repos.attribute")}
-                    description={t("repos.attributionWarning")}
-                    disabled={busy || !team.data}
-                    onConfirm={() =>
-                      action.mutate({
-                        action: "attribute",
-                        commit_id: commit.id,
-                        student_id:
-                          Number(
-                            attributions[commit.id] ?? commit.student_id,
-                          ) || null,
+            <article className="record-row record-row-wide" key={commit.id}>
+              <div className="record-copy stack">
+                <p className="break-all font-mono" dir="ltr">
+                  {commit.commit_hash}
+                </p>
+                <p dir="auto" className="whitespace-pre-wrap break-words">
+                  {commit.message}
+                </p>
+                <p>
+                  <bdi>{commit.author_name}</bdi> ·{" "}
+                  <bdi>{commit.author_github_username || "—"}</bdi> ·{" "}
+                  <Stamp value={commit.committed_at} />
+                </p>
+                <p>
+                  {commit.attributed_at
+                    ? t("repos.attributed", {
+                        student:
+                          team.data?.members.find(
+                            (m) => m.student_id === commit.student_id,
+                          )?.name || String(commit.student_id ?? "—"),
                       })
-                    }
-                  />
-                </div>
-              )}
-              {repo.actions.includes("snapshot") && (
-                <Button
-                  variant="outline"
-                  disabled={busy}
-                  onClick={() => setSha(commit.commit_hash)}
-                >
-                  {t("repos.selectCommit")}
-                </Button>
-              )}
+                    : t("repos.unverified")}
+                </p>
+                {(repo.actions.includes("attribute") ||
+                  repo.actions.includes("snapshot")) && (
+                  <div className="task-actions">
+                    {repo.actions.includes("attribute") && (
+                      <div className="stack min-w-[min(100%,20rem)]">
+                        <Field label={t("repos.attribution")}>
+                          <select
+                            disabled={busy}
+                            value={
+                              attributions[commit.id] ??
+                              String(commit.student_id ?? "")
+                            }
+                            onChange={(e) =>
+                              setAttributions({
+                                ...attributions,
+                                [commit.id]: e.target.value,
+                              })
+                            }
+                          >
+                            <option value="">{t("repos.unassigned")}</option>
+                            {team.data?.members.map((m) => (
+                              <option key={m.student_id} value={m.student_id}>
+                                {m.name} — {m.student_number}
+                              </option>
+                            ))}
+                          </select>
+                        </Field>
+                        <Confirm
+                          title={t("repos.attribute")}
+                          description={t("repos.attributionWarning")}
+                          disabled={busy || !team.data}
+                          onConfirm={() =>
+                            action.mutate({
+                              action: "attribute",
+                              commit_id: commit.id,
+                              student_id:
+                                Number(
+                                  attributions[commit.id] ?? commit.student_id,
+                                ) || null,
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {repo.actions.includes("snapshot") && (
+                      <Button
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => setSha(commit.commit_hash)}
+                      >
+                        {t("repos.selectCommit")}
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
             </article>
           ))}
         {commits.hasNextPage && (
@@ -412,7 +467,7 @@ export function RepositoryPage({
       </section>
       {repo.actions.includes("snapshot") && (
         <form
-          className="panel stack"
+          className="action-well stack"
           onSubmit={(e) => {
             e.preventDefault();
             capture.mutate();
@@ -447,36 +502,40 @@ export function RepositoryPage({
           </Link>
         </>
       )}
-      <details className="panel">
+      <details className="disclosure-section">
         <summary>{t("repos.history")}</summary>
-        <ErrorNotice error={history.error} retry={() => history.refetch()} />
-        {history.isPending && <Loading />}
-        {history.data?.pages
-          .flatMap((p) => p.items)
-          .map((e) => (
-            <div className="border-t py-3" key={e.id}>
-              <p>
-                {t(`repos.${e.action}`)} · {t("version")} {e.version} ·{" "}
-                <Stamp value={e.created_at} />
-              </p>
-              {e.action === "attribute" && (
-                <p>
-                  {t("repos.attributionChange", {
-                    from: String(e.details.previous_student_id ?? "—"),
-                    to: String(e.details.student_id ?? "—"),
-                  })}
-                </p>
-              )}
-            </div>
-          ))}
-        {history.hasNextPage && (
-          <Button
-            disabled={history.isFetchingNextPage}
-            onClick={() => history.fetchNextPage()}
-          >
-            {t("teams.more")}
-          </Button>
-        )}
+        <div className="disclosure-content stack">
+          <ErrorNotice error={history.error} retry={() => history.refetch()} />
+          {history.isPending && <Loading />}
+          <ol className="history-list">
+            {history.data?.pages
+              .flatMap((p) => p.items)
+              .map((event) => (
+                <li className="history-row" key={event.id}>
+                  <p>
+                    {t(`repos.${event.action}`)} · {t("version")}{" "}
+                    {event.version} · <Stamp value={event.created_at} />
+                  </p>
+                  {event.action === "attribute" && (
+                    <p className="record-description">
+                      {t("repos.attributionChange", {
+                        from: String(event.details.previous_student_id ?? "—"),
+                        to: String(event.details.student_id ?? "—"),
+                      })}
+                    </p>
+                  )}
+                </li>
+              ))}
+          </ol>
+          {history.hasNextPage && (
+            <Button
+              disabled={history.isFetchingNextPage}
+              onClick={() => history.fetchNextPage()}
+            >
+              {t("teams.more")}
+            </Button>
+          )}
+        </div>
       </details>
     </div>
   );

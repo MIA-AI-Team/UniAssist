@@ -226,6 +226,10 @@ html[lang="ar"] {
   .record-row + .record-row {
     border-block-start: 1px solid var(--divider);
   }
+  .record-row-wide {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
   .record-row-link {
     color: inherit;
   }
