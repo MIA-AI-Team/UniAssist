@@ -435,7 +435,7 @@ function SubmitForm({ task }: { task: TaskDetail }) {
     }
   }
   return (
-    <section className="panel stack">
+    <section className="document-section stack">
       <h2>{t("submit")}</h2>
       <p className="muted">{t("resubmitHelp")}</p>
       {task.project_details?.require_team && (
@@ -446,82 +446,90 @@ function SubmitForm({ task }: { task: TaskDetail }) {
         </p>
       )}
       <form onSubmit={submit} className="stack">
-        {snapshotId && (
-          <div className="stack">
-            {snapshot.isPending && <Loading />}
-            <ErrorNotice
-              error={snapshot.error}
-              retry={() => snapshot.refetch()}
+        <fieldset className="document-section stack">
+          <legend>{t("submissionDraft")}</legend>
+          <Field label={t("submissionText")}>
+            <textarea
+              rows={8}
+              dir="auto"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              disabled={busy}
             />
-            {snapshot.data && <SnapshotSummary snapshot={snapshot.data} />}
-            {snapshot.data && !snapshotReady && (
-              <p role="alert">{t("errors.team_forbidden")}</p>
-            )}
+          </Field>
+        </fieldset>
+        <fieldset className="document-section stack">
+          <legend>{t("submissionEvidence")}</legend>
+          {snapshotId && (
+            <div className="stack">
+              {snapshot.isPending && <Loading />}
+              <ErrorNotice
+                error={snapshot.error}
+                retry={() => snapshot.refetch()}
+              />
+              {snapshot.data && <SnapshotSummary snapshot={snapshot.data} />}
+              {snapshot.data && !snapshotReady && (
+                <p role="alert">{t("errors.team_forbidden")}</p>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={() => {
+                  setSnapshotId(undefined);
+                  router.replace(`/student/tasks/${task.id}/submit`);
+                }}
+              >
+                {t("repos.detach")}
+              </Button>
+            </div>
+          )}
+          {!snapshotId && task.submission_eligibility.team_id && (
+            <Link
+              className="underline text-action"
+              href={`/student/teams/${task.submission_eligibility.team_id}/repositories`}
+            >
+              {t("repos.choose")}
+            </Link>
+          )}
+          <Field label={t("file")}>
+            <input
+              type="file"
+              disabled={busy || !!snapshotId}
+              accept={task.assignment_details?.allowed_file_types
+                ?.map((x) => "." + x)
+                .join(",")}
+              onChange={(e) => {
+                setFile(e.target.files?.[0]);
+                setFileId(undefined);
+              }}
+            />
+          </Field>
+          <p className="text-sm muted">{t("fileHelp")}</p>
+        </fieldset>
+        <div className="action-well stack">
+          {(stage || fileId) && <p role="status">{t(stage || "uploaded")}</p>}
+          <ErrorNotice error={error} />
+          {uncertain && (
             <Button
               type="button"
               variant="outline"
-              disabled={busy}
-              onClick={() => {
-                setSnapshotId(undefined);
-                router.replace(`/student/tasks/${task.id}/submit`);
+              onClick={async () => {
+                try {
+                  await client.refetchQueries({}, { throwOnError: true });
+                  setUncertain(false);
+                } catch (error) {
+                  setError(error);
+                }
               }}
             >
-              {t("repos.detach")}
+              {t("refresh")}
             </Button>
-          </div>
-        )}
-        {!snapshotId && task.submission_eligibility.team_id && (
-          <Link
-            className="underline text-action"
-            href={`/student/teams/${task.submission_eligibility.team_id}/repositories`}
-          >
-            {t("repos.choose")}
-          </Link>
-        )}
-        <Field label={t("submissionText")}>
-          <textarea
-            rows={8}
-            dir="auto"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            disabled={busy}
-          />
-        </Field>
-        <Field label={t("file")}>
-          <input
-            type="file"
-            disabled={busy || !!snapshotId}
-            accept={task.assignment_details?.allowed_file_types
-              ?.map((x) => "." + x)
-              .join(",")}
-            onChange={(e) => {
-              setFile(e.target.files?.[0]);
-              setFileId(undefined);
-            }}
-          />
-        </Field>
-        <p className="text-sm muted">{t("fileHelp")}</p>
-        {(stage || fileId) && <p role="status">{t(stage || "uploaded")}</p>}
-        <ErrorNotice error={error} />
-        {uncertain && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={async () => {
-              try {
-                await client.refetchQueries({}, { throwOnError: true });
-                setUncertain(false);
-              } catch (error) {
-                setError(error);
-              }
-            }}
-          >
-            {t("refresh")}
+          )}
+          <Button disabled={busy || uncertain || !snapshotReady}>
+            {t(busy ? "working" : fileId ? "newAttempt" : "submit")}
           </Button>
-        )}
-        <Button disabled={busy || uncertain || !snapshotReady}>
-          {t(busy ? "working" : fileId ? "newAttempt" : "submit")}
-        </Button>
+        </div>
       </form>
     </section>
   );

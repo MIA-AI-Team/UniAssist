@@ -141,99 +141,110 @@ export function CreateTask() {
       </Link>
       <h1>{t("createTask")}</h1>
       <p className="muted">{t("taskSetup")}</p>
-      <form className="panel stack" onSubmit={submit} noValidate>
-        <Field label={t("type")}>
-          <select {...form.register("type")}>
-            {["lab", "assignment", "project"].map((v) => (
-              <option key={v} value={v}>
-                {t(v)}
-              </option>
-            ))}
-          </select>
-        </Field>
-        {field("title")}
-        <Field
-          label={t("description")}
-          error={form.formState.errors.description?.message}
-        >
-          <textarea rows={6} dir="auto" {...form.register("description")} />
-        </Field>
-        <MarkdownPreview content={description} label={t("description")} />
-        <div className="grid gap-5 sm:grid-cols-2">
-          {field("due_date", "datetime-local")}
-          {field("target_cohort_year", "number")}
-        </div>
-        {field("target_major")}
-        {type === "lab" && (
-          <>
-            {field("scheduled_date", "datetime-local")}
-            <Field label={t("referenceFile")}>
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={(e) => {
-                  setFile(e.target.files?.[0]);
-                  setFileId(undefined);
-                }}
-              />
-            </Field>
-          </>
-        )}
-        {type === "assignment" && (
-          <>
-            {field("allowed_file_types")}
-            <label className="!flex items-center gap-3">
-              <input type="checkbox" {...form.register("allow_late")} />
-              {t("allowLate")}
-            </label>
-          </>
-        )}
-        {type === "project" && (
-          <>
-            {field("default_repo_provider")}
-            <label className="!flex items-center gap-3">
-              <input type="checkbox" {...form.register("require_team")} />
-              {t("requireTeam")}
-            </label>
-          </>
-        )}
-        <ErrorNotice error={error} />
-        {stage && <p role="status">{t(stage)}</p>}
-        {fileId && !stage && <p>{t("uploaded")}</p>}
-        {uncertain && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={async () => {
-              try {
-                const tasks = await request<Task[]>("/tasks/");
-                client.setQueryData(["tasks", ""], tasks);
-                setReconciledTasks(
-                  tasks.filter(
-                    (task) => task.title === form.getValues("title"),
-                  ),
-                );
-                setUncertain(false);
-              } catch (error) {
-                setError(error);
-              }
-            }}
+      <form className="stack" onSubmit={submit} noValidate>
+        <fieldset className="document-section stack">
+          <legend>{t("taskBasics")}</legend>
+          <Field label={t("type")}>
+            <select {...form.register("type")}>
+              {["lab", "assignment", "project"].map((v) => (
+                <option key={v} value={v}>
+                  {t(v)}
+                </option>
+              ))}
+            </select>
+          </Field>
+          {field("title")}
+          <Field
+            label={t("description")}
+            error={form.formState.errors.description?.message}
           >
-            {t("refresh")}
+            <textarea rows={6} dir="auto" {...form.register("description")} />
+          </Field>
+          <MarkdownPreview content={description} label={t("description")} />
+        </fieldset>
+        <fieldset className="document-section stack">
+          <legend>{t("taskAudience")}</legend>
+          <div className="grid gap-5 sm:grid-cols-2">
+            {field("due_date", "datetime-local")}
+            {field("target_cohort_year", "number")}
+          </div>
+          {field("target_major")}
+        </fieldset>
+        <fieldset className="document-section stack">
+          <legend>{t("taskRequirements")}</legend>
+          {type === "lab" && (
+            <>
+              {field("scheduled_date", "datetime-local")}
+              <Field label={t("referenceFile")}>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) => {
+                    setFile(e.target.files?.[0]);
+                    setFileId(undefined);
+                  }}
+                />
+              </Field>
+            </>
+          )}
+          {type === "assignment" && (
+            <>
+              {field("allowed_file_types")}
+              <label className="!flex items-center gap-3">
+                <input type="checkbox" {...form.register("allow_late")} />
+                {t("allowLate")}
+              </label>
+            </>
+          )}
+          {type === "project" && (
+            <>
+              {field("default_repo_provider")}
+              <label className="!flex items-center gap-3">
+                <input type="checkbox" {...form.register("require_team")} />
+                {t("requireTeam")}
+              </label>
+            </>
+          )}
+        </fieldset>
+        <div className="action-well stack">
+          <ErrorNotice error={error} />
+          {stage && <p role="status">{t(stage)}</p>}
+          {fileId && !stage && <p role="status">{t("uploaded")}</p>}
+          {uncertain && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={async () => {
+                try {
+                  const tasks = await request<Task[]>("/tasks/");
+                  client.setQueryData(["tasks", ""], tasks);
+                  setReconciledTasks(
+                    tasks.filter(
+                      (task) => task.title === form.getValues("title"),
+                    ),
+                  );
+                  setUncertain(false);
+                } catch (error) {
+                  setError(error);
+                }
+              }}
+            >
+              {t("refresh")}
+            </Button>
+          )}
+          {reconciledTasks.map((task) => (
+            <Link
+              key={task.id}
+              className="text-action underline"
+              href={"/staff/tasks/" + task.id}
+            >
+              {t("openTask")}: {task.title}
+            </Link>
+          ))}
+          <Button disabled={form.formState.isSubmitting || uncertain}>
+            {t(form.formState.isSubmitting ? "working" : "createTask")}
           </Button>
-        )}
-        {reconciledTasks.map((task) => (
-          <Link
-            key={task.id}
-            className="text-action underline"
-            href={"/staff/tasks/" + task.id}
-          >
-            {t("openTask")}: {task.title}
-          </Link>
-        ))}
-        <Button disabled={form.formState.isSubmitting || uncertain}>
-          {t(form.formState.isSubmitting ? "working" : "createTask")}
-        </Button>
+        </div>
       </form>
     </div>
   );

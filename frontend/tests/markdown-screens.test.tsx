@@ -84,7 +84,11 @@ it.each(["en", "ar"])(
   async (locale) => {
     const messages = locale === "ar" ? ar : en;
     const content = String.raw`Explain **why** \(x^2\), then \[\frac{1}{2}\].`;
-    setup(<CreateTask />, locale);
+    const { container } = setup(<CreateTask />, locale);
+    expect(
+      container.querySelectorAll("fieldset.document-section"),
+    ).toHaveLength(3);
+    expect(container.querySelector(".action-well")).not.toBeNull();
     const input = screen.getByLabelText(messages.description, { exact: true });
     expect(screen.getByText(messages.markdown.empty)).toBeVisible();
     fireEvent.change(input, { target: { value: content } });

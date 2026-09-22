@@ -353,7 +353,7 @@ The palette, fonts, radii, spacing, semantic colors and motion values in section
 | 6. Repository evidence | **Complete** | Repository, commit, snapshot and attribution evidence ledger | Full SHA, fixture, omitted-file and authorization context stay prominent |
 | 7. Tutoring and sharing | **Complete** | Academic transcript, session records and frozen-share preview | Privacy, retries, language, revocation and draft behavior remain intact |
 | 8. Profile and operations | **Complete** | Summary-list identity, account records, audit history and aligned metrics | Operations reveal no academic content and retain version checks |
-| 9. Task and submission forms | Planned | Ruled form sections, deliberate preview hierarchy and evidence receipts | Eligibility, input/upload recovery and ambiguous-mutation handling remain intact |
+| 9. Task and submission forms | **Complete** | Ruled form sections, deliberate preview hierarchy and evidence receipts | Eligibility, input/upload recovery and ambiguous-mutation handling remain intact |
 | 10. Bilingual visual QA | Planned | Full English/Arabic responsive audit, final score and evidence | Typecheck, lint, unit, build, E2E and anti-slop gates pass |
 
 Each completed phase records its behavior and verification here before its commit is published. The current task list and assessment review hierarchy are regression references throughout all ten phases.
@@ -385,3 +385,7 @@ Tutoring now reads as an academic transcript: each persisted question and tutor 
 ### Phase 8 evidence
 
 Profile and account detail screens now separate immutable identity facts from the fields that can be changed, using aligned summary rows and an explicit correction action area. Account search results are whole-row destinations with trailing account state. Content-free audit events use a chronological history, while AI operation groups present technical provider/operation identity above aligned, tabular numeric rows. Existing optimistic version checks, supported role boundaries, suspension safeguards and the prohibition on academic content in operations remain unchanged.
+
+### Phase 9 evidence
+
+Task creation now separates task instructions, audience and timing, and type-specific submission requirements into ruled fieldsets, with the existing Markdown/math preview kept beside the authored instructions. Upload progress, ambiguous-create reconciliation and the final create action share one action area. Student submission separates the preserved attempt text from file or repository evidence, then reports upload receipt and attempt creation state in a dedicated action area. Eligibility still comes from the server, successful uploads are retained after failure, ambiguous mutations require a server refresh, and no mutation is automatically retried.
