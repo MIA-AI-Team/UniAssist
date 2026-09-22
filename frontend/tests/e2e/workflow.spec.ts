@@ -65,6 +65,7 @@ test("lab PDF flow and Arabic staff rubric controls", async ({ page }) => {
     .getByRole("button", { name: "Suggest rubric with AI", exact: true })
     .click();
   await expect(page.getByRole("heading", { name: /Version 1/ })).toBeVisible();
+  await page.locator("summary").filter({ hasText: "Refine with AI" }).click();
   await page
     .getByLabel("What should the next version improve?", { exact: true })
     .fill("Focus on clarity and explanation");

@@ -105,9 +105,7 @@ test("profile recovery, admin correction, suspension and Arabic operational priv
   await login(admin, adminEmail);
   await admin.getByLabel("Name, email or student number").fill(tag);
   await admin.getByRole("button", { name: "Search", exact: true }).click();
-  await admin
-    .getByRole("link", { name: "Preserved Student", exact: true })
-    .click();
+  await admin.getByRole("link", { name: /^Preserved Student/ }).click();
   await expect(admin).toHaveURL(new RegExp(`/admin/users/${studentId}$`));
   await admin.getByLabel("Cohort year").fill("2028");
   await admin.getByLabel("Account status").selectOption("suspended");

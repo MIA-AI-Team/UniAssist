@@ -354,7 +354,7 @@ The palette, fonts, radii, spacing, semantic colors and motion values in section
 | 7. Tutoring and sharing | **Complete** | Academic transcript, session records and frozen-share preview | Privacy, retries, language, revocation and draft behavior remain intact |
 | 8. Profile and operations | **Complete** | Summary-list identity, account records, audit history and aligned metrics | Operations reveal no academic content and retain version checks |
 | 9. Task and submission forms | **Complete** | Ruled form sections, deliberate preview hierarchy and evidence receipts | Eligibility, input/upload recovery and ambiguous-mutation handling remain intact |
-| 10. Bilingual visual QA | Planned | Full English/Arabic responsive audit, final score and evidence | Typecheck, lint, unit, build, E2E and anti-slop gates pass |
+| 10. Bilingual visual QA | **Complete** | Full English/Arabic responsive audit, final score and evidence | Typecheck, lint, unit, build, E2E and anti-slop gates pass |
 
 Each completed phase records its behavior and verification here before its commit is published. The current task list and assessment review hierarchy are regression references throughout all ten phases.
 
@@ -389,3 +389,44 @@ Profile and account detail screens now separate immutable identity facts from th
 ### Phase 9 evidence
 
 Task creation now separates task instructions, audience and timing, and type-specific submission requirements into ruled fieldsets, with the existing Markdown/math preview kept beside the authored instructions. Upload progress, ambiguous-create reconciliation and the final create action share one action area. Student submission separates the preserved attempt text from file or repository evidence, then reports upload receipt and attempt creation state in a dedicated action area. Eligibility still comes from the server, successful uploads are retained after failure, ambiguous mutations require a server refresh, and no mutation is automatically retried.
+
+### Phase 10 evidence and final score
+
+The isolated `uniassist-verify` stack was rebuilt from the final source and served at `http://localhost:13000`, backed by the isolated PostgreSQL service at port 15432 and backend at port 18001. English and Arabic screenshots were inspected at 390, 768 and 1440 pixels for sign-in, task records and staff task detail; additional mobile evidence covered account operations, Markdown/math, released assessment, team and repository evidence screens. The browser checks found no page overflow in the target task views and retained the expected Arabic font, RTL document direction, focus treatment and reduced-motion behavior.
+
+| Final gate | Result |
+|---|---|
+| TypeScript | Passed |
+| ESLint | Passed |
+| Component and contract tests | **56 passed** |
+| Production build | Passed locally and in the isolated Docker image |
+| Real-backend Playwright journeys | **16 passed** |
+| Anti-slop heuristic | **0.0/10**, zero detected findings across `frontend/src` |
+| Frontend dependencies | No library or package added during this ten-phase plan |
+| Backend and contracts | No backend, database, API schema, route, permission or academic-rule change |
+
+The first full browser run exposed two stale test locators: account search now gives the whole row an accessible name, and rubric refinement now starts in a closed disclosure. The tests were updated to select the whole-row record and open the disclosure through its summary. Both affected journeys passed in isolation before the complete 16-test suite passed.
+
+#### AI Slop Score — 1/10
+
+| Category | Score | Final evidence |
+|---|---:|---|
+| Palette defaultness | 0 | The locked neutral desk palette and restrained teal action role remain consistent across every adapted pattern. |
+| Layout defaultness | 0 | Task records, assessment receipts, evidence ledgers, transcripts, histories and operational datasets follow their domain rather than one repeated card grid. |
+| Component defaultness | 0 | Generic secondary panels were replaced with ruled records, summary rows, disclosures, data tables and explicit action areas; retained panels carry the established task/review hierarchy. |
+| Typography genericness | 1 | Source Sans 3 and Noto Sans Arabic are clear and disciplined, though intentionally restrained rather than expressive display typography. |
+| Decorative noise | 0 | The interface uses rules, spacing and semantic state color without gradients, ornamental illustration or gratuitous motion. |
+| **Total** | **1** | **Target achieved.** |
+
+#### Distinctiveness Score — 9/10
+
+| Category | Score | Final evidence |
+|---|---:|---|
+| Product fit | 2 | Every primary visual pattern expresses tasks, rubric authority, attempts, evidence, privacy or release state. |
+| Visual system clarity | 2 | Locked tokens now drive a consistent family of document, record, summary, history, transcript, table and action roles. |
+| Layout character | 2 | The Academic Review Desk has a recognizable document-and-ledger rhythm across student, staff and operations work. |
+| Typographic identity | 1 | The bilingual type system is robust and legible but deliberately quiet. |
+| Signature moments | 2 | Task rows, attempt receipts, criterion evidence, repository provenance and tutoring transcripts form a coherent product-specific vocabulary. |
+| **Total** | **9** | **Target achieved.** |
+
+Release gating, mock and fixture provenance, request deduplication, draft and upload recovery, exact timestamps, RTL behavior and mixed-direction isolation all passed their applicable browser journeys. The isolated verification environment uses mock AI and deterministic GitHub fixtures; this is not live-provider acceptance.
